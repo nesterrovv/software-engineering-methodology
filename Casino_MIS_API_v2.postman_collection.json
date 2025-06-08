@@ -1,0 +1,293 @@
+{
+	"info": {
+		"_postman_id": "f1a9b12a-3b13-4f03-9ff0-88175ebd0745",
+		"name": "Casino MIS API v2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25040547"
+	},
+	"item": [
+		{
+			"name": "Incident Service (Port 8080)",
+			"item": [
+				{
+					"name": "POST /violations",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username_incident}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password_incident}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employeeId\": \"11111111-1111-1111-1111-111111111111\",\n  \"type\": \"LATE\",\n  \"description\": \"Опоздание более чем на 10 минут\",\n  \"attachmentUrls\": [\n    \"https://minio.local/video/incident123.mp4\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{host_incident}}/violations",
+							"host": [
+								"{{host_incident}}"
+							],
+							"path": [
+								"violations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /violations",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username_incident}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password_incident}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host_incident}}/violations",
+							"host": [
+								"{{host_incident}}"
+							],
+							"path": [
+								"violations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /violations/{violationId}",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username_incident}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password_incident}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host_incident}}/violations/{{violationId}}",
+							"host": [
+								"{{host_incident}}"
+							],
+							"path": [
+								"violations",
+								"{{violationId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Finance Service (Port 8081)",
+			"item": [
+				{
+					"name": "POST /operations",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username_finance}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password_finance}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"cashDeskId\": \"22222222-2222-2222-2222-222222222222\",\n  \"amount\": 2000.5,\n  \"type\": \"DEPOSIT\",\n  \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{host_finance}}/operations",
+							"host": [
+								"{{host_finance}}"
+							],
+							"path": [
+								"operations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /operations",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username_finance}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password_finance}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host_finance}}/operations",
+							"host": [
+								"{{host_finance}}"
+							],
+							"path": [
+								"operations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /operations/{operationId}",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username_finance}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password_finance}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{host_finance}}/operations/{{operationId}}",
+							"host": [
+								"{{host_finance}}"
+							],
+							"path": [
+								"operations",
+								"{{operationId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /reports",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{username_finance}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password_finance}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"periodStart\": \"2025-06-01\",\n  \"periodEnd\": \"2025-06-07\"\n}"
+						},
+						"url": {
+							"raw": "{{host_finance}}/reports",
+							"host": [
+								"{{host_finance}}"
+							],
+							"path": [
+								"reports"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

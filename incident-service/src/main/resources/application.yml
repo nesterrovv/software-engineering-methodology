@@ -1,0 +1,21 @@
+spring:
+  security:
+    user:
+      name: incident
+      password: incident
+  datasource:
+    url: jdbc:postgresql://casino-mis-postgres:5432/incident
+    username: incident
+    password: incident
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+  liquibase:
+    enabled: false
+
+logging:
+  level:
+    org.springframework: INFO

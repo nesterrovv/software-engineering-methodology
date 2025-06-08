@@ -1,0 +1,34 @@
+package com.casino.incident.mapper;
+
+import com.casino.incident.domain.DisciplinaryViolation;
+import com.casino.incident.dto.CreateViolationRequest;
+import com.casino.incident.dto.ViolationResponse;
+
+import java.util.List;
+
+public class ViolationMapper {
+
+    public static DisciplinaryViolation toEntity(CreateViolationRequest dto) {
+        DisciplinaryViolation entity = new DisciplinaryViolation();
+        entity.setEmployeeId(dto.getEmployeeId());
+        entity.setType(dto.getType());
+        entity.setDescription(dto.getDescription());
+        entity.setAttachmentUrls(dto.getAttachmentUrls());
+        return entity;
+    }
+
+    public static ViolationResponse toDto(DisciplinaryViolation e) {
+        return new ViolationResponse(
+                e.getId(),
+                e.getEmployeeId(),
+                e.getType(),
+                e.getDescription(),
+                e.getOccurredAt(),
+                e.getStatus(),
+                e.getAttachmentUrls());
+    }
+
+    public static List<ViolationResponse> toDtoList(List<DisciplinaryViolation> list) {
+        return list.stream().map(ViolationMapper::toDto).toList();
+    }
+}

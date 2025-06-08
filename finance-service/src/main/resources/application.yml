@@ -1,0 +1,21 @@
+spring:
+  security:
+    user:
+      name: finance
+      password: finance
+  datasource:
+    url: jdbc:postgresql://casino-mis-postgres:5432/finance
+    username: finance
+    password: finance
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+  liquibase:
+    enabled: false
+
+logging:
+  level:
+    org.springframework: INFO

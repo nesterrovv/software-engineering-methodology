@@ -1,0 +1,5 @@
+CREATE USER incident WITH ENCRYPTED PASSWORD 'incident';
+CREATE DATABASE incident OWNER incident;
+
+CREATE USER finance WITH ENCRYPTED PASSWORD 'finance';
+CREATE DATABASE finance OWNER finance;
