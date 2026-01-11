@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="007-create-security-tables" author="system">
+        <!-- UC1: Мониторинг зала -->
+        <createTable tableName="hall_monitoring_sessions">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="security_officer_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="started_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ended_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active_visitors" type="INTEGER"/>
+            <column name="active_staff" type="INTEGER"/>
+            <column name="anomalies_detected" type="INTEGER"/>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+
+        <!-- UC4, UC5: События контактов -->
+        <createTable tableName="contact_events">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="person_id1" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="person_id2" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contact_start_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contact_end_time" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="duration_seconds" type="BIGINT"/>
+            <column name="location" type="VARCHAR(500)"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="suspicious" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="suspicious_activity_id" type="UUID"/>
+        </createTable>
+
+        <!-- UC6: База мошенников -->
+        <createTable tableName="fraud_database">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="person_id" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="full_name" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="photo_url" type="TEXT"/>
+            <column name="fraud_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="added_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="added_by" type="UUID"/>
+            <column name="last_checked_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="match_count" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- UC6: Результаты проверок -->
+        <createTable tableName="fraud_check_results">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="fraud_record_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="checked_person_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="checked_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="confidence" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="similarity_score" type="DOUBLE PRECISION"/>
+            <column name="match_details" type="TEXT"/>
+            <column name="triggered_by_activity_id" type="UUID"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- UC7: Уведомления -->
+        <createTable tableName="notifications">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="recipient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sent_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="read_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="related_entity_type" type="VARCHAR(255)"/>
+            <column name="related_entity_id" type="UUID"/>
+            <column name="metadata" type="TEXT"/>
+        </createTable>
+
+        <!-- Индексы -->
+        <createIndex indexName="idx_hall_monitoring_officer" tableName="hall_monitoring_sessions">
+            <column name="security_officer_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_contact_person1" tableName="contact_events">
+            <column name="person_id1"/>
+        </createIndex>
+
+        <createIndex indexName="idx_contact_person2" tableName="contact_events">
+            <column name="person_id2"/>
+        </createIndex>
+
+        <createIndex indexName="idx_contact_suspicious" tableName="contact_events">
+            <column name="suspicious"/>
+        </createIndex>
+
+        <createIndex indexName="idx_fraud_person_id" tableName="fraud_database">
+            <column name="person_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_fraud_status" tableName="fraud_database">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_check_result_person" tableName="fraud_check_results">
+            <column name="checked_person_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_check_result_activity" tableName="fraud_check_results">
+            <column name="triggered_by_activity_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_notification_recipient" tableName="notifications">
+            <column name="recipient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_notification_status" tableName="notifications">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_notification_type" tableName="notifications">
+            <column name="type"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+
+

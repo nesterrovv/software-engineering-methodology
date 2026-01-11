@@ -5,6 +5,7 @@ import com.casino.incident.dto.CreateViolationRequest;
 import com.casino.incident.dto.ViolationResponse;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ViolationMapper {
 
@@ -29,6 +30,6 @@ public class ViolationMapper {
     }
 
     public static List<ViolationResponse> toDtoList(List<DisciplinaryViolation> list) {
-        return list.stream().map(ViolationMapper::toDto).toList();
+        return list.stream().map(ViolationMapper::toDto).collect(Collectors.toList());
     }
 }

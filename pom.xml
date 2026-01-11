@@ -10,8 +10,7 @@
 
     <modules>
         <module>common</module>
-        <module>incident-service</module>
-        <module>finance-service</module>
+        <module>casino-mis-application</module>
     </modules>
 
     <properties>

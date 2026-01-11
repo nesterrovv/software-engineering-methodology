@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="008-create-staff-tables" author="system">
+        <!-- Базовая таблица сотрудников -->
+        <createTable tableName="employees">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(255)"/>
+            <column name="last_name" type="VARCHAR(255)"/>
+            <column name="middle_name" type="VARCHAR(255)"/>
+            <column name="position" type="VARCHAR(255)"/>
+            <column name="department" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hire_date" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contact_info" type="TEXT"/>
+        </createTable>
+
+        <!-- UC20: Учёт времени работы сотрудников -->
+        <createTable tableName="work_time_records">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="employee_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="clock_in_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="clock_out_time" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="device_id" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="worked_minutes" type="BIGINT"/>
+            <column name="is_late" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="has_overtime" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+
+        <!-- UC23: Управление сменами и загрузкой -->
+        <createTable tableName="shift_schedules">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="employee_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="shift_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="planned_start_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="planned_end_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="shift_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="VARCHAR(500)"/>
+            <column name="created_by" type="UUID"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="published_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="confirmed_by" type="UUID"/>
+            <column name="confirmed_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="notes" type="TEXT"/>
+        </createTable>
+
+        <!-- Индексы -->
+        <createIndex indexName="idx_employee_department" tableName="employees">
+            <column name="department"/>
+        </createIndex>
+
+        <createIndex indexName="idx_employee_status" tableName="employees">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_work_time_employee" tableName="work_time_records">
+            <column name="employee_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_work_time_status" tableName="work_time_records">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_work_time_clock_in" tableName="work_time_records">
+            <column name="clock_in_time"/>
+        </createIndex>
+
+        <createIndex indexName="idx_shift_employee" tableName="shift_schedules">
+            <column name="employee_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_shift_date" tableName="shift_schedules">
+            <column name="shift_date"/>
+        </createIndex>
+
+        <createIndex indexName="idx_shift_status" tableName="shift_schedules">
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Foreign keys -->
+        <addForeignKeyConstraint baseTableName="work_time_records"
+                                 baseColumnNames="employee_id"
+                                 referencedTableName="employees"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_work_time_employee"/>
+
+        <addForeignKeyConstraint baseTableName="shift_schedules"
+                                 baseColumnNames="employee_id"
+                                 referencedTableName="employees"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_shift_employee"/>
+    </changeSet>
+
+</databaseChangeLog>
+
+

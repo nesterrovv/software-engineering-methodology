@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="001-create-incidents-table" author="system">
+        <createTable tableName="incidents">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="VARCHAR(255)"/>
+            <column name="occurred_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reported_by" type="UUID"/>
+        </createTable>
+
+        <createTable tableName="incident_participants">
+            <column name="incident_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="participant" type="VARCHAR(255)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="incident_participants"
+                                 baseColumnNames="incident_id"
+                                 constraintName="fk_incident_participants_incident"
+                                 referencedTableName="incidents"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <createTable tableName="incident_attachments">
+            <column name="incident_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="attachment_url" type="VARCHAR(500)"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="incident_attachments"
+                                 baseColumnNames="incident_id"
+                                 constraintName="fk_incident_attachments_incident"
+                                 referencedTableName="incidents"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <createIndex indexName="idx_incidents_occurred_at" tableName="incidents">
+            <column name="occurred_at"/>
+        </createIndex>
+
+        <createIndex indexName="idx_incidents_type" tableName="incidents">
+            <column name="type"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+

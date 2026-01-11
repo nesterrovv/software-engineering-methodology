@@ -1,0 +1,59 @@
+spring:
+  cloud:
+    compatibility-verifier:
+      enabled: false
+  application:
+    name: casino-mis
+  security:
+    user:
+      name: admin
+      password: admin
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://casino-mis-postgres:5432/casino_mis}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework: INFO
+    com.casino.mis: DEBUG
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+    incident:
+      url: http://localhost:8080
+    security:
+      url: http://localhost:8080
+
+security:
+  contact:
+    max-duration-minutes: 10
+    max-frequency: 5
+    time-window-minutes: 10
+

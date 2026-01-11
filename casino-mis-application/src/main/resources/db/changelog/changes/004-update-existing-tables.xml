@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Таблица disciplinary_violation для UC21 -->
+    <changeSet id="004-01-create-disciplinary-violation-table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="disciplinary_violation"/>
+            </not>
+        </preConditions>
+        <createTable tableName="disciplinary_violation">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="employee_id" type="UUID"/>
+            <column name="type" type="VARCHAR(50)"/>
+            <column name="description" type="TEXT"/>
+            <column name="occurred_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="status" type="VARCHAR(50)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="004-02-create-violations-employee-id-index" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_violations_employee_id" tableName="disciplinary_violation"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="idx_violations_employee_id" tableName="disciplinary_violation">
+            <column name="employee_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="004-03-create-violations-occurred-at-index" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_violations_occurred_at" tableName="disciplinary_violation"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="idx_violations_occurred_at" tableName="disciplinary_violation">
+            <column name="occurred_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="004-03a-create-disciplinary-violation-attachment-urls-table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="disciplinary_violation_attachment_urls"/>
+            </not>
+        </preConditions>
+        <createTable tableName="disciplinary_violation_attachment_urls">
+            <column name="disciplinary_violation_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="attachment_urls" type="VARCHAR(500)"/>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="disciplinary_violation_attachment_urls"
+                                 baseColumnNames="disciplinary_violation_id"
+                                 referencedTableName="disciplinary_violation"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_dv_attachment_urls_dv"/>
+    </changeSet>
+
+    <!-- Таблица suspicious_activity для UC3 -->
+    <changeSet id="004-04-create-suspicious-activity-table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="suspicious_activity"/>
+            </not>
+        </preConditions>
+        <createTable tableName="suspicious_activity">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="short_description" type="VARCHAR(500)"/>
+            <column name="occurred_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="VARCHAR(500)"/>
+            <column name="risk" type="VARCHAR(50)"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="004-05-create-suspicious-activity-participants-table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="suspicious_activity_participants"/>
+            </not>
+        </preConditions>
+        <createTable tableName="suspicious_activity_participants">
+            <column name="suspicious_activity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="participants" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="004-06-add-suspicious-activity-participants-pk" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <primaryKeyExists tableName="suspicious_activity_participants"/>
+            </not>
+        </preConditions>
+        <addPrimaryKey tableName="suspicious_activity_participants" 
+                       columnNames="suspicious_activity_id,participants"
+                       constraintName="pk_suspicious_activity_participants"/>
+    </changeSet>
+
+    <changeSet id="004-07-add-suspicious-activity-participants-fk" author="system">
+        <addForeignKeyConstraint baseTableName="suspicious_activity_participants"
+                                 baseColumnNames="suspicious_activity_id"
+                                 referencedTableName="suspicious_activity"
+                                 referencedColumnNames="id"
+                                 constraintName="fk_suspicious_activity_participants"/>
+    </changeSet>
+
+</databaseChangeLog>

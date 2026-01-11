@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002-create-complaints-table" author="system">
+        <createTable tableName="complaints">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reported_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reporter_name" type="VARCHAR(255)"/>
+            <column name="related_incident_id" type="UUID"/>
+        </createTable>
+
+        <createIndex indexName="idx_complaints_reported_at" tableName="complaints">
+            <column name="reported_at"/>
+        </createIndex>
+
+        <createIndex indexName="idx_complaints_category" tableName="complaints">
+            <column name="category"/>
+        </createIndex>
+
+        <createIndex indexName="idx_complaints_source" tableName="complaints">
+            <column name="source"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+
+

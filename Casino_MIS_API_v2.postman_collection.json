@@ -10,140 +10,906 @@
 			"name": "Incident Service (Port 8080)",
 			"item": [
 				{
-					"name": "POST /violations",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "username",
-									"value": "{{username_incident}}",
-									"type": "string"
+					"name": "UC21: Violations (Disciplinary)",
+					"item": [
+						{
+							"name": "UC21: POST /violations",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
 								},
-								{
-									"key": "password",
-									"value": "{{password_incident}}",
-									"type": "string"
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"employeeId\": \"11111111-1111-1111-1111-111111111111\",\n  \"type\": \"LATE\",\n  \"description\": \"Опоздание более чем на 10 минут\",\n  \"attachmentUrls\": [\n    \"https://minio.local/video/incident123.mp4\"\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/incident/violations",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"violations"
+									]
 								}
-							]
+							},
+							"response": []
 						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"employeeId\": \"11111111-1111-1111-1111-111111111111\",\n  \"type\": \"LATE\",\n  \"description\": \"Опоздание более чем на 10 минут\",\n  \"attachmentUrls\": [\n    \"https://minio.local/video/incident123.mp4\"\n  ]\n}"
+						{
+							"name": "GET /violations",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/violations",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"violations"
+									]
+								}
+							},
+							"response": []
 						},
-						"url": {
-							"raw": "{{host_incident}}/violations",
-							"host": [
-								"{{host_incident}}"
-							],
-							"path": [
-								"violations"
-							]
+						{
+							"name": "GET /violations/{violationId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/violations/{{violationId}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"violations",
+										"{{violationId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /violations/employee/{employeeId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/violations/employee/11111111-1111-1111-1111-111111111111",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"violations",
+										"employee",
+										"11111111-1111-1111-1111-111111111111"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "GET /violations",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "username",
-									"value": "{{username_incident}}",
-									"type": "string"
+					"name": "UC3: Suspicious Activities",
+					"item": [
+						{
+							"name": "UC3: POST /suspicious-activities",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
 								},
-								{
-									"key": "password",
-									"value": "{{password_incident}}",
-									"type": "string"
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"shortDescription\": \"Подозрительное поведение у стола 7\",\n  \"location\": \"Игровой зал, стол 7\",\n  \"participants\": [\n    \"PERSON_001\",\n    \"PERSON_002\"\n  ],\n  \"risk\": \"HIGH\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/incident/suspicious-activities",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"suspicious-activities"
+									]
 								}
-							]
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{host_incident}}/violations",
-							"host": [
-								"{{host_incident}}"
-							],
-							"path": [
-								"violations"
-							]
+						{
+							"name": "GET /suspicious-activities",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/suspicious-activities",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"suspicious-activities"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /suspicious-activities/{id}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/suspicious-activities/{{activityId}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"suspicious-activities",
+										"{{activityId}}"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "GET /violations/{violationId}",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "username",
-									"value": "{{username_incident}}",
-									"type": "string"
+					"name": "UC2, UC14: Incidents",
+					"item": [
+						{
+							"name": "UC2: POST /incidents",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
 								},
-								{
-									"key": "password",
-									"value": "{{password_incident}}",
-									"type": "string"
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"type\": \"THEFT\",\n  \"location\": \"Игровой зал, стол 5\",\n  \"description\": \"Кража фишек у игрока\",\n  \"participants\": [\n    \"Игрок ID: 12345\",\n    \"Подозреваемый ID: 67890\"\n  ],\n  \"attachmentUrls\": [\n    \"https://minio.local/video/theft_incident.mp4\"\n  ],\n  \"reportedBy\": \"11111111-1111-1111-1111-111111111111\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/incident/incidents",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"incidents"
+									]
 								}
-							]
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{host_incident}}/violations/{{violationId}}",
-							"host": [
-								"{{host_incident}}"
-							],
-							"path": [
-								"violations",
-								"{{violationId}}"
-							]
+						{
+							"name": "GET /incidents",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/incidents?start=2025-01-01T00:00:00Z&end=2025-12-31T23:59:59Z&type=THEFT",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"incidents"
+									],
+									"query": [
+										{
+											"key": "start",
+											"value": "2025-01-01T00:00:00Z",
+											"description": "ISO 8601 format"
+										},
+										{
+											"key": "end",
+											"value": "2025-12-31T23:59:59Z",
+											"description": "ISO 8601 format"
+										},
+										{
+											"key": "type",
+											"value": "THEFT",
+											"description": "THEFT, FIGHT, DRUNKENNESS, CHEATING, OTHER",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /incidents/{incidentId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/incidents/{{incidentId}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"incidents",
+										"{{incidentId}}"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
+				},
+				{
+					"name": "UC15: Complaints",
+					"item": [
+						{
+							"name": "POST /complaints",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"category\": \"STAFF_BEHAVIOR\",\n  \"description\": \"Грубое поведение сотрудника с посетителем\",\n  \"source\": \"VISITOR\",\n  \"reporterName\": \"Иван Иванов\",\n  \"relatedIncidentId\": \"{{incidentId}}\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/incident/complaints",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"complaints"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /complaints",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/complaints?start=2025-01-01T00:00:00Z&end=2025-12-31T23:59:59Z&category=STAFF_BEHAVIOR&source=VISITOR",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"complaints"
+									],
+									"query": [
+										{
+											"key": "start",
+											"value": "2025-01-01T00:00:00Z",
+											"description": "ISO 8601 format",
+											"disabled": true
+										},
+										{
+											"key": "end",
+											"value": "2025-12-31T23:59:59Z",
+											"description": "ISO 8601 format",
+											"disabled": true
+										},
+										{
+											"key": "category",
+											"value": "STAFF_BEHAVIOR",
+											"description": "SERVICE_QUALITY, STAFF_BEHAVIOR, GAME_ISSUES, SAFETY, OTHER",
+											"disabled": true
+										},
+										{
+											"key": "source",
+											"value": "VISITOR",
+											"description": "VISITOR, EMPLOYEE, SYSTEM, TERMINAL",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /complaints/{complaintId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/complaints/{{complaintId}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"complaints",
+										"{{complaintId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH /complaints/{complaintId}/status",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/complaints/{{complaintId}}/status?status=RESOLVED",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"complaints",
+										"{{complaintId}}",
+										"status"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "RESOLVED",
+											"description": "OPEN, IN_PROGRESS, RESOLVED, CLOSED"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "UC14, UC17, UC18: Reports",
+					"item": [
+						{
+							"name": "UC14: POST /reports/incidents",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"periodStart\": \"2025-01-01T00:00:00Z\",\n  \"periodEnd\": \"2025-12-31T23:59:59Z\",\n  \"incidentTypes\": [\"THEFT\", \"FIGHT\"],\n  \"generatedBy\": \"11111111-1111-1111-1111-111111111111\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/incident/reports/incidents",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reports",
+										"incidents"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UC17: POST /reports/management",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"periodStart\": \"2025-01-01T00:00:00Z\",\n  \"periodEnd\": \"2025-12-31T23:59:59Z\",\n  \"generatedBy\": \"11111111-1111-1111-1111-111111111111\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/incident/reports/management",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reports",
+										"management"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UC18: POST /reports/regulatory",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"periodStart\": \"2025-01-01T00:00:00Z\",\n  \"periodEnd\": \"2025-12-31T23:59:59Z\",\n  \"generatedBy\": \"11111111-1111-1111-1111-111111111111\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/incident/reports/regulatory",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reports",
+										"regulatory"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UC16: POST /reports/repeated-violations",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"periodStart\": \"2025-01-01T00:00:00Z\",\n  \"periodEnd\": \"2025-12-31T23:59:59Z\",\n  \"threshold\": 3\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/incident/reports/repeated-violations",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reports",
+										"repeated-violations"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /reports",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/reports?type=INCIDENTS",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reports"
+									],
+									"query": [
+										{
+											"key": "type",
+											"value": "INCIDENTS",
+											"description": "INCIDENTS, MANAGEMENT, REGULATORY",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /reports/{reportId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/reports/{{reportId}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reports",
+										"{{reportId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UC19: GET /reports/{reportId}/export/pdf",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/reports/{{reportId}}/export/pdf",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reports",
+										"{{reportId}}",
+										"export",
+										"pdf"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UC19: GET /reports/{reportId}/export/excel",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/incident/reports/{{reportId}}/export/excel",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"reports",
+										"{{reportId}}",
+										"export",
+										"excel"
+									]
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		},
 		{
-			"name": "Finance Service (Port 8081)",
+			"name": "Finance Module",
 			"item": [
 				{
-					"name": "POST /operations",
+					"name": "UC9: Cash Operations",
+					"item": [
+						{
+							"name": "UC9: POST /operations",
 					"request": {
 						"auth": {
 							"type": "basic",
 							"basic": [
 								{
 									"key": "username",
-									"value": "{{username_finance}}",
+									"value": "{{username}}",
 									"type": "string"
 								},
 								{
 									"key": "password",
-									"value": "{{password_finance}}",
+									"value": "{{password}}",
 									"type": "string"
 								}
 							]
@@ -160,9 +926,9 @@
 							"raw": "{\n  \"cashDeskId\": \"22222222-2222-2222-2222-222222222222\",\n  \"amount\": 2000.5,\n  \"type\": \"DEPOSIT\",\n  \"currency\": \"USD\"\n}"
 						},
 						"url": {
-							"raw": "{{host_finance}}/operations",
+							"raw": "{{host}}/api/finance/operations",
 							"host": [
-								"{{host_finance}}"
+								"{{host}}"
 							],
 							"path": [
 								"operations"
@@ -179,27 +945,22 @@
 							"basic": [
 								{
 									"key": "username",
-									"value": "{{username_finance}}",
+									"value": "{{username}}",
 									"type": "string"
 								},
 								{
 									"key": "password",
-									"value": "{{password_finance}}",
+									"value": "{{password}}",
 									"type": "string"
 								}
 							]
 						},
 						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [],
 						"url": {
-							"raw": "{{host_finance}}/operations",
+							"raw": "{{host}}/api/finance/operations",
 							"host": [
-								"{{host_finance}}"
+								"{{host}}"
 							],
 							"path": [
 								"operations"
@@ -216,27 +977,22 @@
 							"basic": [
 								{
 									"key": "username",
-									"value": "{{username_finance}}",
+									"value": "{{username}}",
 									"type": "string"
 								},
 								{
 									"key": "password",
-									"value": "{{password_finance}}",
+									"value": "{{password}}",
 									"type": "string"
 								}
 							]
 						},
 						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [],
 						"url": {
-							"raw": "{{host_finance}}/operations/{{operationId}}",
+							"raw": "{{host}}/api/finance/operations/{{operationId}}",
 							"host": [
-								"{{host_finance}}"
+								"{{host}}"
 							],
 							"path": [
 								"operations",
@@ -245,21 +1001,26 @@
 						}
 					},
 					"response": []
+				}
+					]
 				},
 				{
-					"name": "POST /reports",
+					"name": "UC10: Financial Reports",
+					"item": [
+						{
+							"name": "UC10: POST /reports",
 					"request": {
 						"auth": {
 							"type": "basic",
 							"basic": [
 								{
 									"key": "username",
-									"value": "{{username_finance}}",
+									"value": "{{username}}",
 									"type": "string"
 								},
 								{
 									"key": "password",
-									"value": "{{password_finance}}",
+									"value": "{{password}}",
 									"type": "string"
 								}
 							]
@@ -276,9 +1037,9 @@
 							"raw": "{\n  \"periodStart\": \"2025-06-01\",\n  \"periodEnd\": \"2025-06-07\"\n}"
 						},
 						"url": {
-							"raw": "{{host_finance}}/reports",
+							"raw": "{{host}}/api/finance/reports",
 							"host": [
-								"{{host_finance}}"
+								"{{host}}"
 							],
 							"path": [
 								"reports"
@@ -286,6 +1047,1891 @@
 						}
 					},
 					"response": []
+				}
+					]
+				},
+				{
+					"name": "UC11: Cash Reconciliation",
+					"item": [
+						{
+							"name": "POST /api/finance/reconciliation",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"cashDeskId\": \"22222222-2222-2222-2222-222222222222\",\n  \"shiftStart\": \"2025-01-01T08:00:00Z\",\n  \"shiftEnd\": \"2025-01-01T20:00:00Z\",\n  \"actualBalance\": 50000.00,\n  \"notes\": \"Сверка кассы после смены\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/finance/reconciliation",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"reconciliation"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/finance/reconciliation/{id}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/finance/reconciliation/{{reconciliationId}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"reconciliation",
+										"{{reconciliationId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/finance/reconciliation/cashdesk/{cashDeskId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/finance/reconciliation/cashdesk/22222222-2222-2222-2222-222222222222",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"reconciliation",
+										"cashdesk",
+										"22222222-2222-2222-2222-222222222222"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH /api/finance/reconciliation/{id}/status",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/finance/reconciliation/{{reconciliationId}}/status?status=RESOLVED",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"reconciliation",
+										"{{reconciliationId}}",
+										"status"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "RESOLVED",
+											"description": "PENDING, CONFIRMED, DISCREPANCY_FOUND, RESOLVED"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "UC12: Anomaly Detection",
+					"item": [
+						{
+							"name": "POST /api/finance/anomalies/detect",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"periodStart\": \"2025-01-01T00:00:00Z\",\n  \"periodEnd\": \"2025-12-31T23:59:59Z\",\n  \"largeAmountThreshold\": 10000,\n  \"frequencyThreshold\": 10,\n  \"timeWindowMinutes\": 60\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/finance/anomalies/detect",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"anomalies",
+										"detect"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/finance/anomalies",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/finance/anomalies?status=DETECTED&riskLevel=HIGH",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"anomalies"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "DETECTED",
+											"description": "DETECTED, CONFIRMED, REJECTED, RESOLVED",
+											"disabled": true
+										},
+										{
+											"key": "riskLevel",
+											"value": "HIGH",
+											"description": "LOW, MEDIUM, HIGH, CRITICAL",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/finance/anomalies/{id}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/finance/anomalies/{{anomalyId}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"anomalies",
+										"{{anomalyId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/finance/anomalies/{id}/review",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/finance/anomalies/{{anomalyId}}/review?status=CONFIRMED&reviewerId=11111111-1111-1111-1111-111111111111&notes=Подтверждено как аномалия",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"anomalies",
+										"{{anomalyId}}",
+										"review"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "CONFIRMED",
+											"description": "DETECTED, CONFIRMED, REJECTED, RESOLVED"
+										},
+										{
+											"key": "reviewerId",
+											"value": "11111111-1111-1111-1111-111111111111"
+										},
+										{
+											"key": "notes",
+											"value": "Подтверждено как аномалия",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "UC13: Game Analysis",
+					"item": [
+						{
+							"name": "POST /api/finance/game-analysis",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"periodStart\": \"2025-01-01T00:00:00Z\",\n  \"periodEnd\": \"2025-12-31T23:59:59Z\",\n  \"gameTableId\": \"22222222-2222-2222-2222-222222222222\",\n  \"expectedRtp\": 95.0,\n  \"largeWinThreshold\": 1000\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/finance/game-analysis",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"game-analysis"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/finance/game-analysis/{id}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/finance/game-analysis/{{gameAnalysisId}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"game-analysis",
+										"{{gameAnalysisId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/finance/game-analysis/table/{gameTableId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/finance/game-analysis/table/22222222-2222-2222-2222-222222222222",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"game-analysis",
+										"table",
+										"22222222-2222-2222-2222-222222222222"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Security Module",
+			"item": [
+				{
+					"name": "UC1: Hall Monitoring",
+					"item": [
+						{
+							"name": "POST /api/security/monitoring/start",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/monitoring/start?securityOfficerId=11111111-1111-1111-1111-111111111111",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "monitoring", "start"],
+									"query": [
+										{
+											"key": "securityOfficerId",
+											"value": "11111111-1111-1111-1111-111111111111"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/security/monitoring/{id}/end",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/monitoring/{{monitoringId}}/end",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "monitoring", "{{monitoringId}}", "end"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/security/monitoring/status",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/monitoring/status",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "monitoring", "status"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/security/monitoring/{id}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/monitoring/{{monitoringId}}",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "monitoring", "{{monitoringId}}"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "UC4, UC5: Contact Monitoring",
+					"item": [
+						{
+							"name": "POST /api/security/contacts",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"personId1\": \"PERSON_001\",\n  \"personId2\": \"PERSON_002\",\n  \"contactStartTime\": \"2025-01-15T10:00:00Z\",\n  \"contactEndTime\": \"2025-01-15T10:15:00Z\",\n  \"location\": \"Игровой зал, стол 5\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/security/contacts",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "contacts"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/security/contacts/check-frequency",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/contacts/check-frequency?personId1=PERSON_001&personId2=PERSON_002",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "contacts", "check-frequency"],
+									"query": [
+										{
+											"key": "personId1",
+											"value": "PERSON_001"
+										},
+										{
+											"key": "personId2",
+											"value": "PERSON_002"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/security/contacts/generate-mocks",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/contacts/generate-mocks?count=10",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "contacts", "generate-mocks"],
+									"query": [
+										{
+											"key": "count",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/security/contacts/suspicious",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/contacts/suspicious",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "contacts", "suspicious"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "UC6: Fraud Database",
+					"item": [
+						{
+							"name": "POST /api/security/fraud-database",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"personId\": \"FRAUD_001\",\n  \"fullName\": \"Иван Иванов\",\n  \"description\": \"Известный мошенник в карточных играх\",\n  \"fraudType\": \"CHEATING\",\n  \"addedBy\": \"11111111-1111-1111-1111-111111111111\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/security/fraud-database",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "fraud-database"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/security/fraud-database",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/fraud-database",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "fraud-database"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/security/fraud-database/{id}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/fraud-database/{{fraudRecordId}}",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "fraud-database", "{{fraudRecordId}}"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/security/fraud-database/search",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/fraud-database/search?q=Иван",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "fraud-database", "search"],
+									"query": [
+										{
+											"key": "q",
+											"value": "Иван"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/security/fraud-database/type/{type}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/fraud-database/type/CHEATING",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "fraud-database", "type", "CHEATING"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH /api/security/fraud-database/{id}/status",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/fraud-database/{{fraudRecordId}}/status?status=ACTIVE",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "fraud-database", "{{fraudRecordId}}", "status"],
+									"query": [
+										{
+											"key": "status",
+											"value": "ACTIVE"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE /api/security/fraud-database/{id}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/fraud-database/{{fraudRecordId}}",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "fraud-database", "{{fraudRecordId}}"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "UC6: Fraud Check",
+					"item": [
+						{
+							"name": "POST /api/security/fraud-check",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"personId\": \"FRAUD_001\",\n  \"activityId\": null\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/security/fraud-check",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "fraud-check"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/security/fraud-check/quick",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/fraud-check/quick?personId=FRAUD_001",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "fraud-check", "quick"],
+									"query": [
+										{
+											"key": "personId",
+											"value": "FRAUD_001"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "UC7: Notifications",
+					"item": [
+						{
+							"name": "GET /api/security/notifications/recipient/{recipientId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/notifications/recipient/11111111-1111-1111-1111-111111111111",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "notifications", "recipient", "11111111-1111-1111-1111-111111111111"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/security/notifications/recipient/{recipientId}/unread",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/notifications/recipient/11111111-1111-1111-1111-111111111111/unread",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "notifications", "recipient", "11111111-1111-1111-1111-111111111111", "unread"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/security/notifications/recipient/{recipientId}/unread-count",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/notifications/recipient/11111111-1111-1111-1111-111111111111/unread-count",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "notifications", "recipient", "11111111-1111-1111-1111-111111111111", "unread-count"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/security/notifications/{id}/read",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/security/notifications/{{notificationId}}/read",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "notifications", "{{notificationId}}", "read"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/security/notifications",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"recipientId\": \"11111111-1111-1111-1111-111111111111\",\n  \"type\": \"SYSTEM_ALERT\",\n  \"title\": \"Тестовое уведомление\",\n  \"message\": \"Сообщение для тестирования\",\n  \"priority\": \"HIGH\",\n  \"relatedEntityType\": \"WORK_TIME_RECORD\",\n  \"relatedEntityId\": null\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/security/notifications",
+									"host": ["{{host}}"],
+									"path": ["api", "security", "notifications"]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Staff Module",
+			"item": [
+				{
+					"name": "Employees",
+					"item": [
+						{
+							"name": "POST /api/staff/employees",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"firstName\": \"Иван\",\n  \"lastName\": \"Петров\",\n  \"middleName\": \"Сергеевич\",\n  \"position\": \"Официант\",\n  \"department\": \"Обслуживание\",\n  \"status\": \"ACTIVE\",\n  \"contactInfo\": \"ivan.petrov@casino.local\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/staff/employees",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "employees"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/staff/employees",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/employees",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "employees"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/staff/employees/{id}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/employees/11111111-1111-1111-1111-111111111111",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "employees", "11111111-1111-1111-1111-111111111111"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/staff/employees/department/{department}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/employees/department/Обслуживание",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "employees", "department", "Обслуживание"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH /api/staff/employees/{id}/status",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/employees/11111111-1111-1111-1111-111111111111/status?status=ON_LEAVE",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "employees", "11111111-1111-1111-1111-111111111111", "status"],
+									"query": [
+										{
+											"key": "status",
+											"value": "ON_LEAVE"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "UC20: Work Time",
+					"item": [
+						{
+							"name": "POST /api/staff/work-time/clock-in",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"employeeId\": \"11111111-1111-1111-1111-111111111111\",\n  \"deviceId\": \"TERMINAL_001\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/staff/work-time/clock-in",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "work-time", "clock-in"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/staff/work-time/clock-out",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"employeeId\": \"11111111-1111-1111-1111-111111111111\",\n  \"deviceId\": \"TERMINAL_001\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/staff/work-time/clock-out",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "work-time", "clock-out"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/staff/work-time/employee/{employeeId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/work-time/employee/11111111-1111-1111-1111-111111111111",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "work-time", "employee", "11111111-1111-1111-1111-111111111111"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/staff/work-time/{id}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/work-time/{{workTimeRecordId}}",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "work-time", "{{workTimeRecordId}}"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/staff/work-time/check-missing-clock-outs",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/work-time/check-missing-clock-outs",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "work-time", "check-missing-clock-outs"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "UC22: Violation History",
+					"item": [
+						{
+							"name": "POST /api/staff/violation-history/search",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"employeeId\": \"11111111-1111-1111-1111-111111111111\",\n  \"startDate\": \"2025-01-01T00:00:00Z\",\n  \"endDate\": \"2025-12-31T23:59:59Z\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/staff/violation-history/search",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "violation-history", "search"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/staff/violation-history/employee/{employeeId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/violation-history/employee/11111111-1111-1111-1111-111111111111",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "violation-history", "employee", "11111111-1111-1111-1111-111111111111"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/staff/violation-history/department/{department}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/violation-history/department/Обслуживание",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "violation-history", "department", "Обслуживание"]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "UC23: Shift Management",
+					"item": [
+						{
+							"name": "POST /api/staff/shifts",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"employeeId\": \"11111111-1111-1111-1111-111111111111\",\n  \"shiftDate\": \"2025-01-20\",\n  \"plannedStartTime\": \"2025-01-20T08:00:00Z\",\n  \"plannedEndTime\": \"2025-01-20T16:00:00Z\",\n  \"shiftType\": \"DAY\",\n  \"location\": \"Игровой зал\",\n  \"createdBy\": \"22222222-2222-2222-2222-222222222222\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/staff/shifts",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "shifts"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/staff/shifts/availability",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/shifts/availability?startDate=2025-01-01&endDate=2025-01-31",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "shifts", "availability"],
+									"query": [
+										{
+											"key": "startDate",
+											"value": "2025-01-01"
+										},
+										{
+											"key": "endDate",
+											"value": "2025-01-31"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/staff/shifts/{id}/publish",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/shifts/{{shiftId}}/publish",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "shifts", "{{shiftId}}", "publish"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/staff/shifts/{id}/confirm",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/shifts/{{shiftId}}/confirm?confirmedBy=11111111-1111-1111-1111-111111111111",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "shifts", "{{shiftId}}", "confirm"],
+									"query": [
+										{
+											"key": "confirmedBy",
+											"value": "11111111-1111-1111-1111-111111111111"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST /api/staff/shifts/{id}/reassign",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/shifts/{{shiftId}}/reassign?newEmployeeId=33333333-3333-3333-3333-333333333333",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "shifts", "{{shiftId}}", "reassign"],
+									"query": [
+										{
+											"key": "newEmployeeId",
+											"value": "33333333-3333-3333-3333-333333333333"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/staff/shifts/employee/{employeeId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/shifts/employee/11111111-1111-1111-1111-111111111111",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "shifts", "employee", "11111111-1111-1111-1111-111111111111"]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/staff/shifts",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/shifts?startDate=2025-01-01&endDate=2025-01-31",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "shifts"],
+									"query": [
+										{
+											"key": "startDate",
+											"value": "2025-01-01"
+										},
+										{
+											"key": "endDate",
+											"value": "2025-01-31"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET /api/staff/shifts/{id}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/staff/shifts/{{shiftId}}",
+									"host": ["{{host}}"],
+									"path": ["api", "staff", "shifts", "{{shiftId}}"]
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		}

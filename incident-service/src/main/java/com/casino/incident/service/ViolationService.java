@@ -29,6 +29,6 @@ public class ViolationService {
     }
 
     public DisciplinaryViolation get(UUID id) {
-        return repo.findById(id).orElseThrow();
+        return repo.findById(id).orElseThrow(() -> new RuntimeException("Violation not found: " + id));
     }
 }
