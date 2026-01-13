@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+  liquibase:
+    enabled: false
+  security:
+    user:
+      name: admin
+      password: admin
+
+logging:
+  level:
+    org.springframework: WARN
+    com.casino.mis: INFO
+

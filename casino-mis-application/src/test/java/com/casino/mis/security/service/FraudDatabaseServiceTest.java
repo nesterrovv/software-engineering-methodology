@@ -1,0 +1,155 @@
+package com.casino.mis.security.service;
+
+import com.casino.mis.security.domain.FraudDatabase;
+import com.casino.mis.security.dto.FraudRecordRequest;
+import com.casino.mis.security.repository.FraudDatabaseRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class FraudDatabaseServiceTest {
+
+    @Mock
+    private FraudDatabaseRepository repository;
+
+    @InjectMocks
+    private FraudDatabaseService service;
+
+    private FraudRecordRequest request;
+    private FraudDatabase record;
+    private UUID recordId;
+    private UUID addedBy;
+
+    @BeforeEach
+    void setUp() {
+        recordId = UUID.randomUUID();
+        addedBy = UUID.randomUUID();
+
+        request = new FraudRecordRequest();
+        request.setPersonId("PERSON_001");
+        request.setFullName("Иван Иванов");
+        request.setDescription("Известный мошенник");
+        request.setFraudType(FraudDatabase.FraudType.CHEATING);
+        request.setAddedBy(addedBy);
+
+        record = new FraudDatabase();
+        record.setId(recordId);
+        record.setPersonId("PERSON_001");
+        record.setFullName("Иван Иванов");
+        record.setDescription("Известный мошенник");
+        record.setFraudType(FraudDatabase.FraudType.CHEATING);
+        record.setStatus(FraudDatabase.FraudStatus.ACTIVE);
+        record.setAddedBy(addedBy);
+    }
+
+    @Test
+    void testCreateRecord() {
+        when(repository.save(any(FraudDatabase.class))).thenReturn(record);
+
+        FraudDatabase result = service.createRecord(request);
+
+        assertNotNull(result);
+        assertEquals(recordId, result.getId());
+        assertEquals("PERSON_001", result.getPersonId());
+        assertEquals(FraudDatabase.FraudStatus.ACTIVE, result.getStatus());
+        verify(repository, times(1)).save(any(FraudDatabase.class));
+    }
+
+    @Test
+    void testCreateRecordWithNullAddedBy() {
+        request.setAddedBy(null);
+        when(repository.save(any(FraudDatabase.class))).thenReturn(record);
+
+        FraudDatabase result = service.createRecord(request);
+
+        assertNotNull(result);
+        verify(repository, times(1)).save(any(FraudDatabase.class));
+    }
+
+    @Test
+    void testFindById() {
+        when(repository.findById(recordId)).thenReturn(Optional.of(record));
+
+        FraudDatabase result = service.findById(recordId);
+
+        assertNotNull(result);
+        assertEquals(recordId, result.getId());
+        verify(repository, times(1)).findById(recordId);
+    }
+
+    @Test
+    void testFindByIdNotFound() {
+        when(repository.findById(recordId)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> service.findById(recordId));
+        verify(repository, times(1)).findById(recordId);
+    }
+
+    @Test
+    void testFindAll() {
+        List<FraudDatabase> records = Arrays.asList(record);
+        when(repository.findAll()).thenReturn(records);
+
+        List<FraudDatabase> result = service.findAll();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testFindByType() {
+        List<FraudDatabase> records = Arrays.asList(record);
+        when(repository.findByFraudType(FraudDatabase.FraudType.CHEATING)).thenReturn(records);
+
+        List<FraudDatabase> result = service.findByType(FraudDatabase.FraudType.CHEATING);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(repository, times(1)).findByFraudType(FraudDatabase.FraudType.CHEATING);
+    }
+
+    @Test
+    void testSearch() {
+        List<FraudDatabase> records = Arrays.asList(record);
+        when(repository.search("Иван")).thenReturn(records);
+
+        List<FraudDatabase> result = service.search("Иван");
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(repository, times(1)).search("Иван");
+    }
+
+    @Test
+    void testUpdateStatus() {
+        when(repository.findById(recordId)).thenReturn(Optional.of(record));
+        when(repository.save(any(FraudDatabase.class))).thenReturn(record);
+
+        FraudDatabase result = service.updateStatus(recordId, FraudDatabase.FraudStatus.ARCHIVED);
+
+        assertNotNull(result);
+        verify(repository, times(1)).findById(recordId);
+        verify(repository, times(1)).save(any(FraudDatabase.class));
+    }
+
+    @Test
+    void testDelete() {
+        doNothing().when(repository).deleteById(recordId);
+
+        service.delete(recordId);
+
+        verify(repository, times(1)).deleteById(recordId);
+    }
+}
+
