@@ -1,4 +1,5 @@
 import {useEffect, useState} from "react";
+import {useAuth} from "../../auth/AuthContext.tsx";
 import "./incidents-page.scss";
 
 const INCIDENT_TYPES = ["THEFT", "FIGHT", "DRUNKENNESS", "CHEATING", "OTHER"] as const;
@@ -37,10 +38,7 @@ const formatBody = (data: unknown) => {
 };
 
 const IncidentsPage = () => {
-    const [apiBase, setApiBase] = useState(
-        import.meta.env.VITE_INCIDENT_API_BASE ?? "http://localhost:8080"
-    );
-    const [authToken, setAuthToken] = useState("");
+    const {token, baseUrl} = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [lastRequest, setLastRequest] = useState("");
     const [lastStatus, setLastStatus] = useState("");
@@ -111,7 +109,7 @@ const IncidentsPage = () => {
         responseType?: "json" | "blob";
         downloadName?: string;
     }) => {
-        const base = apiBase.replace(/\/+$/, "");
+        const base = baseUrl.replace(/\/+$/, "");
         const query = options.query ? buildQuery(options.query) : "";
         const url = `${base}${options.path}${query}`;
         const started = performance.now();
@@ -121,10 +119,8 @@ const IncidentsPage = () => {
         if (options.body) {
             headers["Content-Type"] = "application/json";
         }
-        if (authToken.trim()) {
-            headers.Authorization = authToken.startsWith("Bearer ")
-                ? authToken.trim()
-                : `Bearer ${authToken.trim()}`;
+        if (token) {
+            headers.Authorization = token;
         }
         setIsLoading(true);
         setLastRequest(`${options.method} ${url}`);
@@ -182,23 +178,8 @@ const IncidentsPage = () => {
                         block below maps directly to a backend endpoint with instant response
                         previews.
                     </p>
-                    <div className="hero-inputs">
-                        <label>
-                            API base URL
-                            <input
-                                value={apiBase}
-                                onChange={(event) => setApiBase(event.target.value)}
-                                placeholder="http://localhost:8080"
-                            />
-                        </label>
-                        <label>
-                            Auth token (optional)
-                            <input
-                                value={authToken}
-                                onChange={(event) => setAuthToken(event.target.value)}
-                                placeholder="Bearer ..."
-                            />
-                        </label>
+                    <div className="hero-note">
+                        API base: <strong>{baseUrl || "proxy"}</strong>
                     </div>
                 </div>
                 <div className="incidents-page__hero-stats">
