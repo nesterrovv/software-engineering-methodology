@@ -222,6 +222,7 @@ public class ReportService {
         return reportRepository.findById(id).orElseThrow(() -> new RuntimeException("Report not found: " + id));
     }
 
+    @Transactional(readOnly = true)
     public List<Report> findByType(ReportType type) {
         return reportRepository.findByType(type);
     }

@@ -82,11 +82,11 @@ public class HallMonitoringService {
         status.setZones(zones);
 
         // Последние активности (моки)
-        List<HallStatusResponse.RecentActivity> activities = Arrays.asList(
+        List<HallStatusResponse.RecentActivity> activities = new ArrayList<>(Arrays.asList(
             new HallStatusResponse.RecentActivity("VISITOR_ENTRY", "Посетитель вошёл в зал", "Входная зона", OffsetDateTime.now().minusMinutes(2).toString()),
             new HallStatusResponse.RecentActivity("TABLE_ACTIVITY", "Активность за столом 7", "Игровой зал, стол 7", OffsetDateTime.now().minusMinutes(5).toString()),
             new HallStatusResponse.RecentActivity("STAFF_MOVEMENT", "Персонал переместился", "Игровой зал", OffsetDateTime.now().minusMinutes(10).toString())
-        );
+        ));
         
         // Добавляем реальные подозрительные контакты, если есть
         int suspiciousCount = status.getAnomaliesCount();
