@@ -226,3 +226,29 @@ docker compose logs -f casino-mis-application
 * Credentials: `minio` / `minio123`
 
 Используется для хранения отчётов и вложений.
+
+# TestPlan
+
+## Database testing:
+```bash
+cd db-testing/
+./run-tests.sh
+```
+
+## Functional testing:
+```bash
+cd casino-mis-application/
+mvn clean test
+mvn surefire-report:report
+```
+Отчет будет находиться в casino-mis-application/target/site
+
+## Load testing
+```bash
+mvn clean package
+cd load-testing/
+docker compose up -d --build
+jmeter -n -t load-test-60.jmx -l results-60.jtl
+```
+
+Grafana: localhost:3000 (`admin`:`admin`)
