@@ -7,9 +7,15 @@ import com.casino.mis.finance.repository.CashOperationRepository;
 import com.casino.mis.finance.repository.FinancialReportRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -75,6 +81,43 @@ public class FinancialReportService {
         report.setPeriodEnd(req.getPeriodEnd());
         report.setCsvUrl("s3://" + BUCKET + "/" + key);
         return reportRepo.save(report);
+    }
+
+    public byte[] downloadReport(UUID reportId) {
+        FinancialReport report = reportRepo.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found: " + reportId));
+
+        if (report.getCsvUrl() == null || report.getCsvUrl().isEmpty()) {
+            throw new RuntimeException("Report CSV URL is not set");
+        }
+
+        // Извлекаем ключ из URL формата s3://bucket/key
+        String csvUrl = report.getCsvUrl();
+        if (!csvUrl.startsWith("s3://" + BUCKET + "/")) {
+            throw new RuntimeException("Invalid CSV URL format: " + csvUrl);
+        }
+        String key = csvUrl.substring(("s3://" + BUCKET + "/").length());
+
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(BUCKET)
+                    .key(key)
+                    .build();
+
+            ResponseInputStream<GetObjectResponse> response = s3.getObject(getObjectRequest);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = response.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            response.close();
+            return outputStream.toByteArray();
+        } catch (NoSuchKeyException e) {
+            throw new RuntimeException("Report file not found in storage: " + key, e);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read report file from storage", e);
+        }
     }
 }
 

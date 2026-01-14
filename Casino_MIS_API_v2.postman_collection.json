@@ -898,110 +898,116 @@
 					"item": [
 						{
 							"name": "UC9: POST /operations",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "username",
-									"value": "{{username}}",
-									"type": "string"
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
 								},
-								{
-									"key": "password",
-									"value": "{{password}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"cashDeskId\": \"22222222-2222-2222-2222-222222222222\",\n  \"amount\": 2000.5,\n  \"type\": \"DEPOSIT\",\n  \"currency\": \"USD\"\n}"
-						},
-						"url": {
-							"raw": "{{host}}/api/finance/operations",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"operations"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "GET /operations",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "username",
-									"value": "{{username}}",
-									"type": "string"
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"cashDeskId\": \"22222222-2222-2222-2222-222222222222\",\n  \"amount\": 2000.5,\n  \"type\": \"DEPOSIT\",\n  \"currency\": \"USD\"\n}"
 								},
-								{
-									"key": "password",
-									"value": "{{password}}",
-									"type": "string"
+								"url": {
+									"raw": "{{host}}/api/finance/operations",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"operations"
+									]
 								}
-							]
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{host}}/api/finance/operations",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"operations"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "GET /operations/{operationId}",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
-								{
-									"key": "username",
-									"value": "{{username}}",
-									"type": "string"
+						{
+							"name": "GET /operations",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
 								},
-								{
-									"key": "password",
-									"value": "{{password}}",
-									"type": "string"
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/finance/operations",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"operations"
+									]
 								}
-							]
+							},
+							"response": []
 						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{host}}/api/finance/operations/{{operationId}}",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"operations",
-								"{{operationId}}"
-							]
+						{
+							"name": "GET /operations/{operationId}",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/finance/operations/{{operationId}}",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"operations",
+										"{{operationId}}"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
-				}
 					]
 				},
 				{
@@ -1009,45 +1015,323 @@
 					"item": [
 						{
 							"name": "UC10: POST /reports",
-					"request": {
-						"auth": {
-							"type": "basic",
-							"basic": [
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"periodStart\": \"2025-01-01\",\n  \"periodEnd\": \"2025-01-31\"\n}"
+								},
+								"url": {
+									"raw": "{{host}}/api/finance/reports",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"reports"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "UC10: GET /reports/{id}/download",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{username}}",
+											"type": "string"
+										},
+										{
+											"key": "password",
+											"value": "{{password}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{host}}/api/finance/reports/{{financeReportId}}/download",
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"finance",
+										"reports",
+										"{{financeReportId}}",
+										"download"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "UC10: Financial Reports - Test with Data",
+					"item": [
+						{
+							"name": "1. Create Operations",
+							"item": [
 								{
-									"key": "username",
-									"value": "{{username}}",
-									"type": "string"
+									"name": "Create Operation 1",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "username",
+													"value": "{{username}}",
+													"type": "string"
+												},
+												{
+													"key": "password",
+													"value": "{{password}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"cashDeskId\": \"22222222-2222-2222-2222-222222222222\",\n  \"amount\": 6000.00,\n  \"type\": \"DEPOSIT\",\n  \"currency\": \"USD\"\n}"
+										},
+										"url": {
+											"raw": "{{host}}/api/finance/operations",
+											"host": [
+												"{{host}}"
+											],
+											"path": [
+												"api",
+												"finance",
+												"operations"
+											]
+										}
+									},
+									"response": []
 								},
 								{
-									"key": "password",
-									"value": "{{password}}",
-									"type": "string"
+									"name": "Create Operation 2",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "username",
+													"value": "{{username}}",
+													"type": "string"
+												},
+												{
+													"key": "password",
+													"value": "{{password}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"cashDeskId\": \"22222222-2222-2222-2222-222222222222\",\n  \"amount\": 7000.00,\n  \"type\": \"DEPOSIT\",\n  \"currency\": \"USD\"\n}"
+										},
+										"url": {
+											"raw": "{{host}}/api/finance/operations",
+											"host": [
+												"{{host}}"
+											],
+											"path": [
+												"api",
+												"finance",
+												"operations"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Create Operation 3",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "username",
+													"value": "{{username}}",
+													"type": "string"
+												},
+												{
+													"key": "password",
+													"value": "{{password}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"cashDeskId\": \"22222222-2222-2222-2222-222222222222\",\n  \"amount\": 2500.00,\n  \"type\": \"WITHDRAWAL\",\n  \"currency\": \"USD\"\n}"
+										},
+										"url": {
+											"raw": "{{host}}/api/finance/operations",
+											"host": [
+												"{{host}}"
+											],
+											"path": [
+												"api",
+												"finance",
+												"operations"
+											]
+										}
+									},
+									"response": []
 								}
 							]
 						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"periodStart\": \"2025-06-01\",\n  \"periodEnd\": \"2025-06-07\"\n}"
+						{
+							"name": "2. Generate Report",
+							"item": [
+								{
+									"name": "Generate Financial Report",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var jsonData = pm.response.json();",
+													"pm.environment.set(\"financeReportId\", jsonData.id);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "username",
+													"value": "{{username}}",
+													"type": "string"
+												},
+												{
+													"key": "password",
+													"value": "{{password}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"periodStart\": \"2025-01-01\",\n  \"periodEnd\": \"2025-12-31\"\n}"
+										},
+										"url": {
+											"raw": "{{host}}/api/finance/reports",
+											"host": [
+												"{{host}}"
+											],
+											"path": [
+												"api",
+												"finance",
+												"reports"
+											]
+										}
+									},
+									"response": []
+								}
+							]
 						},
-						"url": {
-							"raw": "{{host}}/api/finance/reports",
-							"host": [
-								"{{host}}"
-							],
-							"path": [
-								"reports"
+						{
+							"name": "3. Download Report",
+							"item": [
+								{
+									"name": "Download Report from MinIO",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "username",
+													"value": "{{username}}",
+													"type": "string"
+												},
+												{
+													"key": "password",
+													"value": "{{password}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{host}}/api/finance/reports/{{financeReportId}}/download",
+											"host": [
+												"{{host}}"
+											],
+											"path": [
+												"api",
+												"finance",
+												"reports",
+												"{{financeReportId}}",
+												"download"
+											]
+										}
+									},
+									"response": []
+								}
 							]
 						}
-					},
-					"response": []
-				}
 					]
 				},
 				{
@@ -1545,8 +1829,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/monitoring/start?securityOfficerId=11111111-1111-1111-1111-111111111111",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "monitoring", "start"],
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"monitoring",
+										"start"
+									],
 									"query": [
 										{
 											"key": "securityOfficerId",
@@ -1579,8 +1870,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/monitoring/{{monitoringId}}/end",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "monitoring", "{{monitoringId}}", "end"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"monitoring",
+										"{{monitoringId}}",
+										"end"
+									]
 								}
 							},
 							"response": []
@@ -1607,8 +1906,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/monitoring/status",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "monitoring", "status"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"monitoring",
+										"status"
+									]
 								}
 							},
 							"response": []
@@ -1635,8 +1941,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/monitoring/{{monitoringId}}",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "monitoring", "{{monitoringId}}"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"monitoring",
+										"{{monitoringId}}"
+									]
 								}
 							},
 							"response": []
@@ -1677,8 +1990,14 @@
 								},
 								"url": {
 									"raw": "{{host}}/api/security/contacts",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "contacts"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"contacts"
+									]
 								}
 							},
 							"response": []
@@ -1705,8 +2024,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/contacts/check-frequency?personId1=PERSON_001&personId2=PERSON_002",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "contacts", "check-frequency"],
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"contacts",
+										"check-frequency"
+									],
 									"query": [
 										{
 											"key": "personId1",
@@ -1743,8 +2069,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/contacts/generate-mocks?count=10",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "contacts", "generate-mocks"],
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"contacts",
+										"generate-mocks"
+									],
 									"query": [
 										{
 											"key": "count",
@@ -1777,8 +2110,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/contacts/suspicious",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "contacts", "suspicious"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"contacts",
+										"suspicious"
+									]
 								}
 							},
 							"response": []
@@ -1819,8 +2159,14 @@
 								},
 								"url": {
 									"raw": "{{host}}/api/security/fraud-database",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "fraud-database"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"fraud-database"
+									]
 								}
 							},
 							"response": []
@@ -1847,8 +2193,14 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/fraud-database",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "fraud-database"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"fraud-database"
+									]
 								}
 							},
 							"response": []
@@ -1875,8 +2227,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/fraud-database/{{fraudRecordId}}",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "fraud-database", "{{fraudRecordId}}"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"fraud-database",
+										"{{fraudRecordId}}"
+									]
 								}
 							},
 							"response": []
@@ -1903,8 +2262,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/fraud-database/search?q=Иван",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "fraud-database", "search"],
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"fraud-database",
+										"search"
+									],
 									"query": [
 										{
 											"key": "q",
@@ -1937,8 +2303,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/fraud-database/type/CHEATING",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "fraud-database", "type", "CHEATING"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"fraud-database",
+										"type",
+										"CHEATING"
+									]
 								}
 							},
 							"response": []
@@ -1965,8 +2339,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/fraud-database/{{fraudRecordId}}/status?status=ACTIVE",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "fraud-database", "{{fraudRecordId}}", "status"],
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"fraud-database",
+										"{{fraudRecordId}}",
+										"status"
+									],
 									"query": [
 										{
 											"key": "status",
@@ -1999,8 +2381,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/fraud-database/{{fraudRecordId}}",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "fraud-database", "{{fraudRecordId}}"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"fraud-database",
+										"{{fraudRecordId}}"
+									]
 								}
 							},
 							"response": []
@@ -2041,8 +2430,14 @@
 								},
 								"url": {
 									"raw": "{{host}}/api/security/fraud-check",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "fraud-check"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"fraud-check"
+									]
 								}
 							},
 							"response": []
@@ -2069,8 +2464,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/fraud-check/quick?personId=FRAUD_001",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "fraud-check", "quick"],
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"fraud-check",
+										"quick"
+									],
 									"query": [
 										{
 											"key": "personId",
@@ -2108,8 +2510,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/notifications/recipient/11111111-1111-1111-1111-111111111111",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "notifications", "recipient", "11111111-1111-1111-1111-111111111111"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"notifications",
+										"recipient",
+										"11111111-1111-1111-1111-111111111111"
+									]
 								}
 							},
 							"response": []
@@ -2136,8 +2546,17 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/notifications/recipient/11111111-1111-1111-1111-111111111111/unread",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "notifications", "recipient", "11111111-1111-1111-1111-111111111111", "unread"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"notifications",
+										"recipient",
+										"11111111-1111-1111-1111-111111111111",
+										"unread"
+									]
 								}
 							},
 							"response": []
@@ -2164,8 +2583,17 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/notifications/recipient/11111111-1111-1111-1111-111111111111/unread-count",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "notifications", "recipient", "11111111-1111-1111-1111-111111111111", "unread-count"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"notifications",
+										"recipient",
+										"11111111-1111-1111-1111-111111111111",
+										"unread-count"
+									]
 								}
 							},
 							"response": []
@@ -2192,8 +2620,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/security/notifications/{{notificationId}}/read",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "notifications", "{{notificationId}}", "read"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"notifications",
+										"{{notificationId}}",
+										"read"
+									]
 								}
 							},
 							"response": []
@@ -2229,8 +2665,14 @@
 								},
 								"url": {
 									"raw": "{{host}}/api/security/notifications",
-									"host": ["{{host}}"],
-									"path": ["api", "security", "notifications"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"security",
+										"notifications"
+									]
 								}
 							},
 							"response": []
@@ -2276,8 +2718,14 @@
 								},
 								"url": {
 									"raw": "{{host}}/api/staff/employees",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "employees"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"employees"
+									]
 								}
 							},
 							"response": []
@@ -2304,8 +2752,14 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/employees",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "employees"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"employees"
+									]
 								}
 							},
 							"response": []
@@ -2332,8 +2786,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/employees/11111111-1111-1111-1111-111111111111",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "employees", "11111111-1111-1111-1111-111111111111"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"employees",
+										"11111111-1111-1111-1111-111111111111"
+									]
 								}
 							},
 							"response": []
@@ -2360,8 +2821,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/employees/department/Обслуживание",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "employees", "department", "Обслуживание"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"employees",
+										"department",
+										"Обслуживание"
+									]
 								}
 							},
 							"response": []
@@ -2388,8 +2857,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/employees/11111111-1111-1111-1111-111111111111/status?status=ON_LEAVE",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "employees", "11111111-1111-1111-1111-111111111111", "status"],
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"employees",
+										"11111111-1111-1111-1111-111111111111",
+										"status"
+									],
 									"query": [
 										{
 											"key": "status",
@@ -2436,8 +2913,15 @@
 								},
 								"url": {
 									"raw": "{{host}}/api/staff/work-time/clock-in",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "work-time", "clock-in"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"work-time",
+										"clock-in"
+									]
 								}
 							},
 							"response": []
@@ -2473,8 +2957,15 @@
 								},
 								"url": {
 									"raw": "{{host}}/api/staff/work-time/clock-out",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "work-time", "clock-out"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"work-time",
+										"clock-out"
+									]
 								}
 							},
 							"response": []
@@ -2501,8 +2992,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/work-time/employee/11111111-1111-1111-1111-111111111111",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "work-time", "employee", "11111111-1111-1111-1111-111111111111"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"work-time",
+										"employee",
+										"11111111-1111-1111-1111-111111111111"
+									]
 								}
 							},
 							"response": []
@@ -2529,8 +3028,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/work-time/{{workTimeRecordId}}",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "work-time", "{{workTimeRecordId}}"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"work-time",
+										"{{workTimeRecordId}}"
+									]
 								}
 							},
 							"response": []
@@ -2557,8 +3063,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/work-time/check-missing-clock-outs",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "work-time", "check-missing-clock-outs"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"work-time",
+										"check-missing-clock-outs"
+									]
 								}
 							},
 							"response": []
@@ -2599,8 +3112,15 @@
 								},
 								"url": {
 									"raw": "{{host}}/api/staff/violation-history/search",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "violation-history", "search"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"violation-history",
+										"search"
+									]
 								}
 							},
 							"response": []
@@ -2627,8 +3147,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/violation-history/employee/11111111-1111-1111-1111-111111111111",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "violation-history", "employee", "11111111-1111-1111-1111-111111111111"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"violation-history",
+										"employee",
+										"11111111-1111-1111-1111-111111111111"
+									]
 								}
 							},
 							"response": []
@@ -2655,8 +3183,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/violation-history/department/Обслуживание",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "violation-history", "department", "Обслуживание"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"violation-history",
+										"department",
+										"Обслуживание"
+									]
 								}
 							},
 							"response": []
@@ -2697,8 +3233,14 @@
 								},
 								"url": {
 									"raw": "{{host}}/api/staff/shifts",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "shifts"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"shifts"
+									]
 								}
 							},
 							"response": []
@@ -2725,8 +3267,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/shifts/availability?startDate=2025-01-01&endDate=2025-01-31",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "shifts", "availability"],
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"shifts",
+										"availability"
+									],
 									"query": [
 										{
 											"key": "startDate",
@@ -2763,8 +3312,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/shifts/{{shiftId}}/publish",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "shifts", "{{shiftId}}", "publish"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"shifts",
+										"{{shiftId}}",
+										"publish"
+									]
 								}
 							},
 							"response": []
@@ -2791,8 +3348,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/shifts/{{shiftId}}/confirm?confirmedBy=11111111-1111-1111-1111-111111111111",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "shifts", "{{shiftId}}", "confirm"],
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"shifts",
+										"{{shiftId}}",
+										"confirm"
+									],
 									"query": [
 										{
 											"key": "confirmedBy",
@@ -2825,8 +3390,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/shifts/{{shiftId}}/reassign?newEmployeeId=33333333-3333-3333-3333-333333333333",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "shifts", "{{shiftId}}", "reassign"],
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"shifts",
+										"{{shiftId}}",
+										"reassign"
+									],
 									"query": [
 										{
 											"key": "newEmployeeId",
@@ -2859,8 +3432,16 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/shifts/employee/11111111-1111-1111-1111-111111111111",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "shifts", "employee", "11111111-1111-1111-1111-111111111111"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"shifts",
+										"employee",
+										"11111111-1111-1111-1111-111111111111"
+									]
 								}
 							},
 							"response": []
@@ -2887,8 +3468,14 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/shifts?startDate=2025-01-01&endDate=2025-01-31",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "shifts"],
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"shifts"
+									],
 									"query": [
 										{
 											"key": "startDate",
@@ -2925,8 +3512,15 @@
 								"header": [],
 								"url": {
 									"raw": "{{host}}/api/staff/shifts/{{shiftId}}",
-									"host": ["{{host}}"],
-									"path": ["api", "staff", "shifts", "{{shiftId}}"]
+									"host": [
+										"{{host}}"
+									],
+									"path": [
+										"api",
+										"staff",
+										"shifts",
+										"{{shiftId}}"
+									]
 								}
 							},
 							"response": []

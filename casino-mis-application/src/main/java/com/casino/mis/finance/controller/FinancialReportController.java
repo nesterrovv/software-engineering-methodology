@@ -6,8 +6,13 @@ import com.casino.mis.finance.dto.FinancialReportResponse;
 import com.casino.mis.finance.service.FinancialReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/finance/reports")
@@ -31,6 +36,21 @@ public class FinancialReportController {
                 report.getPeriodEnd(),
                 report.getCsvUrl()
         );
+    }
+
+    @GetMapping("/{id}/download")
+    @Operation(summary = "Скачать финансовый отчёт", description = "Скачивание CSV отчёта из MinIO по идентификатору отчёта")
+    public ResponseEntity<byte[]> downloadReport(@PathVariable UUID id) {
+        byte[] reportBytes = service.downloadReport(id);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "report_" + id + ".csv");
+        headers.setContentLength(reportBytes.length);
+        
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(reportBytes);
     }
 }
 

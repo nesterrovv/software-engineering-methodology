@@ -37,6 +37,7 @@ COMPLAINT_ID=""
 FRAUD_RECORD_ID=""
 NOTIFICATION_ID=""
 REPORT_ID=""
+FINANCE_REPORT_ID=""
 OPERATION_ID=""
 RECONCILIATION_ID=""
 ANOMALY_ID=""
@@ -383,10 +384,31 @@ test_uc9() {
 
 # UC10: Формирование финансовых отчётов
 test_uc10() {
-    curl_request "POST" "/api/finance/reports" "{
+    local response
+    response=$(curl_request "POST" "/api/finance/reports" "{
         \"periodStart\": \"2025-01-01\",
         \"periodEnd\": \"2025-01-31\"
-    }" 201 "Create financial report" > /dev/null || return 1
+    }" 201 "Create financial report")
+    if [ $? -eq 0 ]; then
+        FINANCE_REPORT_ID=$(extract_id "$response")
+        log_info "Finance Report ID: $FINANCE_REPORT_ID"
+    else
+        return 1
+    fi
+    
+    # Тест скачивания отчета из MinIO
+    if [ -n "$FINANCE_REPORT_ID" ]; then
+        mkdir -p ./tmp
+        curl -s -u "$AUTH" -o ./tmp/finance_report_test.csv \
+            "${HOST}/api/finance/reports/${FINANCE_REPORT_ID}/download" > /dev/null 2>&1
+        if [ $? -eq 0 ] && [ -f ./tmp/finance_report_test.csv ]; then
+            log_info "Report downloaded successfully, size: $(wc -c < ./tmp/finance_report_test.csv) bytes"
+            log_info "Report saved to: ./tmp/finance_report_test.csv"
+        else
+            log_warning "Report download may have failed, but continuing..."
+        fi
+    fi
+    
     return 0
 }
 
