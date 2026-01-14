@@ -9,16 +9,16 @@ const Header = () => {
     return (
         <div className='header'>
             <div className="header__nav">
-                <NavLink to="/incidents" className={linkClass}>Incidents</NavLink>
-                <NavLink to="/security" className={linkClass}>Security</NavLink>
-                <NavLink to="/finance" className={linkClass}>Finance</NavLink>
-                <NavLink to="/staff" className={linkClass}>Staff</NavLink>
+                <NavLink to="/incidents" className={linkClass}>Инциденты</NavLink>
+                <NavLink to="/security" className={linkClass}>Безопасность</NavLink>
+                <NavLink to="/finance" className={linkClass}>Финансы</NavLink>
+                <NavLink to="/staff" className={linkClass}>Персонал</NavLink>
             </div>
             <div className="header__auth">
-                <span className="header__badge">{username ?? "anonymous"}</span>
-                <span className="header__badge">{baseUrl ? baseUrl : "proxy"}</span>
+                <span className="header__badge">{username ?? "гость"}</span>
+                <span className="header__badge">{baseUrl ? baseUrl : "прокси"}</span>
                 <button className="header__logout" type="button" onClick={logout}>
-                    Log out
+                    Выйти
                 </button>
             </div>
         </div>

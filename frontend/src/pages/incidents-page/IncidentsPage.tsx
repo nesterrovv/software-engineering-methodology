@@ -37,6 +37,34 @@ const formatBody = (data: unknown) => {
     return JSON.stringify(data, null, 2);
 };
 
+type EmployeeOption = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    middleName?: string;
+    position?: string;
+    department?: string;
+};
+
+const toEmployeeOptions = (data: unknown): EmployeeOption[] => {
+    if (Array.isArray(data)) {
+        return data as EmployeeOption[];
+    }
+    if (data && typeof data === "object") {
+        return [data as EmployeeOption];
+    }
+    return [];
+};
+
+const formatEmployeeName = (employee?: EmployeeOption) => {
+    if (!employee) {
+        return "";
+    }
+    return [employee.lastName, employee.firstName, employee.middleName]
+        .filter(Boolean)
+        .join(" ");
+};
+
 const IncidentsPage = () => {
     const {token, baseUrl} = useAuth();
     const [isLoading, setIsLoading] = useState(false);
@@ -92,6 +120,7 @@ const IncidentsPage = () => {
     const [reportFilterType, setReportFilterType] = useState("");
     const [reportId, setReportId] = useState("");
     const [exportReportId, setExportReportId] = useState("");
+    const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
 
     useEffect(() => {
         return () => {
@@ -106,6 +135,7 @@ const IncidentsPage = () => {
         path: string;
         query?: Record<string, string | undefined>;
         body?: unknown;
+        onSuccess?: (data: unknown) => void;
         responseType?: "json" | "blob";
         downloadName?: string;
     }) => {
@@ -143,10 +173,15 @@ const IncidentsPage = () => {
                 setLastBody(`Binary response (${blob.type || "unknown"}) ready for download.`);
             } else {
                 const text = await response.text();
+                let parsed: unknown = text || "Empty response.";
                 try {
-                    setLastBody(formatBody(JSON.parse(text)));
+                    parsed = JSON.parse(text);
                 } catch {
-                    setLastBody(text || "Empty response.");
+                    parsed = text || "Empty response.";
+                }
+                setLastBody(formatBody(parsed));
+                if (response.ok && options.onSuccess) {
+                    options.onSuccess(parsed);
                 }
             }
             setLastStatus(`${response.status} ${response.ok ? "OK" : "ERROR"}`);
@@ -171,36 +206,35 @@ const IncidentsPage = () => {
         <div className="incidents-page">
             <section className="incidents-page__hero">
                 <div className="incidents-page__hero-text">
-                    <div className="hero-eyebrow">Incident service console</div>
-                    <h1>All endpoints, one place.</h1>
+                    <div className="hero-eyebrow">Консоль инцидентов</div>
+                    <h1>Все ручки в одном месте.</h1>
                     <p>
-                        Full control over incidents, complaints, violations, and reporting. Each
-                        block below maps directly to a backend endpoint with instant response
-                        previews.
+                        Полный контроль над инцидентами, жалобами, нарушениями и отчетами. Каждый
+                        блок ниже соответствует ручке бэка с мгновенным превью ответа.
                     </p>
                     <div className="hero-note">
-                        API base: <strong>{baseUrl || "proxy"}</strong>
+                        База API: <strong>{baseUrl || "прокси"}</strong>
                     </div>
                 </div>
                 <div className="incidents-page__hero-stats">
-                    <div className="hero-pill">Incidents</div>
-                    <div className="hero-pill">Complaints</div>
-                    <div className="hero-pill">Violations</div>
-                    <div className="hero-pill">Reports</div>
+                    <div className="hero-pill">Инциденты</div>
+                    <div className="hero-pill">Жалобы</div>
+                    <div className="hero-pill">Нарушения</div>
+                    <div className="hero-pill">Отчеты</div>
                     <div className="hero-pill hero-pill--dark">
-                        {isLoading ? "Running request..." : "Ready for action"}
+                        {isLoading ? "Выполняю запрос..." : "Готово к работе"}
                     </div>
                 </div>
             </section>
 
             <section className="incidents-page__grid">
                 <div className="panel">
-                    <div className="panel__title">Incidents</div>
+                    <div className="panel__title">Инциденты</div>
                     <div className="panel__section">
-                        <h3>Create incident</h3>
+                        <h3>Создать инцидент</h3>
                         <div className="form-grid">
                             <label>
-                                Type
+                                Тип
                                 <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)}>
                                     {INCIDENT_TYPES.map((type) => (
                                         <option key={type} value={type}>
@@ -210,23 +244,23 @@ const IncidentsPage = () => {
                                 </select>
                             </label>
                             <label>
-                                Location
+                                Локация
                                 <input
                                     value={incidentLocation}
                                     onChange={(e) => setIncidentLocation(e.target.value)}
-                                    placeholder="Floor, table, zone"
+                                    placeholder="Этаж, стол, зона"
                                 />
                             </label>
                             <label className="form-span">
-                                Description
+                                Описание
                                 <textarea
                                     value={incidentDescription}
                                     onChange={(e) => setIncidentDescription(e.target.value)}
-                                    placeholder="What happened?"
+                                    placeholder="Что случилось?"
                                 />
                             </label>
                             <label>
-                                Participants (comma separated)
+                                Участники (через запятую)
                                 <input
                                     value={incidentParticipants}
                                     onChange={(e) => setIncidentParticipants(e.target.value)}
@@ -234,7 +268,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Attachment URLs
+                                Вложения (URL)
                                 <input
                                     value={incidentAttachments}
                                     onChange={(e) => setIncidentAttachments(e.target.value)}
@@ -242,11 +276,11 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Reported by (UUID)
+                                Кто сообщил (UUID)
                                 <input
                                     value={incidentReportedBy}
                                     onChange={(e) => setIncidentReportedBy(e.target.value)}
-                                    placeholder="reporter uuid"
+                                    placeholder="uuid"
                                 />
                             </label>
                         </div>
@@ -268,14 +302,14 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Create incident
+                            Создать инцидент
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Filter incidents</h3>
+                        <h3>Фильтр инцидентов</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={incidentStart}
@@ -283,7 +317,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={incidentEnd}
@@ -291,12 +325,12 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Type (optional)
+                                Тип (необязательно)
                                 <select
                                     value={incidentFilterType}
                                     onChange={(e) => setIncidentFilterType(e.target.value)}
                                 >
-                                    <option value="">All</option>
+                                    <option value="">Все</option>
                                     {INCIDENT_TYPES.map((type) => (
                                         <option key={type} value={type}>
                                             {type}
@@ -320,16 +354,16 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Fetch incidents
+                            Получить инциденты
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Get incident by ID</h3>
+                        <h3>Инцидент по ID</h3>
                         <div className="inline-row">
                             <input
                                 value={incidentId}
                                 onChange={(e) => setIncidentId(e.target.value)}
-                                placeholder="Incident UUID"
+                                placeholder="UUID инцидента"
                             />
                             <button
                                 className="ghost-button"
@@ -341,19 +375,19 @@ const IncidentsPage = () => {
                                     })
                                 }
                             >
-                                Get incident
+                                Получить инцидент
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Complaints</div>
+                    <div className="panel__title">Жалобы</div>
                     <div className="panel__section">
-                        <h3>Create complaint</h3>
+                        <h3>Создать жалобу</h3>
                         <div className="form-grid">
                             <label>
-                                Category
+                                Категория
                                 <select
                                     value={complaintCategory}
                                     onChange={(e) => setComplaintCategory(e.target.value)}
@@ -366,7 +400,7 @@ const IncidentsPage = () => {
                                 </select>
                             </label>
                             <label>
-                                Source
+                                Источник
                                 <select
                                     value={complaintSource}
                                     onChange={(e) => setComplaintSource(e.target.value)}
@@ -379,27 +413,27 @@ const IncidentsPage = () => {
                                 </select>
                             </label>
                             <label className="form-span">
-                                Description
+                                Описание
                                 <textarea
                                     value={complaintDescription}
                                     onChange={(e) => setComplaintDescription(e.target.value)}
-                                    placeholder="Complaint details"
+                                    placeholder="Детали жалобы"
                                 />
                             </label>
                             <label>
-                                Reporter name
+                                Имя заявителя
                                 <input
                                     value={complaintReporter}
                                     onChange={(e) => setComplaintReporter(e.target.value)}
-                                    placeholder="Name or alias"
+                                    placeholder="Имя или псевдоним"
                                 />
                             </label>
                             <label>
-                                Related incident UUID
+                                Связанный инцидент (UUID)
                                 <input
                                     value={complaintRelatedIncidentId}
                                     onChange={(e) => setComplaintRelatedIncidentId(e.target.value)}
-                                    placeholder="Incident UUID"
+                                    placeholder="UUID инцидента"
                                 />
                             </label>
                         </div>
@@ -420,14 +454,14 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Create complaint
+                            Создать жалобу
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Filter complaints</h3>
+                        <h3>Фильтр жалоб</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={complaintStart}
@@ -435,7 +469,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={complaintEnd}
@@ -443,12 +477,12 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Category
+                                Категория
                                 <select
                                     value={complaintFilterCategory}
                                     onChange={(e) => setComplaintFilterCategory(e.target.value)}
                                 >
-                                    <option value="">All</option>
+                                    <option value="">Все</option>
                                     {COMPLAINT_CATEGORIES.map((category) => (
                                         <option key={category} value={category}>
                                             {category}
@@ -457,12 +491,12 @@ const IncidentsPage = () => {
                                 </select>
                             </label>
                             <label>
-                                Source
+                                Источник
                                 <select
                                     value={complaintFilterSource}
                                     onChange={(e) => setComplaintFilterSource(e.target.value)}
                                 >
-                                    <option value="">All</option>
+                                    <option value="">Все</option>
                                     {COMPLAINT_SOURCES.map((source) => (
                                         <option key={source} value={source}>
                                             {source}
@@ -487,16 +521,16 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Fetch complaints
+                            Получить жалобы
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Get complaint by ID</h3>
+                        <h3>Жалоба по ID</h3>
                         <div className="inline-row">
                             <input
                                 value={complaintId}
                                 onChange={(e) => setComplaintId(e.target.value)}
-                                placeholder="Complaint UUID"
+                                placeholder="UUID жалобы"
                             />
                             <button
                                 className="ghost-button"
@@ -508,17 +542,17 @@ const IncidentsPage = () => {
                                     })
                                 }
                             >
-                                Get complaint
+                                Получить жалобу
                             </button>
                         </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Update complaint status</h3>
+                        <h3>Изменить статус жалобы</h3>
                         <div className="inline-row">
                             <input
                                 value={complaintStatusId}
                                 onChange={(e) => setComplaintStatusId(e.target.value)}
-                                placeholder="Complaint UUID"
+                                placeholder="UUID жалобы"
                             />
                             <select
                                 value={complaintStatus}
@@ -541,27 +575,51 @@ const IncidentsPage = () => {
                                     })
                                 }
                             >
-                                Update status
+                                Обновить статус
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Violations</div>
+                    <div className="panel__title">Нарушения</div>
                     <div className="panel__section">
-                        <h3>Create violation</h3>
+                        <div className="inline-row">
+                            <button
+                                className="ghost-button"
+                                type="button"
+                                onClick={() =>
+                                    runRequest({
+                                        method: "GET",
+                                        path: "/api/staff/employees",
+                                        onSuccess: (data) => setEmployeeOptions(toEmployeeOptions(data)),
+                                    })
+                                }
+                            >
+                                Обновить список сотрудников
+                            </button>
+                            <span className="hint">Загружено: {employeeOptions.length}</span>
+                        </div>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Создать нарушение</h3>
                         <div className="form-grid">
-                            <label>
-                                Employee UUID
-                                <input
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
                                     value={violationEmployeeId}
                                     onChange={(e) => setViolationEmployeeId(e.target.value)}
-                                    placeholder="Employee UUID"
-                                />
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                             <label>
-                                Type
+                                Тип
                                 <select
                                     value={violationType}
                                     onChange={(e) => setViolationType(e.target.value)}
@@ -574,15 +632,15 @@ const IncidentsPage = () => {
                                 </select>
                             </label>
                             <label className="form-span">
-                                Description
+                                Описание
                                 <textarea
                                     value={violationDescription}
                                     onChange={(e) => setViolationDescription(e.target.value)}
-                                    placeholder="Violation context"
+                                    placeholder="Контекст нарушения"
                                 />
                             </label>
                             <label className="form-span">
-                                Attachment URLs
+                                Вложения (URL)
                                 <input
                                     value={violationAttachments}
                                     onChange={(e) => setViolationAttachments(e.target.value)}
@@ -606,11 +664,11 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Create violation
+                            Создать нарушение
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>List violations</h3>
+                        <h3>Список нарушений</h3>
                         <button
                             className="ghost-button"
                             type="button"
@@ -621,16 +679,16 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Fetch violations
+                            Получить нарушения
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Get violation by ID</h3>
+                        <h3>Нарушение по ID</h3>
                         <div className="inline-row">
                             <input
                                 value={violationId}
                                 onChange={(e) => setViolationId(e.target.value)}
-                                placeholder="Violation UUID"
+                                placeholder="UUID нарушения"
                             />
                             <button
                                 className="ghost-button"
@@ -642,19 +700,19 @@ const IncidentsPage = () => {
                                     })
                                 }
                             >
-                                Get violation
+                                Получить нарушение
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Reports</div>
+                    <div className="panel__title">Отчеты</div>
                     <div className="panel__section">
-                        <h3>Incident report</h3>
+                        <h3>Отчет по инцидентам</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={reportStart}
@@ -662,7 +720,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={reportEnd}
@@ -670,7 +728,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label className="form-span">
-                                Incident types
+                                Типы инцидентов
                                 <div className="chip-grid">
                                     {INCIDENT_TYPES.map((type) => (
                                         <button
@@ -685,11 +743,11 @@ const IncidentsPage = () => {
                                 </div>
                             </label>
                             <label>
-                                Generated by (UUID)
+                                Сформировал (UUID)
                                 <input
                                     value={reportGeneratedBy}
                                     onChange={(e) => setReportGeneratedBy(e.target.value)}
-                                    placeholder="User UUID"
+                                    placeholder="UUID пользователя"
                                 />
                             </label>
                         </div>
@@ -711,14 +769,14 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Generate incident report
+                            Сформировать отчет
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Management report</h3>
+                        <h3>Отчет для руководства</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={managementReportStart}
@@ -726,7 +784,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={managementReportEnd}
@@ -734,11 +792,11 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Generated by (UUID)
+                                Сформировал (UUID)
                                 <input
                                     value={managementReportGeneratedBy}
                                     onChange={(e) => setManagementReportGeneratedBy(e.target.value)}
-                                    placeholder="User UUID"
+                                    placeholder="UUID пользователя"
                                 />
                             </label>
                         </div>
@@ -757,14 +815,14 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Generate management report
+                            Сформировать отчет
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Regulatory report</h3>
+                        <h3>Регуляторный отчет</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={regulatoryReportStart}
@@ -772,7 +830,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={regulatoryReportEnd}
@@ -780,11 +838,11 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Generated by (UUID)
+                                Сформировал (UUID)
                                 <input
                                     value={regulatoryReportGeneratedBy}
                                     onChange={(e) => setRegulatoryReportGeneratedBy(e.target.value)}
-                                    placeholder="User UUID"
+                                    placeholder="UUID пользователя"
                                 />
                             </label>
                         </div>
@@ -803,14 +861,14 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Generate regulatory report
+                            Сформировать отчет
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Repeated violations</h3>
+                        <h3>Повторяющиеся нарушения</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={repeatedStart}
@@ -818,7 +876,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={repeatedEnd}
@@ -826,7 +884,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Threshold
+                                Порог
                                 <input
                                     type="number"
                                     min="1"
@@ -850,17 +908,17 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Get repeated violations
+                            Получить повторяющиеся
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Report registry</h3>
+                        <h3>Реестр отчетов</h3>
                         <div className="inline-row">
                             <select
                                 value={reportFilterType}
                                 onChange={(e) => setReportFilterType(e.target.value)}
                             >
-                                <option value="">All types</option>
+                                <option value="">Все типы</option>
                                 {REPORT_TYPES.map((type) => (
                                     <option key={type} value={type}>
                                         {type}
@@ -876,16 +934,16 @@ const IncidentsPage = () => {
                                         path: "/reports",
                                         query: {type: reportFilterType || undefined},
                                     })
-                                }
-                            >
-                                Fetch reports
-                            </button>
+                            }
+                        >
+                            Получить отчеты
+                        </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={reportId}
                                 onChange={(e) => setReportId(e.target.value)}
-                                placeholder="Report UUID"
+                                placeholder="UUID отчета"
                             />
                             <button
                                 className="ghost-button"
@@ -897,21 +955,21 @@ const IncidentsPage = () => {
                                     })
                                 }
                             >
-                                Get report
+                                Получить отчет
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Exports</div>
+                    <div className="panel__title">Экспорт</div>
                     <div className="panel__section">
-                        <h3>Export report</h3>
+                        <h3>Экспорт отчета</h3>
                         <div className="inline-row">
                             <input
                                 value={exportReportId}
                                 onChange={(e) => setExportReportId(e.target.value)}
-                                placeholder="Report UUID"
+                                placeholder="UUID отчета"
                             />
                             <button
                                 className="ghost-button"
@@ -925,7 +983,7 @@ const IncidentsPage = () => {
                                     })
                                 }
                             >
-                                Export PDF
+                                Экспорт PDF
                             </button>
                             <button
                                 className="ghost-button"
@@ -939,28 +997,28 @@ const IncidentsPage = () => {
                                     })
                                 }
                             >
-                                Export Excel
+                                Экспорт Excel
                             </button>
                         </div>
                         {download ? (
                             <a className="download-link" href={download.url} download={download.filename}>
-                                Download {download.filename}
+                                Скачать {download.filename}
                             </a>
                         ) : (
-                            <div className="hint">Exports appear as downloadable files here.</div>
+                            <div className="hint">Файлы для скачивания появятся здесь.</div>
                         )}
                     </div>
                 </div>
             </section>
 
             <section className="panel panel--wide">
-                <div className="panel__title">Last response</div>
+                <div className="panel__title">Последний ответ</div>
                 <div className="response-meta">
-                    <span>{lastRequest || "Run a request to see details."}</span>
+                    <span>{lastRequest || "Выполните запрос, чтобы увидеть детали."}</span>
                     <span>{lastStatus}</span>
                     <span>{lastDuration}</span>
                 </div>
-                <pre className="response-body">{lastBody || "Response payloads show up here."}</pre>
+                <pre className="response-body">{lastBody || "Тело ответа появится здесь."}</pre>
             </section>
         </div>
     );

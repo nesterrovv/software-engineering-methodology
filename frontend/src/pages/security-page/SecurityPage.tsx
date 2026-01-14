@@ -138,37 +138,37 @@ const SecurityPage = () => {
         <div className="security-page">
             <section className="security-page__hero">
                 <div className="security-page__hero-text">
-                    <div className="hero-eyebrow">Security service console</div>
-                    <h1>Visibility, alerts, response.</h1>
+                    <div className="hero-eyebrow">Консоль безопасности</div>
+                    <h1>Видимость, оповещения, реакция.</h1>
                     <p>
-                        Monitor halls, track contacts, run fraud checks, and manage notifications
-                        in a single pink command center.
+                        Мониторинг зала, контроль контактов, проверки мошенничества и уведомления —
+                        в одном центре управления.
                     </p>
                     <div className="hero-note">
-                        API base: <strong>{baseUrl || "proxy"}</strong>
+                        База API: <strong>{baseUrl || "прокси"}</strong>
                     </div>
                 </div>
                 <div className="security-page__hero-stats">
-                    <div className="hero-pill">Hall monitoring</div>
-                    <div className="hero-pill">Contacts</div>
-                    <div className="hero-pill">Fraud DB</div>
-                    <div className="hero-pill">Notifications</div>
+                    <div className="hero-pill">Мониторинг зала</div>
+                    <div className="hero-pill">Контакты</div>
+                    <div className="hero-pill">База мошенников</div>
+                    <div className="hero-pill">Уведомления</div>
                     <div className="hero-pill hero-pill--dark">
-                        {isLoading ? "Running request..." : "Ready for action"}
+                        {isLoading ? "Выполняю запрос..." : "Готово к работе"}
                     </div>
                 </div>
             </section>
 
             <section className="security-page__grid">
                 <div className="panel">
-                    <div className="panel__title">Hall monitoring</div>
+                    <div className="panel__title">Мониторинг зала</div>
                     <div className="panel__section">
-                        <h3>Start monitoring</h3>
+                        <h3>Начать мониторинг</h3>
                         <div className="inline-row">
                             <input
                                 value={monitorOfficerId}
                                 onChange={(e) => setMonitorOfficerId(e.target.value)}
-                                placeholder="Security officer UUID"
+                                placeholder="UUID сотрудника"
                             />
                             <button
                                 className="primary-button"
@@ -181,14 +181,14 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Start session
+                                Начать сессию
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={monitorSessionId}
                                 onChange={(e) => setMonitorSessionId(e.target.value)}
-                                placeholder="Session UUID"
+                                placeholder="UUID сессии"
                             />
                             <button
                                 className="ghost-button"
@@ -200,7 +200,7 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                End session
+                                Завершить
                             </button>
                             <button
                                 className="ghost-button"
@@ -212,7 +212,7 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Get session
+                                Получить сессию
                             </button>
                         </div>
                         <button
@@ -225,34 +225,34 @@ const SecurityPage = () => {
                                 })
                             }
                         >
-                            Current hall status
+                            Текущее состояние зала
                         </button>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Contact monitoring</div>
+                    <div className="panel__title">Контроль контактов</div>
                     <div className="panel__section">
-                        <h3>Register contact</h3>
+                        <h3>Зарегистрировать контакт</h3>
                         <div className="form-grid">
                             <label>
-                                Person ID 1
+                                ID лица 1
                                 <input
                                     value={contactPerson1}
                                     onChange={(e) => setContactPerson1(e.target.value)}
-                                    placeholder="Person ID"
+                                    placeholder="ID лица"
                                 />
                             </label>
                             <label>
-                                Person ID 2
+                                ID лица 2
                                 <input
                                     value={contactPerson2}
                                     onChange={(e) => setContactPerson2(e.target.value)}
-                                    placeholder="Person ID"
+                                    placeholder="ID лица"
                                 />
                             </label>
                             <label>
-                                Contact start
+                                Начало контакта
                                 <input
                                     type="datetime-local"
                                     value={contactStart}
@@ -260,7 +260,7 @@ const SecurityPage = () => {
                                 />
                             </label>
                             <label>
-                                Contact end
+                                Конец контакта
                                 <input
                                     type="datetime-local"
                                     value={contactEnd}
@@ -268,11 +268,11 @@ const SecurityPage = () => {
                                 />
                             </label>
                             <label className="form-span">
-                                Location
+                                Локация
                                 <input
                                     value={contactLocation}
                                     onChange={(e) => setContactLocation(e.target.value)}
-                                    placeholder="Location"
+                                    placeholder="Локация"
                                 />
                             </label>
                         </div>
@@ -293,21 +293,21 @@ const SecurityPage = () => {
                                 })
                             }
                         >
-                            Register contact
+                            Зарегистрировать
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Contact checks</h3>
+                        <h3>Проверки контактов</h3>
                         <div className="inline-row">
                             <input
                                 value={contactCheckPerson1}
                                 onChange={(e) => setContactCheckPerson1(e.target.value)}
-                                placeholder="Person ID 1"
+                                placeholder="ID лица 1"
                             />
                             <input
                                 value={contactCheckPerson2}
                                 onChange={(e) => setContactCheckPerson2(e.target.value)}
-                                placeholder="Person ID 2"
+                                placeholder="ID лица 2"
                             />
                             <button
                                 className="ghost-button"
@@ -323,7 +323,7 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Check frequency
+                                Проверить частоту
                             </button>
                         </div>
                         <div className="inline-row">
@@ -344,7 +344,7 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Generate mock contacts
+                                Сгенерировать мок-контакты
                             </button>
                         </div>
                         <button
@@ -357,34 +357,34 @@ const SecurityPage = () => {
                                 })
                             }
                         >
-                            Suspicious contacts
+                            Подозрительные контакты
                         </button>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Fraud database</div>
+                    <div className="panel__title">База мошенников</div>
                     <div className="panel__section">
-                        <h3>Create record</h3>
+                        <h3>Добавить запись</h3>
                         <div className="form-grid">
                             <label>
-                                Person ID
+                                ID лица
                                 <input
                                     value={fraudPersonId}
                                     onChange={(e) => setFraudPersonId(e.target.value)}
-                                    placeholder="Person ID"
+                                    placeholder="ID лица"
                                 />
                             </label>
                             <label>
-                                Full name
+                                ФИО
                                 <input
                                     value={fraudFullName}
                                     onChange={(e) => setFraudFullName(e.target.value)}
-                                    placeholder="Full name"
+                                    placeholder="ФИО"
                                 />
                             </label>
                             <label>
-                                Fraud type
+                                Тип мошенничества
                                 <select value={fraudType} onChange={(e) => setFraudType(e.target.value)}>
                                     {FRAUD_TYPES.map((type) => (
                                         <option key={type} value={type}>
@@ -394,23 +394,23 @@ const SecurityPage = () => {
                                 </select>
                             </label>
                             <label>
-                                Added by (UUID)
+                                Добавил (UUID)
                                 <input
                                     value={fraudAddedBy}
                                     onChange={(e) => setFraudAddedBy(e.target.value)}
-                                    placeholder="Security officer UUID"
+                                    placeholder="UUID сотрудника"
                                 />
                             </label>
                             <label className="form-span">
-                                Description
+                                Описание
                                 <textarea
                                     value={fraudDescription}
                                     onChange={(e) => setFraudDescription(e.target.value)}
-                                    placeholder="Details"
+                                    placeholder="Детали"
                                 />
                             </label>
                             <label className="form-span">
-                                Photo URL
+                                URL фото
                                 <input
                                     value={fraudPhotoUrl}
                                     onChange={(e) => setFraudPhotoUrl(e.target.value)}
@@ -436,11 +436,11 @@ const SecurityPage = () => {
                                 })
                             }
                         >
-                            Add record
+                            Добавить
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Lookup records</h3>
+                        <h3>Поиск записей</h3>
                         <div className="inline-row">
                             <button
                                 className="ghost-button"
@@ -452,12 +452,12 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Fetch all
+                                Получить все
                             </button>
                             <input
                                 value={fraudRecordId}
                                 onChange={(e) => setFraudRecordId(e.target.value)}
-                                placeholder="Record UUID"
+                                placeholder="UUID записи"
                             />
                             <button
                                 className="ghost-button"
@@ -469,14 +469,14 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Get by ID
+                                По ID
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={fraudSearchQuery}
                                 onChange={(e) => setFraudSearchQuery(e.target.value)}
-                                placeholder="Search query"
+                                placeholder="Поисковый запрос"
                             />
                             <button
                                 className="ghost-button"
@@ -489,7 +489,7 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Search
+                                Искать
                             </button>
                         </div>
                         <div className="inline-row">
@@ -497,7 +497,7 @@ const SecurityPage = () => {
                                 value={fraudTypeFilter}
                                 onChange={(e) => setFraudTypeFilter(e.target.value)}
                             >
-                                <option value="">Select type</option>
+                                <option value="">Выберите тип</option>
                                 {FRAUD_TYPES.map((type) => (
                                     <option key={type} value={type}>
                                         {type}
@@ -514,17 +514,17 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Filter by type
+                                Фильтр по типу
                             </button>
                         </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Update status / delete</h3>
+                        <h3>Статус и удаление</h3>
                         <div className="inline-row">
                             <input
                                 value={fraudStatusId}
                                 onChange={(e) => setFraudStatusId(e.target.value)}
-                                placeholder="Record UUID"
+                                placeholder="UUID записи"
                             />
                             <select value={fraudStatus} onChange={(e) => setFraudStatus(e.target.value)}>
                                 {FRAUD_STATUSES.map((status) => (
@@ -544,14 +544,14 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Update status
+                                Обновить статус
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={fraudDeleteId}
                                 onChange={(e) => setFraudDeleteId(e.target.value)}
-                                placeholder="Record UUID"
+                                placeholder="UUID записи"
                             />
                             <button
                                 className="ghost-button"
@@ -563,27 +563,27 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Delete record
+                                Удалить запись
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Fraud checks</div>
+                    <div className="panel__title">Проверки мошенничества</div>
                     <div className="panel__section">
-                        <h3>Run fraud check</h3>
+                        <h3>Запустить проверку</h3>
                         <div className="form-grid">
                             <label>
-                                Person ID
+                                ID лица
                                 <input
                                     value={fraudCheckPersonId}
                                     onChange={(e) => setFraudCheckPersonId(e.target.value)}
-                                    placeholder="Person ID"
+                                    placeholder="ID лица"
                                 />
                             </label>
                             <label>
-                                Photo URL
+                                URL фото
                                 <input
                                     value={fraudCheckPhotoUrl}
                                     onChange={(e) => setFraudCheckPhotoUrl(e.target.value)}
@@ -591,11 +591,11 @@ const SecurityPage = () => {
                                 />
                             </label>
                             <label>
-                                Activity ID
+                                ID активности
                                 <input
                                     value={fraudCheckActivityId}
                                     onChange={(e) => setFraudCheckActivityId(e.target.value)}
-                                    placeholder="Activity UUID"
+                                    placeholder="UUID активности"
                                 />
                             </label>
                         </div>
@@ -614,21 +614,21 @@ const SecurityPage = () => {
                                 })
                             }
                         >
-                            Run check
+                            Запустить проверку
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Quick check</h3>
+                        <h3>Быстрая проверка</h3>
                         <div className="inline-row">
                             <input
                                 value={fraudQuickPersonId}
                                 onChange={(e) => setFraudQuickPersonId(e.target.value)}
-                                placeholder="Person ID"
+                                placeholder="ID лица"
                             />
                             <input
                                 value={fraudQuickActivityId}
                                 onChange={(e) => setFraudQuickActivityId(e.target.value)}
-                                placeholder="Activity UUID"
+                                placeholder="UUID активности"
                             />
                             <button
                                 className="ghost-button"
@@ -644,21 +644,21 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Quick check
+                                Быстрая проверка
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Notifications</div>
+                    <div className="panel__title">Уведомления</div>
                     <div className="panel__section">
-                        <h3>Fetch notifications</h3>
+                        <h3>Получить уведомления</h3>
                         <div className="inline-row">
                             <input
                                 value={notificationRecipientId}
                                 onChange={(e) => setNotificationRecipientId(e.target.value)}
-                                placeholder="Recipient UUID"
+                                placeholder="UUID получателя"
                             />
                             <button
                                 className="ghost-button"
@@ -670,14 +670,14 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Fetch notifications
+                                Получить уведомления
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={notificationRecipientUnreadId}
                                 onChange={(e) => setNotificationRecipientUnreadId(e.target.value)}
-                                placeholder="Recipient UUID"
+                                placeholder="UUID получателя"
                             />
                             <button
                                 className="ghost-button"
@@ -689,14 +689,14 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Unread notifications
+                                Непрочитанные
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={notificationRecipientUnreadCountId}
                                 onChange={(e) => setNotificationRecipientUnreadCountId(e.target.value)}
-                                placeholder="Recipient UUID"
+                                placeholder="UUID получателя"
                             />
                             <button
                                 className="ghost-button"
@@ -708,14 +708,14 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Unread count
+                                Количество непрочитанных
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={notificationReadId}
                                 onChange={(e) => setNotificationReadId(e.target.value)}
-                                placeholder="Notification UUID"
+                                placeholder="UUID уведомления"
                             />
                             <button
                                 className="ghost-button"
@@ -727,23 +727,23 @@ const SecurityPage = () => {
                                     })
                                 }
                             >
-                                Mark as read
+                                Отметить прочитанным
                             </button>
                         </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Create notification</h3>
+                        <h3>Создать уведомление</h3>
                         <div className="form-grid">
                             <label>
-                                Recipient UUID
+                                UUID получателя
                                 <input
                                     value={notificationCreateRecipientId}
                                     onChange={(e) => setNotificationCreateRecipientId(e.target.value)}
-                                    placeholder="Recipient UUID"
+                                    placeholder="UUID получателя"
                                 />
                             </label>
                             <label>
-                                Type
+                                Тип
                                 <select
                                     value={notificationType}
                                     onChange={(e) => setNotificationType(e.target.value)}
@@ -756,7 +756,7 @@ const SecurityPage = () => {
                                 </select>
                             </label>
                             <label>
-                                Priority
+                                Приоритет
                                 <select
                                     value={notificationPriority}
                                     onChange={(e) => setNotificationPriority(e.target.value)}
@@ -769,35 +769,35 @@ const SecurityPage = () => {
                                 </select>
                             </label>
                             <label className="form-span">
-                                Title
+                                Заголовок
                                 <input
                                     value={notificationTitle}
                                     onChange={(e) => setNotificationTitle(e.target.value)}
-                                    placeholder="Title"
+                                    placeholder="Заголовок"
                                 />
                             </label>
                             <label className="form-span">
-                                Message
+                                Сообщение
                                 <textarea
                                     value={notificationMessage}
                                     onChange={(e) => setNotificationMessage(e.target.value)}
-                                    placeholder="Message"
+                                    placeholder="Текст уведомления"
                                 />
                             </label>
                             <label>
-                                Related entity type
+                                Тип связанной сущности
                                 <input
                                     value={notificationRelatedType}
                                     onChange={(e) => setNotificationRelatedType(e.target.value)}
-                                    placeholder="Optional"
+                                    placeholder="Необязательно"
                                 />
                             </label>
                             <label>
-                                Related entity UUID
+                                UUID связанной сущности
                                 <input
                                     value={notificationRelatedId}
                                     onChange={(e) => setNotificationRelatedId(e.target.value)}
-                                    placeholder="Optional"
+                                    placeholder="Необязательно"
                                 />
                             </label>
                         </div>
@@ -820,20 +820,20 @@ const SecurityPage = () => {
                                 })
                             }
                         >
-                            Create notification
+                            Создать уведомление
                         </button>
                     </div>
                 </div>
             </section>
 
             <section className="panel panel--wide">
-                <div className="panel__title">Last response</div>
+                <div className="panel__title">Последний ответ</div>
                 <div className="response-meta">
-                    <span>{lastRequest || "Run a request to see details."}</span>
+                    <span>{lastRequest || "Выполните запрос, чтобы увидеть детали."}</span>
                     <span>{lastStatus}</span>
                     <span>{lastDuration}</span>
                 </div>
-                <pre className="response-body">{lastBody || "Response payloads show up here."}</pre>
+                <pre className="response-body">{lastBody || "Тело ответа появится здесь."}</pre>
             </section>
         </div>
     );

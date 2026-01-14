@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {FormEvent, useState} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
 import {useAuth} from "../../auth/AuthContext.tsx";
 import "./login-page.scss";
@@ -13,7 +13,7 @@ const LoginPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const handleSubmit = async (event: React.FormEvent) => {
+    const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
         setError("");
         setIsLoading(true);
@@ -27,14 +27,14 @@ const LoginPage = () => {
                 headers: {Authorization: token},
             });
             if (!response.ok) {
-                setError("Invalid credentials or access denied.");
+                setError("Неверный логин/пароль или доступ запрещен.");
                 return;
             }
             login(username, token, baseUrl);
             const target = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
             navigate(target || "/incidents", {replace: true});
         } catch {
-            setError("Network error. Check the API base URL or proxy.");
+            setError("Ошибка сети. Проверьте базовый URL API или прокси.");
         } finally {
             setIsLoading(false);
         }
@@ -45,12 +45,12 @@ const LoginPage = () => {
             <form className="login-card" onSubmit={handleSubmit}>
                 <div className="login-card__header">
                     <div className="login-eyebrow">Casino MIS</div>
-                    <h1>Sign in</h1>
-                    <p>Use your Basic-auth credentials. Leave base URL empty to use the proxy.</p>
+                    <h1>Вход</h1>
+                    <p>Используйте Basic-auth. Оставьте базовый URL пустым, чтобы использовать прокси.</p>
                 </div>
                 <div className="login-card__fields">
                     <label>
-                        Username
+                        Логин
                         <input
                             value={username}
                             onChange={(event) => setUsername(event.target.value)}
@@ -58,7 +58,7 @@ const LoginPage = () => {
                         />
                     </label>
                     <label>
-                        Password
+                        Пароль
                         <input
                             type="password"
                             value={password}
@@ -67,7 +67,7 @@ const LoginPage = () => {
                         />
                     </label>
                     <label>
-                        API base URL (optional)
+                        Базовый URL API (необязательно)
                         <input
                             value={baseUrl}
                             onChange={(event) => setBaseUrl(event.target.value)}
@@ -77,7 +77,7 @@ const LoginPage = () => {
                 </div>
                 {error ? <div className="login-error">{error}</div> : null}
                 <button className="primary-button" type="submit" disabled={isLoading}>
-                    {isLoading ? "Signing in..." : "Sign in"}
+                    {isLoading ? "Входим..." : "Войти"}
                 </button>
             </form>
         </div>

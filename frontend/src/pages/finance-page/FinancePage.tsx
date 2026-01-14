@@ -128,43 +128,43 @@ const FinancePage = () => {
         <div className="finance-page">
             <section className="finance-page__hero">
                 <div className="finance-page__hero-text">
-                    <div className="hero-eyebrow">Finance service console</div>
-                    <h1>Money flow, fully controlled.</h1>
+                    <div className="hero-eyebrow">Консоль финансов</div>
+                    <h1>Полный контроль денежных потоков.</h1>
                     <p>
-                        Register cash operations, reconcile registers, analyze games, detect
-                        anomalies, and generate financial reports from a single command center.
+                        Регистрируйте операции, сверяйте кассы, анализируйте игры, выявляйте
+                        аномалии и формируйте финансовые отчеты в одном центре управления.
                     </p>
                     <div className="hero-note">
-                        API base: <strong>{baseUrl || "proxy"}</strong>
+                        База API: <strong>{baseUrl || "прокси"}</strong>
                     </div>
                 </div>
                 <div className="finance-page__hero-stats">
-                    <div className="hero-pill">Operations</div>
-                    <div className="hero-pill">Reconciliation</div>
-                    <div className="hero-pill">Game analysis</div>
-                    <div className="hero-pill">Anomalies</div>
+                    <div className="hero-pill">Операции</div>
+                    <div className="hero-pill">Сверка кассы</div>
+                    <div className="hero-pill">Анализ игр</div>
+                    <div className="hero-pill">Аномалии</div>
                     <div className="hero-pill hero-pill--dark">
-                        {isLoading ? "Running request..." : "Ready for action"}
+                        {isLoading ? "Выполняю запрос..." : "Готово к работе"}
                     </div>
                 </div>
             </section>
 
             <section className="finance-page__grid">
                 <div className="panel">
-                    <div className="panel__title">Cash operations</div>
+                    <div className="panel__title">Кассовые операции</div>
                     <div className="panel__section">
-                        <h3>Create operation</h3>
+                        <h3>Создать операцию</h3>
                         <div className="form-grid">
                             <label>
-                                Cash desk UUID
+                                UUID кассы
                                 <input
                                     value={operationCashDeskId}
                                     onChange={(e) => setOperationCashDeskId(e.target.value)}
-                                    placeholder="Cash desk UUID"
+                                    placeholder="UUID кассы"
                                 />
                             </label>
                             <label>
-                                Amount
+                                Сумма
                                 <input
                                     type="number"
                                     value={operationAmount}
@@ -173,7 +173,7 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label>
-                                Type
+                                Тип
                                 <select
                                     value={operationType}
                                     onChange={(e) => setOperationType(e.target.value)}
@@ -186,7 +186,7 @@ const FinancePage = () => {
                                 </select>
                             </label>
                             <label>
-                                Currency
+                                Валюта
                                 <input
                                     value={operationCurrency}
                                     onChange={(e) => setOperationCurrency(e.target.value)}
@@ -210,11 +210,11 @@ const FinancePage = () => {
                                 })
                             }
                         >
-                            Create operation
+                            Создать операцию
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Lookup operations</h3>
+                        <h3>Поиск операций</h3>
                         <div className="inline-row">
                             <button
                                 className="ghost-button"
@@ -226,14 +226,14 @@ const FinancePage = () => {
                                     })
                                 }
                             >
-                                Fetch all operations
+                                Получить все операции
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={operationId}
                                 onChange={(e) => setOperationId(e.target.value)}
-                                placeholder="Operation UUID"
+                                placeholder="UUID операции"
                             />
                             <button
                                 className="ghost-button"
@@ -245,27 +245,27 @@ const FinancePage = () => {
                                     })
                                 }
                             >
-                                Get operation by ID
+                                Операция по ID
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Cash reconciliation</div>
+                    <div className="panel__title">Сверка кассы</div>
                     <div className="panel__section">
-                        <h3>Reconcile cash desk</h3>
+                        <h3>Выполнить сверку</h3>
                         <div className="form-grid">
                             <label>
-                                Cash desk UUID
+                                UUID кассы
                                 <input
                                     value={reconciliationCashDeskId}
                                     onChange={(e) => setReconciliationCashDeskId(e.target.value)}
-                                    placeholder="Cash desk UUID"
+                                    placeholder="UUID кассы"
                                 />
                             </label>
                             <label>
-                                Shift start
+                                Начало смены
                                 <input
                                     type="datetime-local"
                                     value={reconciliationShiftStart}
@@ -273,7 +273,7 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label>
-                                Shift end
+                                Конец смены
                                 <input
                                     type="datetime-local"
                                     value={reconciliationShiftEnd}
@@ -281,7 +281,7 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label>
-                                Actual balance
+                                Фактический баланс
                                 <input
                                     type="number"
                                     value={reconciliationActualBalance}
@@ -289,11 +289,11 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label className="form-span">
-                                Notes
+                                Примечания
                                 <textarea
                                     value={reconciliationNotes}
                                     onChange={(e) => setReconciliationNotes(e.target.value)}
-                                    placeholder="Notes or explanation"
+                                    placeholder="Примечания или пояснение"
                                 />
                             </label>
                         </div>
@@ -316,16 +316,16 @@ const FinancePage = () => {
                                 })
                             }
                         >
-                            Run reconciliation
+                            Запустить сверку
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Reconciliation lookup</h3>
+                        <h3>Поиск сверок</h3>
                         <div className="inline-row">
                             <input
                                 value={reconciliationId}
                                 onChange={(e) => setReconciliationId(e.target.value)}
-                                placeholder="Reconciliation UUID"
+                                placeholder="UUID сверки"
                             />
                             <button
                                 className="ghost-button"
@@ -337,14 +337,14 @@ const FinancePage = () => {
                                     })
                                 }
                             >
-                                Get by ID
+                                Сверка по ID
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={reconciliationCashDeskFilter}
                                 onChange={(e) => setReconciliationCashDeskFilter(e.target.value)}
-                                placeholder="Cash desk UUID"
+                                placeholder="UUID кассы"
                             />
                             <button
                                 className="ghost-button"
@@ -356,17 +356,17 @@ const FinancePage = () => {
                                     })
                                 }
                             >
-                                Get by cash desk
+                                По кассе
                             </button>
                         </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Update reconciliation status</h3>
+                        <h3>Обновить статус сверки</h3>
                         <div className="inline-row">
                             <input
                                 value={reconciliationStatusId}
                                 onChange={(e) => setReconciliationStatusId(e.target.value)}
-                                placeholder="Reconciliation UUID"
+                                placeholder="UUID сверки"
                             />
                             <select
                                 value={reconciliationStatus}
@@ -389,19 +389,19 @@ const FinancePage = () => {
                                     })
                                 }
                             >
-                                Update status
+                                Обновить статус
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Game analysis</div>
+                    <div className="panel__title">Анализ игр</div>
                     <div className="panel__section">
-                        <h3>Analyze game sessions</h3>
+                        <h3>Анализ игровых сессий</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={analysisStart}
@@ -409,7 +409,7 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={analysisEnd}
@@ -417,15 +417,15 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label>
-                                Game table ID
+                                ID игрового стола
                                 <input
                                     value={analysisTableId}
                                     onChange={(e) => setAnalysisTableId(e.target.value)}
-                                    placeholder="Optional"
+                                    placeholder="Необязательно"
                                 />
                             </label>
                             <label>
-                                Expected RTP %
+                                Ожидаемый RTP %
                                 <input
                                     type="number"
                                     value={analysisExpectedRtp}
@@ -433,7 +433,7 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label>
-                                Large win threshold
+                                Порог крупного выигрыша
                                 <input
                                     type="number"
                                     value={analysisLargeWin}
@@ -462,16 +462,16 @@ const FinancePage = () => {
                                 })
                             }
                         >
-                            Run analysis
+                            Запустить анализ
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Analysis lookup</h3>
+                        <h3>Поиск анализов</h3>
                         <div className="inline-row">
                             <input
                                 value={analysisId}
                                 onChange={(e) => setAnalysisId(e.target.value)}
-                                placeholder="Analysis UUID"
+                                placeholder="UUID анализа"
                             />
                             <button
                                 className="ghost-button"
@@ -483,14 +483,14 @@ const FinancePage = () => {
                                     })
                                 }
                             >
-                                Get by ID
+                                Анализ по ID
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={analysisTableFilter}
                                 onChange={(e) => setAnalysisTableFilter(e.target.value)}
-                                placeholder="Game table ID"
+                                placeholder="ID игрового стола"
                             />
                             <button
                                 className="ghost-button"
@@ -502,19 +502,19 @@ const FinancePage = () => {
                                     })
                                 }
                             >
-                                Get by table
+                                По столу
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Financial report</div>
+                    <div className="panel__title">Финансовый отчет</div>
                     <div className="panel__section">
-                        <h3>Generate CSV report</h3>
+                        <h3>Сформировать CSV отчет</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="date"
                                     value={reportStart}
@@ -522,7 +522,7 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="date"
                                     value={reportEnd}
@@ -544,18 +544,18 @@ const FinancePage = () => {
                                 })
                             }
                         >
-                            Generate report
+                            Сформировать отчет
                         </button>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Anomaly detection</div>
+                    <div className="panel__title">Выявление аномалий</div>
                     <div className="panel__section">
-                        <h3>Detect anomalies</h3>
+                        <h3>Запустить детекцию</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={anomalyStart}
@@ -563,7 +563,7 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={anomalyEnd}
@@ -571,7 +571,7 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label>
-                                Large amount threshold
+                                Порог крупной суммы
                                 <input
                                     type="number"
                                     value={anomalyLargeAmount}
@@ -579,7 +579,7 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label>
-                                Frequency threshold
+                                Порог частоты
                                 <input
                                     type="number"
                                     value={anomalyFrequency}
@@ -587,7 +587,7 @@ const FinancePage = () => {
                                 />
                             </label>
                             <label>
-                                Time window (minutes)
+                                Окно времени (мин)
                                 <input
                                     type="number"
                                     value={anomalyWindow}
@@ -618,17 +618,17 @@ const FinancePage = () => {
                                 })
                             }
                         >
-                            Run detection
+                            Запустить детекцию
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Browse anomalies</h3>
+                        <h3>Просмотр аномалий</h3>
                         <div className="inline-row">
                             <select
                                 value={anomalyStatusFilter}
                                 onChange={(e) => setAnomalyStatusFilter(e.target.value)}
                             >
-                                <option value="">All statuses</option>
+                                <option value="">Все статусы</option>
                                 {ANOMALY_STATUSES.map((status) => (
                                     <option key={status} value={status}>
                                         {status}
@@ -639,7 +639,7 @@ const FinancePage = () => {
                                 value={anomalyRiskFilter}
                                 onChange={(e) => setAnomalyRiskFilter(e.target.value)}
                             >
-                                <option value="">All risk levels</option>
+                                <option value="">Все уровни риска</option>
                                 {RISK_LEVELS.map((risk) => (
                                     <option key={risk} value={risk}>
                                         {risk}
@@ -658,16 +658,16 @@ const FinancePage = () => {
                                             riskLevel: anomalyRiskFilter || undefined,
                                         },
                                     })
-                                }
-                            >
-                                Fetch anomalies
-                            </button>
+                            }
+                        >
+                            Получить аномалии
+                        </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={anomalyId}
                                 onChange={(e) => setAnomalyId(e.target.value)}
-                                placeholder="Anomaly UUID"
+                                placeholder="UUID аномалии"
                             />
                             <button
                                 className="ghost-button"
@@ -679,23 +679,23 @@ const FinancePage = () => {
                                     })
                                 }
                             >
-                                Get by ID
+                                Аномалия по ID
                             </button>
                         </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Review anomaly</h3>
+                        <h3>Проверка аномалии</h3>
                         <div className="form-grid">
                             <label>
-                                Anomaly UUID
+                                UUID аномалии
                                 <input
                                     value={anomalyReviewId}
                                     onChange={(e) => setAnomalyReviewId(e.target.value)}
-                                    placeholder="Anomaly UUID"
+                                    placeholder="UUID аномалии"
                                 />
                             </label>
                             <label>
-                                Status
+                                Статус
                                 <select
                                     value={anomalyReviewStatus}
                                     onChange={(e) => setAnomalyReviewStatus(e.target.value)}
@@ -708,19 +708,19 @@ const FinancePage = () => {
                                 </select>
                             </label>
                             <label>
-                                Reviewer UUID
+                                UUID проверяющего
                                 <input
                                     value={anomalyReviewerId}
                                     onChange={(e) => setAnomalyReviewerId(e.target.value)}
-                                    placeholder="Reviewer UUID"
+                                    placeholder="UUID проверяющего"
                                 />
                             </label>
                             <label className="form-span">
-                                Notes
+                                Примечания
                                 <textarea
                                     value={anomalyReviewNotes}
                                     onChange={(e) => setAnomalyReviewNotes(e.target.value)}
-                                    placeholder="Review notes"
+                                    placeholder="Комментарий"
                                 />
                             </label>
                         </div>
@@ -739,20 +739,20 @@ const FinancePage = () => {
                                 })
                             }
                         >
-                            Submit review
+                            Отправить проверку
                         </button>
                     </div>
                 </div>
             </section>
 
             <section className="panel panel--wide">
-                <div className="panel__title">Last response</div>
+                <div className="panel__title">Последний ответ</div>
                 <div className="response-meta">
-                    <span>{lastRequest || "Run a request to see details."}</span>
+                    <span>{lastRequest || "Выполните запрос, чтобы увидеть детали."}</span>
                     <span>{lastStatus}</span>
                     <span>{lastDuration}</span>
                 </div>
-                <pre className="response-body">{lastBody || "Response payloads show up here."}</pre>
+                <pre className="response-body">{lastBody || "Тело ответа появится здесь."}</pre>
             </section>
         </div>
     );

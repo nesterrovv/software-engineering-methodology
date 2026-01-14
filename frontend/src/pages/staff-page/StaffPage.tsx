@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {useAuth} from "../../auth/AuthContext.tsx";
 import "./staff-page.scss";
 
@@ -38,6 +38,55 @@ type EmployeeItem = {
     contactInfo?: string;
 };
 
+type ShiftItem = {
+    id: string;
+    employeeId: string;
+    shiftDate: string;
+    plannedStartTime: string;
+    plannedEndTime: string;
+    status: string;
+    shiftType: string;
+    location?: string;
+    createdBy?: string;
+    createdAt?: string;
+    publishedAt?: string;
+    confirmedBy?: string;
+    confirmedAt?: string;
+    notes?: string;
+};
+
+type ViolationHistoryRecord = {
+    id: string;
+    employeeId: string;
+    employeeName?: string;
+    violationType: string;
+    description?: string;
+    occurredAt?: string;
+    status?: string;
+    severity?: string;
+};
+
+type ViolationHistorySummary = {
+    totalViolations?: number;
+    byType?: Record<string, number>;
+    byDepartment?: Record<string, number>;
+    employeesWithViolations?: number;
+};
+
+type ViolationHistoryResponse = {
+    violations?: ViolationHistoryRecord[];
+    summary?: ViolationHistorySummary;
+};
+
+type EmployeeOption = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    middleName?: string;
+    position?: string;
+    department?: string;
+};
+
 const toEmployeeList = (data: unknown): EmployeeItem[] => {
     if (Array.isArray(data)) {
         return data as EmployeeItem[];
@@ -48,6 +97,60 @@ const toEmployeeList = (data: unknown): EmployeeItem[] => {
     return [];
 };
 
+const toEmployeeOptions = (data: unknown): EmployeeOption[] => {
+    if (Array.isArray(data)) {
+        return data as EmployeeOption[];
+    }
+    if (data && typeof data === "object") {
+        return [data as EmployeeOption];
+    }
+    return [];
+};
+
+const formatEmployeeName = (employee?: EmployeeOption) => {
+    if (!employee) {
+        return "";
+    }
+    return [employee.lastName, employee.firstName, employee.middleName]
+        .filter(Boolean)
+        .join(" ");
+};
+
+const formatEmployeeMeta = (employee?: EmployeeOption) => {
+    if (!employee) {
+        return "";
+    }
+    return [employee.department, employee.position].filter(Boolean).join(" · ");
+};
+
+const toShiftList = (data: unknown): ShiftItem[] => {
+    if (Array.isArray(data)) {
+        return data as ShiftItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as ShiftItem];
+    }
+    return [];
+};
+
+const formatDateTime = (value?: string) => {
+    if (!value) {
+        return "-";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+    return date.toLocaleString();
+};
+
+const toViolationHistory = (data: unknown): ViolationHistoryResponse | null => {
+    if (!data || typeof data !== "object") {
+        return null;
+    }
+    return data as ViolationHistoryResponse;
+};
+
 const StaffPage = () => {
     const {token, baseUrl} = useAuth();
     const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +159,9 @@ const StaffPage = () => {
     const [lastDuration, setLastDuration] = useState("");
     const [lastBody, setLastBody] = useState("");
     const [employeeResults, setEmployeeResults] = useState<EmployeeItem[]>([]);
+    const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
+    const [shiftResults, setShiftResults] = useState<ShiftItem[]>([]);
+    const [violationHistory, setViolationHistory] = useState<ViolationHistoryResponse | null>(null);
 
     const [employeeFirstName, setEmployeeFirstName] = useState("");
     const [employeeLastName, setEmployeeLastName] = useState("");
@@ -104,6 +210,17 @@ const StaffPage = () => {
     const [violationEnd, setViolationEnd] = useState("");
     const [violationType, setViolationType] = useState("");
     const [violationHistoryEmployeeId, setViolationHistoryEmployeeId] = useState("");
+
+    useEffect(() => {
+        runRequest({
+            method: "GET",
+            path: "/api/staff/employees",
+            onSuccess: (data) => {
+                setEmployeeResults(toEmployeeList(data));
+                setEmployeeOptions(toEmployeeOptions(data));
+            },
+        });
+    }, []);
     const [violationHistoryDepartment, setViolationHistoryDepartment] = useState("");
 
     const runRequest = async (options: {
@@ -165,75 +282,75 @@ const StaffPage = () => {
         <div className="staff-page">
             <section className="staff-page__hero">
                 <div className="staff-page__hero-text">
-                    <div className="hero-eyebrow">Staff service console</div>
-                    <h1>Staff ops, end to end.</h1>
+                    <div className="hero-eyebrow">Консоль персонала</div>
+                    <h1>Персонал под полным контролем.</h1>
                     <p>
-                        Manage employees, shifts, work time, and violation history. Every staff
-                        endpoint is wired for quick, practical workflows.
+                        Управляйте сотрудниками, сменами, учетом времени и историей нарушений.
+                        Каждая ручка подключена для быстрых рабочих операций.
                     </p>
                     <div className="hero-note">
-                        API base: <strong>{baseUrl || "proxy"}</strong>
+                        База API: <strong>{baseUrl || "прокси"}</strong>
                     </div>
                 </div>
                 <div className="staff-page__hero-stats">
-                    <div className="hero-pill">Employees</div>
-                    <div className="hero-pill">Shifts</div>
-                    <div className="hero-pill">Work time</div>
-                    <div className="hero-pill">Violations</div>
+                    <div className="hero-pill">Сотрудники</div>
+                    <div className="hero-pill">Смены</div>
+                    <div className="hero-pill">Учет времени</div>
+                    <div className="hero-pill">Нарушения</div>
                     <div className="hero-pill hero-pill--dark">
-                        {isLoading ? "Running request..." : "Ready for action"}
+                        {isLoading ? "Выполняю запрос..." : "Готово к работе"}
                     </div>
                 </div>
             </section>
 
             <section className="staff-page__grid">
                 <div className="panel">
-                    <div className="panel__title">Employees</div>
+                    <div className="panel__title">Сотрудники</div>
                     <div className="panel__section">
-                        <h3>Create employee</h3>
+                        <h3>Создать сотрудника</h3>
                         <div className="form-grid">
                             <label>
-                                First name
+                                Имя
                                 <input
                                     value={employeeFirstName}
                                     onChange={(e) => setEmployeeFirstName(e.target.value)}
-                                    placeholder="First name"
+                                    placeholder="Имя"
                                 />
                             </label>
                             <label>
-                                Last name
+                                Фамилия
                                 <input
                                     value={employeeLastName}
                                     onChange={(e) => setEmployeeLastName(e.target.value)}
-                                    placeholder="Last name"
+                                    placeholder="Фамилия"
                                 />
                             </label>
                             <label>
-                                Middle name
+                                Отчество
                                 <input
                                     value={employeeMiddleName}
                                     onChange={(e) => setEmployeeMiddleName(e.target.value)}
-                                    placeholder="Middle name"
+                                    placeholder="Отчество"
                                 />
                             </label>
                             <label>
-                                Position
+                                Должность
                                 <input
                                     value={employeePosition}
                                     onChange={(e) => setEmployeePosition(e.target.value)}
-                                    placeholder="Dealer, manager, etc."
+                                    placeholder="Дилер, менеджер и т.д."
                                 />
                             </label>
                             <label>
-                                Department
+                                Подразделение
                                 <input
                                     value={employeeDepartment}
                                     onChange={(e) => setEmployeeDepartment(e.target.value)}
-                                    placeholder="Department"
+                                    placeholder="Подразделение"
                                 />
                             </label>
                             <label>
-                                Status
+                                Статус
                                 <select
                                     value={employeeStatus}
                                     onChange={(e) => setEmployeeStatus(e.target.value)}
@@ -246,11 +363,11 @@ const StaffPage = () => {
                                 </select>
                             </label>
                             <label className="form-span">
-                                Contact info
+                                Контакты
                                 <textarea
                                     value={employeeContact}
                                     onChange={(e) => setEmployeeContact(e.target.value)}
-                                    placeholder="Phone, email, or notes"
+                                    placeholder="Телефон, email или заметки"
                                 />
                             </label>
                         </div>
@@ -273,11 +390,11 @@ const StaffPage = () => {
                                 })
                             }
                         >
-                            Create employee
+                            Создать сотрудника
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Lookup employees</h3>
+                        <h3>Поиск сотрудников</h3>
                         <div className="inline-row">
                             <button
                                 className="ghost-button"
@@ -286,17 +403,39 @@ const StaffPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: "/api/staff/employees",
-                                        onSuccess: (data) => setEmployeeResults(toEmployeeList(data)),
+                                        onSuccess: (data) => {
+                                            setEmployeeResults(toEmployeeList(data));
+                                            setEmployeeOptions(toEmployeeOptions(data));
+                                        },
                                     })
                                 }
                             >
-                                Fetch all employees
+                                Получить всех сотрудников
                             </button>
-                            <input
-                                value={employeeId}
-                                onChange={(e) => setEmployeeId(e.target.value)}
-                                placeholder="Employee UUID"
-                            />
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
+                                    value={employeeId}
+                                    onChange={(e) => setEmployeeId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span className="employee-select__value">
+                                    {formatEmployeeName(
+                                        employeeOptions.find((employee) => employee.id === employeeId)
+                                    ) || "Выбранное ФИО появится здесь"}
+                                </span>
+                                <span className="employee-select__meta">
+                                    {formatEmployeeMeta(
+                                        employeeOptions.find((employee) => employee.id === employeeId)
+                                    ) || "Подразделение и роль появятся здесь"}
+                                </span>
+                            </label>
                             <button
                                 className="ghost-button"
                                 type="button"
@@ -308,14 +447,14 @@ const StaffPage = () => {
                                     })
                                 }
                             >
-                                Get by ID
+                                Получить по ID
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={employeeDepartmentFilter}
                                 onChange={(e) => setEmployeeDepartmentFilter(e.target.value)}
-                                placeholder="Department"
+                                placeholder="Подразделение"
                             />
                             <button
                                 className="ghost-button"
@@ -324,16 +463,19 @@ const StaffPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/staff/employees/department/${employeeDepartmentFilter}`,
-                                        onSuccess: (data) => setEmployeeResults(toEmployeeList(data)),
+                                        onSuccess: (data) => {
+                                            setEmployeeResults(toEmployeeList(data));
+                                            setEmployeeOptions(toEmployeeOptions(data));
+                                        },
                                     })
                                 }
                             >
-                                Get by department
+                                По подразделению
                             </button>
                         </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Employee results</h3>
+                        <h3>Результаты</h3>
                         {employeeResults.length ? (
                             <div className="employee-list">
                                 {employeeResults.map((employee) => (
@@ -351,17 +493,26 @@ const StaffPage = () => {
                                 ))}
                             </div>
                         ) : (
-                            <div className="hint">Run a lookup to show employee cards.</div>
+                            <div className="hint">Выполните поиск, чтобы показать карточки.</div>
                         )}
                     </div>
                     <div className="panel__section">
-                        <h3>Update status</h3>
+                        <h3>Обновить статус</h3>
                         <div className="inline-row">
-                            <input
-                                value={employeeStatusId}
-                                onChange={(e) => setEmployeeStatusId(e.target.value)}
-                                placeholder="Employee UUID"
-                            />
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
+                                    value={employeeStatusId}
+                                    onChange={(e) => setEmployeeStatusId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <select
                                 value={employeeStatusUpdate}
                                 onChange={(e) => setEmployeeStatusUpdate(e.target.value)}
@@ -383,27 +534,33 @@ const StaffPage = () => {
                                     })
                                 }
                             >
-                                Update status
+                                Обновить статус
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Shift management</div>
+                    <div className="panel__title">Управление сменами</div>
                     <div className="panel__section">
-                        <h3>Create shift schedule</h3>
+                        <h3>Создать расписание смены</h3>
                         <div className="form-grid">
-                            <label>
-                                Employee UUID
-                                <input
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
                                     value={shiftEmployeeId}
                                     onChange={(e) => setShiftEmployeeId(e.target.value)}
-                                    placeholder="Employee UUID"
-                                />
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                             <label>
-                                Shift date
+                                Дата смены
                                 <input
                                     type="date"
                                     value={shiftDate}
@@ -411,7 +568,7 @@ const StaffPage = () => {
                                 />
                             </label>
                             <label>
-                                Planned start
+                                Начало смены
                                 <input
                                     type="datetime-local"
                                     value={shiftStart}
@@ -419,7 +576,7 @@ const StaffPage = () => {
                                 />
                             </label>
                             <label>
-                                Planned end
+                                Конец смены
                                 <input
                                     type="datetime-local"
                                     value={shiftEnd}
@@ -427,7 +584,7 @@ const StaffPage = () => {
                                 />
                             </label>
                             <label>
-                                Shift type
+                                Тип смены
                                 <select value={shiftType} onChange={(e) => setShiftType(e.target.value)}>
                                     {SHIFT_TYPES.map((type) => (
                                         <option key={type} value={type}>
@@ -437,27 +594,33 @@ const StaffPage = () => {
                                 </select>
                             </label>
                             <label>
-                                Location
+                                Локация
                                 <input
                                     value={shiftLocation}
                                     onChange={(e) => setShiftLocation(e.target.value)}
-                                    placeholder="Casino floor"
+                                    placeholder="Игровой зал"
                                 />
                             </label>
-                            <label>
-                                Created by (UUID)
-                                <input
+                            <label className="employee-select">
+                                Создал
+                                <select
                                     value={shiftCreatedBy}
                                     onChange={(e) => setShiftCreatedBy(e.target.value)}
-                                    placeholder="Manager UUID"
-                                />
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                             <label className="form-span">
-                                Notes
+                                Примечания
                                 <textarea
                                     value={shiftNotes}
                                     onChange={(e) => setShiftNotes(e.target.value)}
-                                    placeholder="Extra notes"
+                                    placeholder="Дополнительные заметки"
                                 />
                             </label>
                         </div>
@@ -481,16 +644,16 @@ const StaffPage = () => {
                                 })
                             }
                         >
-                            Create schedule
+                            Создать расписание
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Shift actions</h3>
+                        <h3>Действия со сменой</h3>
                         <div className="inline-row">
                             <input
                                 value={shiftPublishId}
                                 onChange={(e) => setShiftPublishId(e.target.value)}
-                                placeholder="Shift UUID"
+                                placeholder="UUID смены"
                             />
                             <button
                                 className="ghost-button"
@@ -502,20 +665,29 @@ const StaffPage = () => {
                                     })
                                 }
                             >
-                                Publish
+                                Опубликовать
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={shiftConfirmId}
                                 onChange={(e) => setShiftConfirmId(e.target.value)}
-                                placeholder="Shift UUID"
+                                placeholder="UUID смены"
                             />
-                            <input
-                                value={shiftConfirmedBy}
-                                onChange={(e) => setShiftConfirmedBy(e.target.value)}
-                                placeholder="Confirmed by UUID"
-                            />
+                            <label className="employee-select">
+                                Подтвердил
+                                <select
+                                    value={shiftConfirmedBy}
+                                    onChange={(e) => setShiftConfirmedBy(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <button
                                 className="ghost-button"
                                 type="button"
@@ -527,20 +699,29 @@ const StaffPage = () => {
                                     })
                                 }
                             >
-                                Confirm
+                                Подтвердить
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={shiftReassignId}
                                 onChange={(e) => setShiftReassignId(e.target.value)}
-                                placeholder="Shift UUID"
+                                placeholder="UUID смены"
                             />
-                            <input
-                                value={shiftReassignEmployeeId}
-                                onChange={(e) => setShiftReassignEmployeeId(e.target.value)}
-                                placeholder="New employee UUID"
-                            />
+                            <label className="employee-select">
+                                Новый сотрудник
+                                <select
+                                    value={shiftReassignEmployeeId}
+                                    onChange={(e) => setShiftReassignEmployeeId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <button
                                 className="ghost-button"
                                 type="button"
@@ -552,12 +733,12 @@ const StaffPage = () => {
                                     })
                                 }
                             >
-                                Reassign
+                                Переназначить
                             </button>
                         </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Availability & lookup</h3>
+                        <h3>Доступность и поиск</h3>
                         <div className="inline-row">
                             <input
                                 type="date"
@@ -580,15 +761,24 @@ const StaffPage = () => {
                                     })
                                 }
                             >
-                                Get availability
+                                Получить доступность
                             </button>
                         </div>
                         <div className="inline-row">
-                            <input
-                                value={shiftEmployeeFilterId}
-                                onChange={(e) => setShiftEmployeeFilterId(e.target.value)}
-                                placeholder="Employee UUID"
-                            />
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
+                                    value={shiftEmployeeFilterId}
+                                    onChange={(e) => setShiftEmployeeFilterId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <button
                                 className="ghost-button"
                                 type="button"
@@ -596,10 +786,11 @@ const StaffPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/staff/shifts/employee/${shiftEmployeeFilterId}`,
+                                        onSuccess: (data) => setShiftResults(toShiftList(data)),
                                     })
                                 }
                             >
-                                Shifts by employee
+                                Смены сотрудника
                             </button>
                         </div>
                         <div className="inline-row">
@@ -621,17 +812,18 @@ const StaffPage = () => {
                                         method: "GET",
                                         path: "/api/staff/shifts",
                                         query: {startDate: shiftRangeStart, endDate: shiftRangeEnd},
+                                        onSuccess: (data) => setShiftResults(toShiftList(data)),
                                     })
                                 }
                             >
-                                Shifts by date range
+                                Смены по периоду
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={shiftId}
                                 onChange={(e) => setShiftId(e.target.value)}
-                                placeholder="Shift UUID"
+                                placeholder="UUID смены"
                             />
                             <button
                                 className="ghost-button"
@@ -640,29 +832,63 @@ const StaffPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/staff/shifts/${shiftId}`,
+                                        onSuccess: (data) => setShiftResults(toShiftList(data)),
                                     })
                                 }
                             >
-                                Get shift by ID
+                                Смена по ID
                             </button>
                         </div>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Список смен</h3>
+                        {shiftResults.length ? (
+                            <div className="shift-list">
+                                {shiftResults.map((shift) => (
+                                    <div className="shift-card" key={shift.id}>
+                                        <div className="shift-card__title">
+                                            {shift.shiftType} · {shift.status}
+                                        </div>
+                                        <div className="shift-card__meta">
+                                            <span>Дата: {shift.shiftDate || "-"}</span>
+                                            <span>Начало: {formatDateTime(shift.plannedStartTime)}</span>
+                                            <span>Конец: {formatDateTime(shift.plannedEndTime)}</span>
+                                            <span>Сотрудник: {shift.employeeId}</span>
+                                            {shift.location ? <span>Локация: {shift.location}</span> : null}
+                                        </div>
+                                        <div className="shift-card__id">{shift.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Смены появятся после запроса.</div>
+                        )}
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Work time</div>
+                    <div className="panel__title">Учет времени</div>
                     <div className="panel__section">
-                        <h3>Clock in</h3>
+                        <h3>Отметка входа</h3>
                         <div className="inline-row">
-                            <input
-                                value={workTimeEmployeeId}
-                                onChange={(e) => setWorkTimeEmployeeId(e.target.value)}
-                                placeholder="Employee UUID"
-                            />
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
+                                    value={workTimeEmployeeId}
+                                    onChange={(e) => setWorkTimeEmployeeId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <input
                                 value={workTimeDeviceId}
                                 onChange={(e) => setWorkTimeDeviceId(e.target.value)}
-                                placeholder="Device ID"
+                                placeholder="ID устройства"
                             />
                             <button
                                 className="primary-button"
@@ -678,22 +904,31 @@ const StaffPage = () => {
                                     })
                                 }
                             >
-                                Clock in
+                                Отметить вход
                             </button>
                         </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Clock out</h3>
+                        <h3>Отметка выхода</h3>
                         <div className="inline-row">
-                            <input
-                                value={workTimeClockOutEmployeeId}
-                                onChange={(e) => setWorkTimeClockOutEmployeeId(e.target.value)}
-                                placeholder="Employee UUID"
-                            />
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
+                                    value={workTimeClockOutEmployeeId}
+                                    onChange={(e) => setWorkTimeClockOutEmployeeId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <input
                                 value={workTimeClockOutDeviceId}
                                 onChange={(e) => setWorkTimeClockOutDeviceId(e.target.value)}
-                                placeholder="Device ID"
+                                placeholder="ID устройства"
                             />
                             <button
                                 className="primary-button"
@@ -709,18 +944,27 @@ const StaffPage = () => {
                                     })
                                 }
                             >
-                                Clock out
+                                Отметить выход
                             </button>
                         </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Work time records</h3>
+                        <h3>Записи учета времени</h3>
                         <div className="inline-row">
-                            <input
-                                value={workTimeHistoryEmployeeId}
-                                onChange={(e) => setWorkTimeHistoryEmployeeId(e.target.value)}
-                                placeholder="Employee UUID"
-                            />
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
+                                    value={workTimeHistoryEmployeeId}
+                                    onChange={(e) => setWorkTimeHistoryEmployeeId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <input
                                 type="datetime-local"
                                 value={workTimeHistoryStart}
@@ -745,14 +989,14 @@ const StaffPage = () => {
                                     })
                                 }
                             >
-                                Fetch records
+                                Получить записи
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={workTimeRecordId}
                                 onChange={(e) => setWorkTimeRecordId(e.target.value)}
-                                placeholder="Record UUID"
+                                placeholder="UUID записи"
                             />
                             <button
                                 className="ghost-button"
@@ -764,7 +1008,7 @@ const StaffPage = () => {
                                     })
                                 }
                             >
-                                Get record by ID
+                                Запись по ID
                             </button>
                         </div>
                         <button
@@ -777,34 +1021,40 @@ const StaffPage = () => {
                                 })
                             }
                         >
-                            Check missing clock-outs
+                            Проверить пропущенные выходы
                         </button>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Violation history</div>
+                    <div className="panel__title">История нарушений</div>
                     <div className="panel__section">
-                        <h3>Search violations</h3>
+                        <h3>Поиск нарушений</h3>
                         <div className="form-grid">
-                            <label>
-                                Employee UUID
-                                <input
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
                                     value={violationEmployeeId}
                                     onChange={(e) => setViolationEmployeeId(e.target.value)}
-                                    placeholder="Employee UUID"
-                                />
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                             <label>
-                                Department
+                                Подразделение
                                 <input
                                     value={violationDepartment}
                                     onChange={(e) => setViolationDepartment(e.target.value)}
-                                    placeholder="Department"
+                                    placeholder="Подразделение"
                                 />
                             </label>
                             <label>
-                                Start date
+                                Начало
                                 <input
                                     type="datetime-local"
                                     value={violationStart}
@@ -812,7 +1062,7 @@ const StaffPage = () => {
                                 />
                             </label>
                             <label>
-                                End date
+                                Конец
                                 <input
                                     type="datetime-local"
                                     value={violationEnd}
@@ -820,11 +1070,11 @@ const StaffPage = () => {
                                 />
                             </label>
                             <label className="form-span">
-                                Violation type (optional)
+                                Тип нарушения (необязательно)
                                 <input
                                     value={violationType}
                                     onChange={(e) => setViolationType(e.target.value)}
-                                    placeholder="Type name"
+                                    placeholder="Название типа"
                                 />
                             </label>
                         </div>
@@ -842,20 +1092,30 @@ const StaffPage = () => {
                                         endDate: toIso(violationEnd),
                                         violationType: violationType || undefined,
                                     },
+                                    onSuccess: (data) => setViolationHistory(toViolationHistory(data)),
                                 })
                             }
                         >
-                            Search violations
+                            Найти нарушения
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Quick filters</h3>
+                        <h3>Быстрые фильтры</h3>
                         <div className="inline-row">
-                            <input
-                                value={violationHistoryEmployeeId}
-                                onChange={(e) => setViolationHistoryEmployeeId(e.target.value)}
-                                placeholder="Employee UUID"
-                            />
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
+                                    value={violationHistoryEmployeeId}
+                                    onChange={(e) => setViolationHistoryEmployeeId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <button
                                 className="ghost-button"
                                 type="button"
@@ -863,17 +1123,18 @@ const StaffPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/staff/violation-history/employee/${violationHistoryEmployeeId}`,
+                                        onSuccess: (data) => setViolationHistory(toViolationHistory(data)),
                                     })
                                 }
                             >
-                                By employee
+                                По сотруднику
                             </button>
                         </div>
                         <div className="inline-row">
                             <input
                                 value={violationHistoryDepartment}
                                 onChange={(e) => setViolationHistoryDepartment(e.target.value)}
-                                placeholder="Department"
+                                placeholder="Подразделение"
                             />
                             <button
                                 className="ghost-button"
@@ -882,24 +1143,76 @@ const StaffPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/staff/violation-history/department/${violationHistoryDepartment}`,
+                                        onSuccess: (data) => setViolationHistory(toViolationHistory(data)),
                                     })
                                 }
                             >
-                                By department
+                                По подразделению
                             </button>
                         </div>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Результаты истории</h3>
+                        {violationHistory?.violations?.length ? (
+                            <div className="violation-list">
+                                {violationHistory.violations.map((violation) => (
+                                    <div className="violation-card" key={violation.id}>
+                                        <div className="violation-card__title">
+                                            {violation.violationType}
+                                            {violation.severity ? ` · ${violation.severity}` : ""}
+                                        </div>
+                                        <div className="violation-card__meta">
+                                            <span>Сотрудник: {violation.employeeName || violation.employeeId}</span>
+                                            <span>Дата: {formatDateTime(violation.occurredAt)}</span>
+                                            {violation.status ? <span>Статус: {violation.status}</span> : null}
+                                        </div>
+                                        {violation.description ? (
+                                            <div className="violation-card__desc">{violation.description}</div>
+                                        ) : null}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Результаты появятся после запроса.</div>
+                        )}
+                        {violationHistory?.summary ? (
+                            <div className="violation-summary">
+                                <div className="violation-summary__item">
+                                    Всего: {violationHistory.summary.totalViolations ?? 0}
+                                </div>
+                                <div className="violation-summary__item">
+                                    Сотрудников с нарушениями: {violationHistory.summary.employeesWithViolations ?? 0}
+                                </div>
+                                {violationHistory.summary.byType ? (
+                                    <div className="violation-summary__item">
+                                        По типам:{" "}
+                                        {Object.entries(violationHistory.summary.byType)
+                                            .map(([key, value]) => `${key}: ${value}`)
+                                            .join(", ")}
+                                    </div>
+                                ) : null}
+                                {violationHistory.summary.byDepartment ? (
+                                    <div className="violation-summary__item">
+                                        По подразделениям:{" "}
+                                        {Object.entries(violationHistory.summary.byDepartment)
+                                            .map(([key, value]) => `${key}: ${value}`)
+                                            .join(", ")}
+                                    </div>
+                                ) : null}
+                            </div>
+                        ) : null}
                     </div>
                 </div>
             </section>
 
             <section className="panel panel--wide">
-                <div className="panel__title">Last response</div>
+                <div className="panel__title">Последний ответ</div>
                 <div className="response-meta">
-                    <span>{lastRequest || "Run a request to see details."}</span>
+                    <span>{lastRequest || "Выполните запрос, чтобы увидеть детали."}</span>
                     <span>{lastStatus}</span>
                     <span>{lastDuration}</span>
                 </div>
-                <pre className="response-body">{lastBody || "Response payloads show up here."}</pre>
+                <pre className="response-body">{lastBody || "Тело ответа появится здесь."}</pre>
             </section>
         </div>
     );
