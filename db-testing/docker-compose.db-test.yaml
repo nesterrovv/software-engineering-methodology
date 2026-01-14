@@ -1,0 +1,13 @@
+services:
+  postgres-test:
+    image: postgres:14
+    container_name: casino-mis-db-test
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: casino_mis_test
+    ports:
+      - "55432:5432"
+    volumes:
+      - ./init/00-schema.sql:/docker-entrypoint-initdb.d/00-schema.sql
+      - ./tests:/tests
