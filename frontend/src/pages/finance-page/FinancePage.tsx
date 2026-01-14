@@ -320,6 +320,13 @@ const FinancePage = () => {
         if (!url) {
             return "";
         }
+        if (url.startsWith("s3://")) {
+            const stripped = url.slice("s3://".length);
+            const slashIndex = stripped.indexOf("/");
+            const bucket = slashIndex === -1 ? stripped : stripped.slice(0, slashIndex);
+            const key = slashIndex === -1 ? "" : stripped.slice(slashIndex + 1);
+            return `http://localhost:9001/browser/${bucket}/${key}`;
+        }
         if (/^https?:\/\//i.test(url)) {
             return url;
         }
