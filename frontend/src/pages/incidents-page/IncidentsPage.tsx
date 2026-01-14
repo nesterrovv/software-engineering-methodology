@@ -1,4 +1,5 @@
 import {useEffect, useState} from "react";
+import {useAuth} from "../../auth/AuthContext.tsx";
 import "./incidents-page.scss";
 
 const INCIDENT_TYPES = ["THEFT", "FIGHT", "DRUNKENNESS", "CHEATING", "OTHER"] as const;
@@ -6,7 +7,6 @@ const COMPLAINT_CATEGORIES = ["SERVICE_QUALITY", "STAFF_BEHAVIOR", "GAME_ISSUES"
 const COMPLAINT_SOURCES = ["VISITOR", "EMPLOYEE", "SYSTEM", "TERMINAL"] as const;
 const COMPLAINT_STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const;
 const VIOLATION_TYPES = ["LATE", "OUT_OF_ZONE", "CONFLICT", "OTHER"] as const;
-const REPORT_TYPES = ["INCIDENTS", "MANAGEMENT", "REGULATORY"] as const;
 
 type DownloadState = { url: string; filename: string } | null;
 
@@ -36,11 +36,122 @@ const formatBody = (data: unknown) => {
     return JSON.stringify(data, null, 2);
 };
 
+type EmployeeOption = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    middleName?: string;
+    position?: string;
+    department?: string;
+};
+
+const toEmployeeOptions = (data: unknown): EmployeeOption[] => {
+    if (Array.isArray(data)) {
+        return data as EmployeeOption[];
+    }
+    if (data && typeof data === "object") {
+        return [data as EmployeeOption];
+    }
+    return [];
+};
+
+const formatEmployeeName = (employee?: EmployeeOption) => {
+    if (!employee) {
+        return "";
+    }
+    return [employee.lastName, employee.firstName, employee.middleName]
+        .filter(Boolean)
+        .join(" ");
+};
+
+type IncidentItem = {
+    id: string;
+    type: string;
+    location?: string;
+    occurredAt?: string;
+    description?: string;
+    participants?: string[];
+    attachmentUrls?: string[];
+    status?: string;
+    reportedBy?: string;
+};
+
+type ComplaintItem = {
+    id: string;
+    category: string;
+    description: string;
+    reportedAt?: string;
+    source: string;
+    status?: string;
+    reporterName?: string;
+    relatedIncidentId?: string;
+};
+
+type ViolationItem = {
+    id: string;
+    employeeId: string;
+    type: string;
+    description?: string;
+    occurredAt?: string;
+    status?: string;
+    attachmentUrls?: string[];
+};
+
+const extractReportId = (data: unknown) => {
+    if (data && typeof data === "object") {
+        if (Array.isArray(data)) {
+            const first = data[0] as { id?: string } | undefined;
+            return first?.id ?? "";
+        }
+        const record = data as { id?: string };
+        return record.id ?? "";
+    }
+    return "";
+};
+
+const toIncidentList = (data: unknown): IncidentItem[] => {
+    if (Array.isArray(data)) {
+        return data as IncidentItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as IncidentItem];
+    }
+    return [];
+};
+
+const toComplaintList = (data: unknown): ComplaintItem[] => {
+    if (Array.isArray(data)) {
+        return data as ComplaintItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as ComplaintItem];
+    }
+    return [];
+};
+
+const toViolationList = (data: unknown): ViolationItem[] => {
+    if (Array.isArray(data)) {
+        return data as ViolationItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as ViolationItem];
+    }
+    return [];
+};
+
+const formatDateTime = (value?: string) => {
+    if (!value) {
+        return "-";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+    return date.toLocaleString();
+};
+
 const IncidentsPage = () => {
-    const [apiBase, setApiBase] = useState(
-        import.meta.env.VITE_INCIDENT_API_BASE ?? "http://localhost:8080"
-    );
-    const [authToken, setAuthToken] = useState("");
+    const {token, baseUrl} = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [lastRequest, setLastRequest] = useState("");
     const [lastStatus, setLastStatus] = useState("");
@@ -91,9 +202,14 @@ const IncidentsPage = () => {
     const [repeatedStart, setRepeatedStart] = useState("");
     const [repeatedEnd, setRepeatedEnd] = useState("");
     const [repeatedThreshold, setRepeatedThreshold] = useState("3");
-    const [reportFilterType, setReportFilterType] = useState("");
-    const [reportId, setReportId] = useState("");
     const [exportReportId, setExportReportId] = useState("");
+    const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
+    const [incidentResults, setIncidentResults] = useState<IncidentItem[]>([]);
+    const [complaintResults, setComplaintResults] = useState<ComplaintItem[]>([]);
+    const [violationResults, setViolationResults] = useState<ViolationItem[]>([]);
+    const [incidentReportId, setIncidentReportId] = useState("");
+    const [managementReportId, setManagementReportId] = useState("");
+    const [regulatoryReportId, setRegulatoryReportId] = useState("");
 
     useEffect(() => {
         return () => {
@@ -103,28 +219,38 @@ const IncidentsPage = () => {
         };
     }, [download]);
 
+    useEffect(() => {
+        if (!token) {
+            return;
+        }
+        runRequest({
+            method: "GET",
+            path: "/api/staff/employees",
+            onSuccess: (data) => setEmployeeOptions(toEmployeeOptions(data)),
+        });
+    }, [token]);
+
     const runRequest = async (options: {
         method: string;
         path: string;
         query?: Record<string, string | undefined>;
         body?: unknown;
+        onSuccess?: (data: unknown) => void;
         responseType?: "json" | "blob";
         downloadName?: string;
     }) => {
-        const base = apiBase.replace(/\/+$/, "");
+        const base = baseUrl.replace(/\/+$/, "");
         const query = options.query ? buildQuery(options.query) : "";
         const url = `${base}${options.path}${query}`;
         const started = performance.now();
         const headers: Record<string, string> = {
-            Accept: "application/json",
+            Accept: options.responseType === "blob" ? "*/*" : "application/json",
         };
         if (options.body) {
             headers["Content-Type"] = "application/json";
         }
-        if (authToken.trim()) {
-            headers.Authorization = authToken.startsWith("Bearer ")
-                ? authToken.trim()
-                : `Bearer ${authToken.trim()}`;
+        if (token) {
+            headers.Authorization = token;
         }
         setIsLoading(true);
         setLastRequest(`${options.method} ${url}`);
@@ -140,17 +266,28 @@ const IncidentsPage = () => {
             });
             const duration = `${Math.round(performance.now() - started)} ms`;
             if (options.responseType === "blob") {
-                const blob = await response.blob();
-                const safeName = options.downloadName ?? "report.bin";
-                const downloadUrl = URL.createObjectURL(blob);
-                setDownload({url: downloadUrl, filename: safeName});
-                setLastBody(`Binary response (${blob.type || "unknown"}) ready for download.`);
+                if (!response.ok) {
+                    const text = await response.text();
+                    setLastBody(text || "Empty response.");
+                } else {
+                    const blob = await response.blob();
+                    const safeName = options.downloadName ?? "report.bin";
+                    const downloadUrl = URL.createObjectURL(blob);
+                    const contentType = response.headers.get("content-type") || blob.type || "unknown";
+                    setDownload({url: downloadUrl, filename: safeName});
+                    setLastBody(`Binary response (${contentType}) ready for download.`);
+                }
             } else {
                 const text = await response.text();
+                let parsed: unknown = text || "Empty response.";
                 try {
-                    setLastBody(formatBody(JSON.parse(text)));
+                    parsed = JSON.parse(text);
                 } catch {
-                    setLastBody(text || "Empty response.");
+                    parsed = text || "Empty response.";
+                }
+                setLastBody(formatBody(parsed));
+                if (response.ok && options.onSuccess) {
+                    options.onSuccess(parsed);
                 }
             }
             setLastStatus(`${response.status} ${response.ok ? "OK" : "ERROR"}`);
@@ -175,51 +312,32 @@ const IncidentsPage = () => {
         <div className="incidents-page">
             <section className="incidents-page__hero">
                 <div className="incidents-page__hero-text">
-                    <div className="hero-eyebrow">Incident service console</div>
-                    <h1>All endpoints, one place.</h1>
+                    <div className="hero-eyebrow">Консоль инцидентов</div>
+                    <h1>Все ручки в одном месте.</h1>
                     <p>
-                        Full control over incidents, complaints, violations, and reporting. Each
-                        block below maps directly to a backend endpoint with instant response
-                        previews.
+                        Полный контроль над инцидентами, жалобами, нарушениями и отчетами. Каждый
+                        блок ниже соответствует ручке бэка с мгновенным превью ответа.
                     </p>
-                    <div className="hero-inputs">
-                        <label>
-                            API base URL
-                            <input
-                                value={apiBase}
-                                onChange={(event) => setApiBase(event.target.value)}
-                                placeholder="http://localhost:8080"
-                            />
-                        </label>
-                        <label>
-                            Auth token (optional)
-                            <input
-                                value={authToken}
-                                onChange={(event) => setAuthToken(event.target.value)}
-                                placeholder="Bearer ..."
-                            />
-                        </label>
-                    </div>
                 </div>
                 <div className="incidents-page__hero-stats">
-                    <div className="hero-pill">Incidents</div>
-                    <div className="hero-pill">Complaints</div>
-                    <div className="hero-pill">Violations</div>
-                    <div className="hero-pill">Reports</div>
+                    <div className="hero-pill">Инциденты</div>
+                    <div className="hero-pill">Жалобы</div>
+                    <div className="hero-pill">Нарушения</div>
+                    <div className="hero-pill">Отчеты</div>
                     <div className="hero-pill hero-pill--dark">
-                        {isLoading ? "Running request..." : "Ready for action"}
+                        {isLoading ? "Выполняю запрос..." : "Готово к работе"}
                     </div>
                 </div>
             </section>
 
             <section className="incidents-page__grid">
                 <div className="panel">
-                    <div className="panel__title">Incidents</div>
+                    <div className="panel__title">Инциденты</div>
                     <div className="panel__section">
-                        <h3>Create incident</h3>
+                        <h3>Создать инцидент</h3>
                         <div className="form-grid">
                             <label>
-                                Type
+                                Тип
                                 <select value={incidentType} onChange={(e) => setIncidentType(e.target.value)}>
                                     {INCIDENT_TYPES.map((type) => (
                                         <option key={type} value={type}>
@@ -229,23 +347,23 @@ const IncidentsPage = () => {
                                 </select>
                             </label>
                             <label>
-                                Location
+                                Локация
                                 <input
                                     value={incidentLocation}
                                     onChange={(e) => setIncidentLocation(e.target.value)}
-                                    placeholder="Floor, table, zone"
+                                    placeholder="Этаж, стол, зона"
                                 />
                             </label>
                             <label className="form-span">
-                                Description
+                                Описание
                                 <textarea
                                     value={incidentDescription}
                                     onChange={(e) => setIncidentDescription(e.target.value)}
-                                    placeholder="What happened?"
+                                    placeholder="Что случилось?"
                                 />
                             </label>
                             <label>
-                                Participants (comma separated)
+                                Участники (через запятую)
                                 <input
                                     value={incidentParticipants}
                                     onChange={(e) => setIncidentParticipants(e.target.value)}
@@ -253,7 +371,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Attachment URLs
+                                Вложения (URL)
                                 <input
                                     value={incidentAttachments}
                                     onChange={(e) => setIncidentAttachments(e.target.value)}
@@ -261,11 +379,11 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Reported by (UUID)
+                                Кто сообщил (UUID)
                                 <input
                                     value={incidentReportedBy}
                                     onChange={(e) => setIncidentReportedBy(e.target.value)}
-                                    placeholder="reporter uuid"
+                                    placeholder="uuid"
                                 />
                             </label>
                         </div>
@@ -275,7 +393,7 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "POST",
-                                    path: "/incidents",
+                                    path: "/api/incident/incidents",
                                     body: {
                                         type: incidentType,
                                         location: incidentLocation || undefined,
@@ -287,14 +405,14 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Create incident
+                            Создать инцидент
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Filter incidents</h3>
+                        <h3>Фильтр инцидентов</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={incidentStart}
@@ -302,7 +420,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={incidentEnd}
@@ -310,12 +428,12 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Type (optional)
+                                Тип (необязательно)
                                 <select
                                     value={incidentFilterType}
                                     onChange={(e) => setIncidentFilterType(e.target.value)}
                                 >
-                                    <option value="">All</option>
+                                    <option value="">Все</option>
                                     {INCIDENT_TYPES.map((type) => (
                                         <option key={type} value={type}>
                                             {type}
@@ -330,25 +448,53 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "GET",
-                                    path: "/incidents",
+                                    path: "/api/incident/incidents",
                                     query: {
                                         start: toIso(incidentStart),
                                         end: toIso(incidentEnd),
                                         type: incidentFilterType || undefined,
                                     },
+                                    onSuccess: (data) => setIncidentResults(toIncidentList(data)),
                                 })
                             }
                         >
-                            Fetch incidents
+                            Получить инциденты
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Get incident by ID</h3>
+                        <h3>Список инцидентов</h3>
+                        {incidentResults.length ? (
+                            <div className="incident-list">
+                                {incidentResults.map((incident) => (
+                                    <div className="incident-card" key={incident.id}>
+                                        <div className="incident-card__title">
+                                            {incident.type} {incident.status ? `· ${incident.status}` : ""}
+                                        </div>
+                                        <div className="incident-card__meta">
+                                            <span>Дата: {formatDateTime(incident.occurredAt)}</span>
+                                            {incident.location ? <span>Локация: {incident.location}</span> : null}
+                                            {incident.reportedBy ? (
+                                                <span>Сообщил: {incident.reportedBy}</span>
+                                            ) : null}
+                                        </div>
+                                        {incident.description ? (
+                                            <div className="incident-card__desc">{incident.description}</div>
+                                        ) : null}
+                                        <div className="incident-card__id">{incident.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Инциденты появятся после запроса.</div>
+                        )}
+                    </div>
+                    <div className="panel__section">
+                        <h3>Инцидент по ID</h3>
                         <div className="inline-row">
                             <input
                                 value={incidentId}
                                 onChange={(e) => setIncidentId(e.target.value)}
-                                placeholder="Incident UUID"
+                                placeholder="UUID инцидента"
                             />
                             <button
                                 className="ghost-button"
@@ -356,23 +502,24 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "GET",
-                                        path: `/incidents/${incidentId}`,
+                                        path: `/api/incident/incidents/${incidentId}`,
+                                        onSuccess: (data) => setIncidentResults(toIncidentList(data)),
                                     })
                                 }
                             >
-                                Get incident
+                                Получить инцидент
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Complaints</div>
+                    <div className="panel__title">Жалобы</div>
                     <div className="panel__section">
-                        <h3>Create complaint</h3>
+                        <h3>Создать жалобу</h3>
                         <div className="form-grid">
                             <label>
-                                Category
+                                Категория
                                 <select
                                     value={complaintCategory}
                                     onChange={(e) => setComplaintCategory(e.target.value)}
@@ -385,7 +532,7 @@ const IncidentsPage = () => {
                                 </select>
                             </label>
                             <label>
-                                Source
+                                Источник
                                 <select
                                     value={complaintSource}
                                     onChange={(e) => setComplaintSource(e.target.value)}
@@ -398,27 +545,27 @@ const IncidentsPage = () => {
                                 </select>
                             </label>
                             <label className="form-span">
-                                Description
+                                Описание
                                 <textarea
                                     value={complaintDescription}
                                     onChange={(e) => setComplaintDescription(e.target.value)}
-                                    placeholder="Complaint details"
+                                    placeholder="Детали жалобы"
                                 />
                             </label>
                             <label>
-                                Reporter name
+                                Имя заявителя
                                 <input
                                     value={complaintReporter}
                                     onChange={(e) => setComplaintReporter(e.target.value)}
-                                    placeholder="Name or alias"
+                                    placeholder="Имя или псевдоним"
                                 />
                             </label>
                             <label>
-                                Related incident UUID
+                                Связанный инцидент (UUID)
                                 <input
                                     value={complaintRelatedIncidentId}
                                     onChange={(e) => setComplaintRelatedIncidentId(e.target.value)}
-                                    placeholder="Incident UUID"
+                                    placeholder="UUID инцидента"
                                 />
                             </label>
                         </div>
@@ -428,7 +575,7 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "POST",
-                                    path: "/complaints",
+                                    path: "/api/incident/complaints",
                                     body: {
                                         category: complaintCategory,
                                         description: complaintDescription,
@@ -439,14 +586,14 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Create complaint
+                            Создать жалобу
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Filter complaints</h3>
+                        <h3>Фильтр жалоб</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={complaintStart}
@@ -454,7 +601,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={complaintEnd}
@@ -462,12 +609,12 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Category
+                                Категория
                                 <select
                                     value={complaintFilterCategory}
                                     onChange={(e) => setComplaintFilterCategory(e.target.value)}
                                 >
-                                    <option value="">All</option>
+                                    <option value="">Все</option>
                                     {COMPLAINT_CATEGORIES.map((category) => (
                                         <option key={category} value={category}>
                                             {category}
@@ -476,12 +623,12 @@ const IncidentsPage = () => {
                                 </select>
                             </label>
                             <label>
-                                Source
+                                Источник
                                 <select
                                     value={complaintFilterSource}
                                     onChange={(e) => setComplaintFilterSource(e.target.value)}
                                 >
-                                    <option value="">All</option>
+                                    <option value="">Все</option>
                                     {COMPLAINT_SOURCES.map((source) => (
                                         <option key={source} value={source}>
                                             {source}
@@ -496,26 +643,57 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "GET",
-                                    path: "/complaints",
+                                    path: "/api/incident/complaints",
                                     query: {
                                         start: toIso(complaintStart),
                                         end: toIso(complaintEnd),
                                         category: complaintFilterCategory || undefined,
                                         source: complaintFilterSource || undefined,
                                     },
+                                    onSuccess: (data) => setComplaintResults(toComplaintList(data)),
                                 })
                             }
                         >
-                            Fetch complaints
+                            Получить жалобы
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Get complaint by ID</h3>
+                        <h3>Список жалоб</h3>
+                        {complaintResults.length ? (
+                            <div className="complaint-list">
+                                {complaintResults.map((complaint) => (
+                                    <div className="complaint-card" key={complaint.id}>
+                                        <div className="complaint-card__title">
+                                            {complaint.category} {complaint.status ? `· ${complaint.status}` : ""}
+                                        </div>
+                                        <div className="complaint-card__meta">
+                                            <span>Источник: {complaint.source}</span>
+                                            <span>Дата: {formatDateTime(complaint.reportedAt)}</span>
+                                            {complaint.reporterName ? (
+                                                <span>Заявитель: {complaint.reporterName}</span>
+                                            ) : null}
+                                            {complaint.relatedIncidentId ? (
+                                                <span>Инцидент: {complaint.relatedIncidentId}</span>
+                                            ) : null}
+                                        </div>
+                                        {complaint.description ? (
+                                            <div className="complaint-card__desc">{complaint.description}</div>
+                                        ) : null}
+                                        <div className="complaint-card__id">{complaint.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Жалобы появятся после запроса.</div>
+                        )}
+                    </div>
+                    <div className="panel__section">
+                        <h3>Жалоба по ID</h3>
                         <div className="inline-row">
                             <input
                                 value={complaintId}
                                 onChange={(e) => setComplaintId(e.target.value)}
-                                placeholder="Complaint UUID"
+                                placeholder="UUID жалобы"
                             />
                             <button
                                 className="ghost-button"
@@ -523,21 +701,22 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "GET",
-                                        path: `/complaints/${complaintId}`,
+                                        path: `/api/incident/complaints/${complaintId}`,
+                                        onSuccess: (data) => setComplaintResults(toComplaintList(data)),
                                     })
                                 }
                             >
-                                Get complaint
+                                Получить жалобу
                             </button>
                         </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Update complaint status</h3>
+                        <h3>Изменить статус жалобы</h3>
                         <div className="inline-row">
                             <input
                                 value={complaintStatusId}
                                 onChange={(e) => setComplaintStatusId(e.target.value)}
-                                placeholder="Complaint UUID"
+                                placeholder="UUID жалобы"
                             />
                             <select
                                 value={complaintStatus}
@@ -555,32 +734,56 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "PATCH",
-                                        path: `/complaints/${complaintStatusId}/status`,
+                                        path: `/api/incident/complaints/${complaintStatusId}/status`,
                                         query: {status: complaintStatus},
                                     })
                                 }
                             >
-                                Update status
+                                Обновить статус
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Violations</div>
+                    <div className="panel__title">Нарушения</div>
                     <div className="panel__section">
-                        <h3>Create violation</h3>
+                        <div className="inline-row">
+                            <button
+                                className="ghost-button"
+                                type="button"
+                                onClick={() =>
+                                    runRequest({
+                                        method: "GET",
+                                        path: "/api/staff/employees",
+                                        onSuccess: (data) => setEmployeeOptions(toEmployeeOptions(data)),
+                                    })
+                                }
+                            >
+                                Обновить список сотрудников
+                            </button>
+                            <span className="hint">Загружено: {employeeOptions.length}</span>
+                        </div>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Создать нарушение</h3>
                         <div className="form-grid">
-                            <label>
-                                Employee UUID
-                                <input
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
                                     value={violationEmployeeId}
                                     onChange={(e) => setViolationEmployeeId(e.target.value)}
-                                    placeholder="Employee UUID"
-                                />
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                             <label>
-                                Type
+                                Тип
                                 <select
                                     value={violationType}
                                     onChange={(e) => setViolationType(e.target.value)}
@@ -593,15 +796,15 @@ const IncidentsPage = () => {
                                 </select>
                             </label>
                             <label className="form-span">
-                                Description
+                                Описание
                                 <textarea
                                     value={violationDescription}
                                     onChange={(e) => setViolationDescription(e.target.value)}
-                                    placeholder="Violation context"
+                                    placeholder="Контекст нарушения"
                                 />
                             </label>
                             <label className="form-span">
-                                Attachment URLs
+                                Вложения (URL)
                                 <input
                                     value={violationAttachments}
                                     onChange={(e) => setViolationAttachments(e.target.value)}
@@ -615,7 +818,7 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "POST",
-                                    path: "/violations",
+                                    path: "/api/incident/violations",
                                     body: {
                                         employeeId: violationEmployeeId,
                                         type: violationType,
@@ -625,31 +828,56 @@ const IncidentsPage = () => {
                                 })
                             }
                         >
-                            Create violation
+                            Создать нарушение
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>List violations</h3>
+                        <h3>Список нарушений</h3>
                         <button
                             className="ghost-button"
                             type="button"
                             onClick={() =>
                                 runRequest({
                                     method: "GET",
-                                    path: "/violations",
+                                    path: "/api/incident/violations",
+                                    onSuccess: (data) => setViolationResults(toViolationList(data)),
                                 })
                             }
                         >
-                            Fetch violations
+                            Получить нарушения
                         </button>
                     </div>
                     <div className="panel__section">
-                        <h3>Get violation by ID</h3>
+                        <h3>Список нарушений</h3>
+                        {violationResults.length ? (
+                            <div className="violation-list">
+                                {violationResults.map((violation) => (
+                                    <div className="violation-card" key={violation.id}>
+                                        <div className="violation-card__title">
+                                            {violation.type} {violation.status ? `· ${violation.status}` : ""}
+                                        </div>
+                                        <div className="violation-card__meta">
+                                            <span>Сотрудник: {violation.employeeId}</span>
+                                            <span>Дата: {formatDateTime(violation.occurredAt)}</span>
+                                        </div>
+                                        {violation.description ? (
+                                            <div className="violation-card__desc">{violation.description}</div>
+                                        ) : null}
+                                        <div className="violation-card__id">{violation.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Нарушения появятся после запроса.</div>
+                        )}
+                    </div>
+                    <div className="panel__section">
+                        <h3>Нарушение по ID</h3>
                         <div className="inline-row">
                             <input
                                 value={violationId}
                                 onChange={(e) => setViolationId(e.target.value)}
-                                placeholder="Violation UUID"
+                                placeholder="UUID нарушения"
                             />
                             <button
                                 className="ghost-button"
@@ -657,23 +885,24 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "GET",
-                                        path: `/violations/${violationId}`,
+                                        path: `/api/incident/violations/${violationId}`,
+                                        onSuccess: (data) => setViolationResults(toViolationList(data)),
                                     })
                                 }
                             >
-                                Get violation
+                                Получить нарушение
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Reports</div>
+                    <div className="panel__title">Отчеты</div>
                     <div className="panel__section">
-                        <h3>Incident report</h3>
+                        <h3>Отчет по инцидентам</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={reportStart}
@@ -681,7 +910,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={reportEnd}
@@ -689,7 +918,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label className="form-span">
-                                Incident types
+                                Типы инцидентов
                                 <div className="chip-grid">
                                     {INCIDENT_TYPES.map((type) => (
                                         <button
@@ -704,12 +933,18 @@ const IncidentsPage = () => {
                                 </div>
                             </label>
                             <label>
-                                Generated by (UUID)
-                                <input
+                                Сформировал (UUID)
+                                <select
                                     value={reportGeneratedBy}
                                     onChange={(e) => setReportGeneratedBy(e.target.value)}
-                                    placeholder="User UUID"
-                                />
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                         </div>
                         <button
@@ -718,7 +953,7 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "POST",
-                                    path: "/reports/incidents",
+                                    path: "/api/incident/reports/incidents",
                                     body: {
                                         periodStart: toIso(reportStart),
                                         periodEnd: toIso(reportEnd),
@@ -727,17 +962,21 @@ const IncidentsPage = () => {
                                             : null,
                                         generatedBy: reportGeneratedBy || undefined,
                                     },
+                                    onSuccess: (data) => setIncidentReportId(extractReportId(data)),
                                 })
                             }
                         >
-                            Generate incident report
+                            Сформировать отчет
                         </button>
+                        <div className="hint">
+                            UUID отчета: {incidentReportId || "появится после создания"}
+                        </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Management report</h3>
+                        <h3>Отчет для руководства</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={managementReportStart}
@@ -745,7 +984,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={managementReportEnd}
@@ -753,11 +992,11 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Generated by (UUID)
+                                Сформировал (UUID)
                                 <input
                                     value={managementReportGeneratedBy}
                                     onChange={(e) => setManagementReportGeneratedBy(e.target.value)}
-                                    placeholder="User UUID"
+                                    placeholder="UUID пользователя"
                                 />
                             </label>
                         </div>
@@ -765,25 +1004,29 @@ const IncidentsPage = () => {
                             className="primary-button"
                             type="button"
                             onClick={() =>
-                                runRequest({
-                                    method: "POST",
-                                    path: "/reports/management",
-                                    body: {
-                                        periodStart: toIso(managementReportStart),
-                                        periodEnd: toIso(managementReportEnd),
-                                        generatedBy: managementReportGeneratedBy || undefined,
-                                    },
+                                    runRequest({
+                                        method: "POST",
+                                        path: "/api/incident/reports/management",
+                                        body: {
+                                            periodStart: toIso(managementReportStart),
+                                            periodEnd: toIso(managementReportEnd),
+                                            generatedBy: managementReportGeneratedBy || undefined,
+                                        },
+                                    onSuccess: (data) => setManagementReportId(extractReportId(data)),
                                 })
                             }
                         >
-                            Generate management report
+                            Сформировать отчет
                         </button>
+                        <div className="hint">
+                            UUID отчета: {managementReportId || "появится после создания"}
+                        </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Regulatory report</h3>
+                        <h3>Регуляторный отчет</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={regulatoryReportStart}
@@ -791,7 +1034,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={regulatoryReportEnd}
@@ -799,11 +1042,11 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Generated by (UUID)
+                                Сформировал (UUID)
                                 <input
                                     value={regulatoryReportGeneratedBy}
                                     onChange={(e) => setRegulatoryReportGeneratedBy(e.target.value)}
-                                    placeholder="User UUID"
+                                    placeholder="UUID пользователя"
                                 />
                             </label>
                         </div>
@@ -811,25 +1054,29 @@ const IncidentsPage = () => {
                             className="primary-button"
                             type="button"
                             onClick={() =>
-                                runRequest({
-                                    method: "POST",
-                                    path: "/reports/regulatory",
-                                    body: {
-                                        periodStart: toIso(regulatoryReportStart),
-                                        periodEnd: toIso(regulatoryReportEnd),
-                                        generatedBy: regulatoryReportGeneratedBy || undefined,
-                                    },
+                                    runRequest({
+                                        method: "POST",
+                                        path: "/api/incident/reports/regulatory",
+                                        body: {
+                                            periodStart: toIso(regulatoryReportStart),
+                                            periodEnd: toIso(regulatoryReportEnd),
+                                            generatedBy: regulatoryReportGeneratedBy || undefined,
+                                        },
+                                    onSuccess: (data) => setRegulatoryReportId(extractReportId(data)),
                                 })
                             }
                         >
-                            Generate regulatory report
+                            Сформировать отчет
                         </button>
+                        <div className="hint">
+                            UUID отчета: {regulatoryReportId || "появится после создания"}
+                        </div>
                     </div>
                     <div className="panel__section">
-                        <h3>Repeated violations</h3>
+                        <h3>Повторяющиеся нарушения</h3>
                         <div className="form-grid">
                             <label>
-                                Period start
+                                Начало периода
                                 <input
                                     type="datetime-local"
                                     value={repeatedStart}
@@ -837,7 +1084,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Period end
+                                Конец периода
                                 <input
                                     type="datetime-local"
                                     value={repeatedEnd}
@@ -845,7 +1092,7 @@ const IncidentsPage = () => {
                                 />
                             </label>
                             <label>
-                                Threshold
+                                Порог
                                 <input
                                     type="number"
                                     min="1"
@@ -858,79 +1105,31 @@ const IncidentsPage = () => {
                             className="ghost-button"
                             type="button"
                             onClick={() =>
-                                runRequest({
-                                    method: "POST",
-                                    path: "/reports/repeated-violations",
-                                    body: {
-                                        periodStart: toIso(repeatedStart),
-                                        periodEnd: toIso(repeatedEnd),
-                                        threshold: Number(repeatedThreshold || 3),
+                                    runRequest({
+                                        method: "POST",
+                                        path: "/api/incident/reports/repeated-violations",
+                                        body: {
+                                            periodStart: toIso(repeatedStart),
+                                            periodEnd: toIso(repeatedEnd),
+                                            threshold: Number(repeatedThreshold || 3),
                                     },
                                 })
                             }
                         >
-                            Get repeated violations
+                            Получить повторяющиеся
                         </button>
-                    </div>
-                    <div className="panel__section">
-                        <h3>Report registry</h3>
-                        <div className="inline-row">
-                            <select
-                                value={reportFilterType}
-                                onChange={(e) => setReportFilterType(e.target.value)}
-                            >
-                                <option value="">All types</option>
-                                {REPORT_TYPES.map((type) => (
-                                    <option key={type} value={type}>
-                                        {type}
-                                    </option>
-                                ))}
-                            </select>
-                            <button
-                                className="ghost-button"
-                                type="button"
-                                onClick={() =>
-                                    runRequest({
-                                        method: "GET",
-                                        path: "/reports",
-                                        query: {type: reportFilterType || undefined},
-                                    })
-                                }
-                            >
-                                Fetch reports
-                            </button>
-                        </div>
-                        <div className="inline-row">
-                            <input
-                                value={reportId}
-                                onChange={(e) => setReportId(e.target.value)}
-                                placeholder="Report UUID"
-                            />
-                            <button
-                                className="ghost-button"
-                                type="button"
-                                onClick={() =>
-                                    runRequest({
-                                        method: "GET",
-                                        path: `/reports/${reportId}`,
-                                    })
-                                }
-                            >
-                                Get report
-                            </button>
-                        </div>
                     </div>
                 </div>
 
                 <div className="panel">
-                    <div className="panel__title">Exports</div>
+                    <div className="panel__title">Экспорт</div>
                     <div className="panel__section">
-                        <h3>Export report</h3>
+                        <h3>Экспорт отчета</h3>
                         <div className="inline-row">
                             <input
                                 value={exportReportId}
                                 onChange={(e) => setExportReportId(e.target.value)}
-                                placeholder="Report UUID"
+                                placeholder="UUID отчета"
                             />
                             <button
                                 className="ghost-button"
@@ -938,13 +1137,13 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "GET",
-                                        path: `/reports/${exportReportId}/export/pdf`,
+                                        path: `/api/incident/reports/${exportReportId}/export/pdf`,
                                         responseType: "blob",
                                         downloadName: `report-${exportReportId || "export"}.pdf`,
                                     })
                                 }
                             >
-                                Export PDF
+                                Экспорт PDF
                             </button>
                             <button
                                 className="ghost-button"
@@ -952,35 +1151,26 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "GET",
-                                        path: `/reports/${exportReportId}/export/excel`,
+                                        path: `/api/incident/reports/${exportReportId}/export/excel`,
                                         responseType: "blob",
                                         downloadName: `report-${exportReportId || "export"}.xlsx`,
                                     })
                                 }
                             >
-                                Export Excel
+                                Экспорт Excel
                             </button>
                         </div>
                         {download ? (
                             <a className="download-link" href={download.url} download={download.filename}>
-                                Download {download.filename}
+                                Скачать {download.filename}
                             </a>
                         ) : (
-                            <div className="hint">Exports appear as downloadable files here.</div>
+                            <div className="hint">Файлы для скачивания появятся здесь.</div>
                         )}
                     </div>
                 </div>
             </section>
 
-            <section className="panel panel--wide">
-                <div className="panel__title">Last response</div>
-                <div className="response-meta">
-                    <span>{lastRequest || "Run a request to see details."}</span>
-                    <span>{lastStatus}</span>
-                    <span>{lastDuration}</span>
-                </div>
-                <pre className="response-body">{lastBody || "Response payloads show up here."}</pre>
-            </section>
         </div>
     );
 };

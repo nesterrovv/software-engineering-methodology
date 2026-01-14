@@ -5,12 +5,19 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   border-radius: 999px;
   background: linear-gradient(120deg, rgba(255, 148, 196, 0.95), rgba(255, 84, 154, 0.98));
   box-shadow: 0 18px 40px rgba(255, 84, 154, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.header__nav {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .header a {
@@ -30,5 +37,31 @@
 
 .header a.active {
   background: rgba(255, 255, 255, 0.35);
+  color: #411327;
+}
+
+.header__auth {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.header__badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.header__logout {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.8);
   color: #411327;
 }
