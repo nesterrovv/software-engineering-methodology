@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {useAuth} from "../../auth/AuthContext.tsx";
 import "./security-page.scss";
 
@@ -34,6 +34,189 @@ const formatBody = (data: unknown) => {
     return JSON.stringify(data, null, 2);
 };
 
+type EmployeeOption = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    middleName?: string;
+    position?: string;
+    department?: string;
+};
+
+type HallStatus = {
+    totalVisitors?: number;
+    totalStaff?: number;
+    activeTables?: number;
+    anomaliesCount?: number;
+    zones?: {
+        zoneName?: string;
+        visitorCount?: number;
+        staffCount?: number;
+        status?: string;
+    }[];
+    recentActivities?: {
+        type?: string;
+        description?: string;
+        location?: string;
+        timestamp?: string;
+    }[];
+};
+
+type ContactEventItem = {
+    id: string;
+    personId1: string;
+    personId2: string;
+    contactStartTime?: string;
+    contactEndTime?: string;
+    durationSeconds?: number;
+    location?: string;
+    status?: string;
+    suspicious?: boolean;
+    suspiciousActivityId?: string;
+};
+
+type FraudRecord = {
+    id: string;
+    personId: string;
+    fullName: string;
+    description?: string;
+    photoUrl?: string;
+    fraudType?: string;
+    addedAt?: string;
+    addedBy?: string;
+    lastCheckedAt?: string;
+    matchCount?: number;
+    status?: string;
+};
+
+type FraudCheckResult = {
+    id?: string;
+    personId?: string;
+    matched?: boolean;
+    matchedRecords?: unknown[];
+    confidenceScore?: number;
+    checkedAt?: string;
+    status?: string;
+    message?: string;
+};
+
+type NotificationItem = {
+    id: string;
+    recipientId: string;
+    type: string;
+    title: string;
+    message: string;
+    priority: string;
+    status: string;
+    createdAt?: string;
+    sentAt?: string;
+    readAt?: string;
+    relatedEntityType?: string;
+    relatedEntityId?: string;
+};
+type MonitoringSession = {
+    id?: string;
+    securityOfficerId?: string;
+    startedAt?: string;
+    endedAt?: string;
+    status?: string;
+    activeVisitors?: number;
+    activeStaff?: number;
+    anomaliesDetected?: number;
+    notes?: string;
+};
+
+const toMonitoringSession = (data: unknown): MonitoringSession | null => {
+    if (!data || typeof data !== "object") {
+        return null;
+    }
+    return data as MonitoringSession;
+};
+
+const toEmployeeOptions = (data: unknown): EmployeeOption[] => {
+    if (Array.isArray(data)) {
+        return data as EmployeeOption[];
+    }
+    if (data && typeof data === "object") {
+        return [data as EmployeeOption];
+    }
+    return [];
+};
+
+const formatEmployeeName = (employee?: EmployeeOption) => {
+    if (!employee) {
+        return "";
+    }
+    return [employee.lastName, employee.firstName, employee.middleName]
+        .filter(Boolean)
+        .join(" ");
+};
+
+const formatDateTime = (value?: string) => {
+    if (!value) {
+        return "-";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+    return date.toLocaleString();
+};
+
+const toContactList = (data: unknown): ContactEventItem[] => {
+    if (Array.isArray(data)) {
+        return data as ContactEventItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as ContactEventItem];
+    }
+    return [];
+};
+
+const toFraudList = (data: unknown): FraudRecord[] => {
+    if (Array.isArray(data)) {
+        return data as FraudRecord[];
+    }
+    if (data && typeof data === "object") {
+        return [data as FraudRecord];
+    }
+    return [];
+};
+
+const toFraudCheck = (data: unknown): FraudCheckResult | null => {
+    if (!data || typeof data !== "object") {
+        return null;
+    }
+    return data as FraudCheckResult;
+};
+
+const toNotificationList = (data: unknown): NotificationItem[] => {
+    if (Array.isArray(data)) {
+        return data as NotificationItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as NotificationItem];
+    }
+    return [];
+};
+
+const matchesPair = (event: ContactEventItem, person1: string, person2: string) => {
+    if (!person1 || !person2) {
+        return false;
+    }
+    return (
+        (event.personId1 === person1 && event.personId2 === person2) ||
+        (event.personId1 === person2 && event.personId2 === person1)
+    );
+};
+
+const toHallStatus = (data: unknown): HallStatus | null => {
+    if (!data || typeof data !== "object") {
+        return null;
+    }
+    return data as HallStatus;
+};
+
 const SecurityPage = () => {
     const {token, baseUrl} = useAuth();
     const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +224,16 @@ const SecurityPage = () => {
     const [lastStatus, setLastStatus] = useState("");
     const [lastDuration, setLastDuration] = useState("");
     const [lastBody, setLastBody] = useState("");
+    const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
+    const [hallStatus, setHallStatus] = useState<HallStatus | null>(null);
+    const [monitoringSession, setMonitoringSession] = useState<MonitoringSession | null>(null);
+    const [suspiciousContacts, setSuspiciousContacts] = useState<ContactEventItem[]>([]);
+    const [contactFrequencyCount, setContactFrequencyCount] = useState<number | null>(null);
+    const [fraudRecords, setFraudRecords] = useState<FraudRecord[]>([]);
+    const [fraudCheckResult, setFraudCheckResult] = useState<FraudCheckResult | null>(null);
+    const [notificationList, setNotificationList] = useState<NotificationItem[]>([]);
+    const [unreadNotificationList, setUnreadNotificationList] = useState<NotificationItem[]>([]);
+    const [unreadCount, setUnreadCount] = useState<number | null>(null);
 
     const [monitorOfficerId, setMonitorOfficerId] = useState("");
     const [monitorSessionId, setMonitorSessionId] = useState("");
@@ -52,7 +245,6 @@ const SecurityPage = () => {
     const [contactLocation, setContactLocation] = useState("");
     const [contactCheckPerson1, setContactCheckPerson1] = useState("");
     const [contactCheckPerson2, setContactCheckPerson2] = useState("");
-    const [contactMockCount, setContactMockCount] = useState("10");
 
     const [fraudPersonId, setFraudPersonId] = useState("");
     const [fraudFullName, setFraudFullName] = useState("");
@@ -90,6 +282,7 @@ const SecurityPage = () => {
         path: string;
         query?: Record<string, string | undefined>;
         body?: unknown;
+        onSuccess?: (data: unknown) => void;
     }) => {
         const base = baseUrl.replace(/\/+$/, "");
         const query = options.query ? buildQuery(options.query) : "";
@@ -117,10 +310,15 @@ const SecurityPage = () => {
             });
             const duration = `${Math.round(performance.now() - started)} ms`;
             const text = await response.text();
+            let parsed: unknown = text || "Empty response.";
             try {
-                setLastBody(formatBody(JSON.parse(text)));
+                parsed = JSON.parse(text);
             } catch {
-                setLastBody(text || "Empty response.");
+                parsed = text || "Empty response.";
+            }
+            setLastBody(formatBody(parsed));
+            if (response.ok && options.onSuccess) {
+                options.onSuccess(parsed);
             }
             setLastStatus(`${response.status} ${response.ok ? "OK" : "ERROR"}`);
             setLastDuration(duration);
@@ -134,6 +332,22 @@ const SecurityPage = () => {
         }
     };
 
+    useEffect(() => {
+        if (!token) {
+            return;
+        }
+        const base = baseUrl.replace(/\/+$/, "");
+        fetch(`${base}/api/staff/employees`, {
+            headers: {
+                Accept: "application/json",
+                Authorization: token,
+            },
+        })
+            .then((response) => (response.ok ? response.json() : []))
+            .then((data) => setEmployeeOptions(toEmployeeOptions(data)))
+            .catch(() => setEmployeeOptions([]));
+    }, [token, baseUrl]);
+
     return (
         <div className="security-page">
             <section className="security-page__hero">
@@ -144,9 +358,6 @@ const SecurityPage = () => {
                         Мониторинг зала, контроль контактов, проверки мошенничества и уведомления —
                         в одном центре управления.
                     </p>
-                    <div className="hero-note">
-                        База API: <strong>{baseUrl || "прокси"}</strong>
-                    </div>
                 </div>
                 <div className="security-page__hero-stats">
                     <div className="hero-pill">Мониторинг зала</div>
@@ -165,11 +376,20 @@ const SecurityPage = () => {
                     <div className="panel__section">
                         <h3>Начать мониторинг</h3>
                         <div className="inline-row">
-                            <input
-                                value={monitorOfficerId}
-                                onChange={(e) => setMonitorOfficerId(e.target.value)}
-                                placeholder="UUID сотрудника"
-                            />
+                            <label className="employee-select">
+                                Сотрудник
+                                <select
+                                    value={monitorOfficerId}
+                                    onChange={(e) => setMonitorOfficerId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <button
                                 className="primary-button"
                                 type="button"
@@ -178,12 +398,36 @@ const SecurityPage = () => {
                                         method: "POST",
                                         path: "/api/security/monitoring/start",
                                         query: {securityOfficerId: monitorOfficerId},
+                                        onSuccess: (data) => setMonitoringSession(toMonitoringSession(data)),
                                     })
                                 }
                             >
                                 Начать сессию
                             </button>
                         </div>
+                        <div className="hint">
+                            UUID сессии: {monitoringSession?.id || "появится после запуска"}
+                        </div>
+                        {monitoringSession ? (
+                            <div className="session-card">
+                                <div className="session-card__title">
+                                    Сессия {monitoringSession.status || ""}
+                                </div>
+                                <div className="session-card__meta">
+                                    <span>Офицер: {monitoringSession.securityOfficerId || "-"}</span>
+                                    <span>Старт: {monitoringSession.startedAt || "-"}</span>
+                                    <span>Завершение: {monitoringSession.endedAt || "-"}</span>
+                                    <span>Посетители: {monitoringSession.activeVisitors ?? 0}</span>
+                                    <span>Персонал: {monitoringSession.activeStaff ?? 0}</span>
+                                    <span>Аномалии: {monitoringSession.anomaliesDetected ?? 0}</span>
+                                </div>
+                                {monitoringSession.notes ? (
+                                    <div className="session-card__desc">{monitoringSession.notes}</div>
+                                ) : null}
+                            </div>
+                        ) : (
+                            <div className="hint">Данные сессии появятся после запроса.</div>
+                        )}
                         <div className="inline-row">
                             <input
                                 value={monitorSessionId}
@@ -197,6 +441,7 @@ const SecurityPage = () => {
                                     runRequest({
                                         method: "POST",
                                         path: `/api/security/monitoring/${monitorSessionId}/end`,
+                                        onSuccess: (data) => setMonitoringSession(toMonitoringSession(data)),
                                     })
                                 }
                             >
@@ -209,6 +454,7 @@ const SecurityPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/security/monitoring/${monitorSessionId}`,
+                                        onSuccess: (data) => setMonitoringSession(toMonitoringSession(data)),
                                     })
                                 }
                             >
@@ -222,11 +468,72 @@ const SecurityPage = () => {
                                 runRequest({
                                     method: "GET",
                                     path: "/api/security/monitoring/status",
+                                    onSuccess: (data) => setHallStatus(toHallStatus(data)),
                                 })
                             }
                         >
                             Текущее состояние зала
                         </button>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Статус зала</h3>
+                        {hallStatus ? (
+                            <div className="hall-status">
+                                <div className="hall-status__summary">
+                                    <div>Посетители: {hallStatus.totalVisitors ?? 0}</div>
+                                    <div>Персонал: {hallStatus.totalStaff ?? 0}</div>
+                                    <div>Активные столы: {hallStatus.activeTables ?? 0}</div>
+                                    <div>Аномалии: {hallStatus.anomaliesCount ?? 0}</div>
+                                </div>
+                                {hallStatus.zones?.length ? (
+                                    <div className="hall-status__section">
+                                        <div className="hall-status__title">Зоны</div>
+                                        <div className="hall-status__list">
+                                            {hallStatus.zones.map((zone, index) => (
+                                                <div className="hall-status__card" key={`${zone.zoneName}-${index}`}>
+                                                    <div className="hall-status__card-title">
+                                                        {zone.zoneName || "Без названия"}
+                                                    </div>
+                                                    <div className="hall-status__meta">
+                                                        <span>Посетители: {zone.visitorCount ?? 0}</span>
+                                                        <span>Персонал: {zone.staffCount ?? 0}</span>
+                                                        <span>Статус: {zone.status || "-"}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : null}
+                                {hallStatus.recentActivities?.length ? (
+                                    <div className="hall-status__section">
+                                        <div className="hall-status__title">Последние события</div>
+                                        <div className="hall-status__list">
+                                            {hallStatus.recentActivities.map((activity, index) => (
+                                                <div
+                                                    className="hall-status__card"
+                                                    key={`${activity.type}-${index}`}
+                                                >
+                                                    <div className="hall-status__card-title">
+                                                        {activity.type || "Событие"}
+                                                    </div>
+                                                    <div className="hall-status__meta">
+                                                        <span>{activity.description || "-"}</span>
+                                                        {activity.location ? (
+                                                            <span>Локация: {activity.location}</span>
+                                                        ) : null}
+                                                        {activity.timestamp ? (
+                                                            <span>Время: {activity.timestamp}</span>
+                                                        ) : null}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : null}
+                            </div>
+                        ) : (
+                            <div className="hint">Статус появится после запроса.</div>
+                        )}
                     </div>
                 </div>
 
@@ -320,32 +627,28 @@ const SecurityPage = () => {
                                             personId1: contactCheckPerson1,
                                             personId2: contactCheckPerson2,
                                         },
+                                        onSuccess: () =>
+                                            runRequest({
+                                                method: "GET",
+                                                path: "/api/security/contacts/suspicious",
+                                                onSuccess: (data) => {
+                                                    const contacts = toContactList(data);
+                                                    setSuspiciousContacts(contacts);
+                                                    const count = contacts.filter((event) =>
+                                                        matchesPair(event, contactCheckPerson1, contactCheckPerson2)
+                                                    ).length;
+                                                    setContactFrequencyCount(count);
+                                                },
+                                            }),
                                     })
                                 }
                             >
                                 Проверить частоту
                             </button>
                         </div>
-                        <div className="inline-row">
-                            <input
-                                type="number"
-                                min="1"
-                                value={contactMockCount}
-                                onChange={(e) => setContactMockCount(e.target.value)}
-                            />
-                            <button
-                                className="ghost-button"
-                                type="button"
-                                onClick={() =>
-                                    runRequest({
-                                        method: "POST",
-                                        path: "/api/security/contacts/generate-mocks",
-                                        query: {count: contactMockCount || undefined},
-                                    })
-                                }
-                            >
-                                Сгенерировать мок-контакты
-                            </button>
+                        <div className="hint">
+                            Частота контактов (подозрительные):{" "}
+                            {contactFrequencyCount !== null ? contactFrequencyCount : "нет данных"}
                         </div>
                         <button
                             className="ghost-button"
@@ -354,11 +657,50 @@ const SecurityPage = () => {
                                 runRequest({
                                     method: "GET",
                                     path: "/api/security/contacts/suspicious",
+                                    onSuccess: (data) => {
+                                        const contacts = toContactList(data);
+                                        setSuspiciousContacts(contacts);
+                                        if (contactCheckPerson1 && contactCheckPerson2) {
+                                            setContactFrequencyCount(
+                                                contacts.filter((event) =>
+                                                    matchesPair(event, contactCheckPerson1, contactCheckPerson2)
+                                                ).length
+                                            );
+                                        }
+                                    },
                                 })
                             }
                         >
                             Подозрительные контакты
                         </button>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Список подозрительных контактов</h3>
+                        {suspiciousContacts.length ? (
+                            <div className="contact-list">
+                                {suspiciousContacts.map((event) => (
+                                    <div className="contact-card" key={event.id}>
+                                        <div className="contact-card__title">
+                                            {event.personId1} ↔ {event.personId2}
+                                        </div>
+                                        <div className="contact-card__meta">
+                                            <span>Начало: {formatDateTime(event.contactStartTime)}</span>
+                                            <span>Конец: {formatDateTime(event.contactEndTime)}</span>
+                                            <span>Длительность: {event.durationSeconds ?? 0} сек.</span>
+                                            {event.location ? <span>Локация: {event.location}</span> : null}
+                                        </div>
+                                        <div className="contact-card__meta">
+                                            <span>Статус: {event.status || "-"}</span>
+                                            <span>
+                                                Подозрительный: {event.suspicious ? "да" : "нет"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Подозрительные контакты появятся после запроса.</div>
+                        )}
                     </div>
                 </div>
 
@@ -394,12 +736,18 @@ const SecurityPage = () => {
                                 </select>
                             </label>
                             <label>
-                                Добавил (UUID)
-                                <input
+                                Добавил
+                                <select
                                     value={fraudAddedBy}
                                     onChange={(e) => setFraudAddedBy(e.target.value)}
-                                    placeholder="UUID сотрудника"
-                                />
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                             <label className="form-span">
                                 Описание
@@ -449,6 +797,7 @@ const SecurityPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: "/api/security/fraud-database",
+                                        onSuccess: (data) => setFraudRecords(toFraudList(data)),
                                     })
                                 }
                             >
@@ -466,6 +815,7 @@ const SecurityPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/security/fraud-database/${fraudRecordId}`,
+                                        onSuccess: (data) => setFraudRecords(toFraudList(data)),
                                     })
                                 }
                             >
@@ -486,6 +836,7 @@ const SecurityPage = () => {
                                         method: "GET",
                                         path: "/api/security/fraud-database/search",
                                         query: {q: fraudSearchQuery},
+                                        onSuccess: (data) => setFraudRecords(toFraudList(data)),
                                     })
                                 }
                             >
@@ -511,12 +862,40 @@ const SecurityPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/security/fraud-database/type/${fraudTypeFilter}`,
+                                        onSuccess: (data) => setFraudRecords(toFraudList(data)),
                                     })
                                 }
                             >
                                 Фильтр по типу
                             </button>
                         </div>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Список записей</h3>
+                        {fraudRecords.length ? (
+                            <div className="fraud-list">
+                                {fraudRecords.map((record) => (
+                                    <div className="fraud-card" key={record.id}>
+                                        <div className="fraud-card__title">
+                                            {record.fullName} {record.status ? `· ${record.status}` : ""}
+                                        </div>
+                                        <div className="fraud-card__meta">
+                                            <span>ID лица: {record.personId}</span>
+                                            {record.fraudType ? <span>Тип: {record.fraudType}</span> : null}
+                                            {record.matchCount !== undefined ? (
+                                                <span>Совпадений: {record.matchCount}</span>
+                                            ) : null}
+                                        </div>
+                                        {record.description ? (
+                                            <div className="fraud-card__desc">{record.description}</div>
+                                        ) : null}
+                                        <div className="fraud-card__id">{record.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Записи появятся после запроса.</div>
+                        )}
                     </div>
                     <div className="panel__section">
                         <h3>Статус и удаление</h3>
@@ -611,11 +990,34 @@ const SecurityPage = () => {
                                         photoUrl: fraudCheckPhotoUrl || undefined,
                                         triggeredByActivityId: fraudCheckActivityId || undefined,
                                     },
+                                    onSuccess: (data) => setFraudCheckResult(toFraudCheck(data)),
                                 })
                             }
                         >
                             Запустить проверку
                         </button>
+                        {fraudCheckResult ? (
+                            <div className="fraud-check-card">
+                                <div className="fraud-check-card__title">
+                                    Проверка: {fraudCheckResult.matched ? "совпадение" : "нет совпадений"}
+                                </div>
+                                <div className="fraud-check-card__meta">
+                                    <span>Лицо: {fraudCheckResult.personId || "-"}</span>
+                                    {fraudCheckResult.status ? <span>Статус: {fraudCheckResult.status}</span> : null}
+                                    {fraudCheckResult.checkedAt ? (
+                                        <span>Проверено: {fraudCheckResult.checkedAt}</span>
+                                    ) : null}
+                                    {fraudCheckResult.confidenceScore !== undefined ? (
+                                        <span>Уверенность: {fraudCheckResult.confidenceScore}</span>
+                                    ) : null}
+                                </div>
+                                {fraudCheckResult.message ? (
+                                    <div className="fraud-check-card__desc">{fraudCheckResult.message}</div>
+                                ) : null}
+                            </div>
+                        ) : (
+                            <div className="hint">Результат проверки появится после запроса.</div>
+                        )}
                     </div>
                     <div className="panel__section">
                         <h3>Быстрая проверка</h3>
@@ -641,6 +1043,7 @@ const SecurityPage = () => {
                                             personId: fraudQuickPersonId,
                                             activityId: fraudQuickActivityId || undefined,
                                         },
+                                        onSuccess: (data) => setFraudCheckResult(toFraudCheck(data)),
                                     })
                                 }
                             >
@@ -655,11 +1058,20 @@ const SecurityPage = () => {
                     <div className="panel__section">
                         <h3>Получить уведомления</h3>
                         <div className="inline-row">
-                            <input
-                                value={notificationRecipientId}
-                                onChange={(e) => setNotificationRecipientId(e.target.value)}
-                                placeholder="UUID получателя"
-                            />
+                            <label className="employee-select">
+                                Получатель
+                                <select
+                                    value={notificationRecipientId}
+                                    onChange={(e) => setNotificationRecipientId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <button
                                 className="ghost-button"
                                 type="button"
@@ -667,18 +1079,48 @@ const SecurityPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/security/notifications/recipient/${notificationRecipientId}`,
+                                        onSuccess: (data) => setNotificationList(toNotificationList(data)),
                                     })
                                 }
                             >
                                 Получить уведомления
                             </button>
                         </div>
+                        {notificationList.length ? (
+                            <div className="notification-list">
+                                {notificationList.map((item) => (
+                                    <div className="notification-card" key={item.id}>
+                                        <div className="notification-card__title">
+                                            {item.title} · {item.priority}
+                                        </div>
+                                        <div className="notification-card__meta">
+                                            <span>Тип: {item.type}</span>
+                                            <span>Статус: {item.status}</span>
+                                            {item.createdAt ? <span>Создано: {item.createdAt}</span> : null}
+                                            {item.readAt ? <span>Прочитано: {item.readAt}</span> : null}
+                                        </div>
+                                        <div className="notification-card__desc">{item.message}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Уведомления появятся после запроса.</div>
+                        )}
                         <div className="inline-row">
-                            <input
-                                value={notificationRecipientUnreadId}
-                                onChange={(e) => setNotificationRecipientUnreadId(e.target.value)}
-                                placeholder="UUID получателя"
-                            />
+                            <label className="employee-select">
+                                Получатель
+                                <select
+                                    value={notificationRecipientUnreadId}
+                                    onChange={(e) => setNotificationRecipientUnreadId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <button
                                 className="ghost-button"
                                 type="button"
@@ -686,18 +1128,47 @@ const SecurityPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/security/notifications/recipient/${notificationRecipientUnreadId}/unread`,
+                                        onSuccess: (data) => setUnreadNotificationList(toNotificationList(data)),
                                     })
                                 }
                             >
                                 Непрочитанные
                             </button>
                         </div>
+                        {unreadNotificationList.length ? (
+                            <div className="notification-list">
+                                {unreadNotificationList.map((item) => (
+                                    <div className="notification-card" key={item.id}>
+                                        <div className="notification-card__title">
+                                            {item.title} · {item.priority}
+                                        </div>
+                                        <div className="notification-card__meta">
+                                            <span>Тип: {item.type}</span>
+                                            <span>Статус: {item.status}</span>
+                                            {item.createdAt ? <span>Создано: {item.createdAt}</span> : null}
+                                        </div>
+                                        <div className="notification-card__desc">{item.message}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Непрочитанные появятся после запроса.</div>
+                        )}
                         <div className="inline-row">
-                            <input
-                                value={notificationRecipientUnreadCountId}
-                                onChange={(e) => setNotificationRecipientUnreadCountId(e.target.value)}
-                                placeholder="UUID получателя"
-                            />
+                            <label className="employee-select">
+                                Получатель
+                                <select
+                                    value={notificationRecipientUnreadCountId}
+                                    onChange={(e) => setNotificationRecipientUnreadCountId(e.target.value)}
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <button
                                 className="ghost-button"
                                 type="button"
@@ -705,18 +1176,39 @@ const SecurityPage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/security/notifications/recipient/${notificationRecipientUnreadCountId}/unread-count`,
+                                        onSuccess: (data) => {
+                                            if (typeof data === "number") {
+                                                setUnreadCount(data);
+                                            } else if (data && typeof data === "object" && "count" in data) {
+                                                setUnreadCount(Number((data as { count?: number }).count ?? 0));
+                                            } else {
+                                                setUnreadCount(null);
+                                            }
+                                        },
                                     })
                                 }
                             >
                                 Количество непрочитанных
                             </button>
                         </div>
+                        <div className="hint">
+                            Количество непрочитанных: {unreadCount !== null ? unreadCount : "нет данных"}
+                        </div>
                         <div className="inline-row">
-                            <input
-                                value={notificationReadId}
-                                onChange={(e) => setNotificationReadId(e.target.value)}
-                                placeholder="UUID уведомления"
-                            />
+                            <label className="employee-select">
+                                Уведомление
+                                <select
+                                    value={notificationReadId}
+                                    onChange={(e) => setNotificationReadId(e.target.value)}
+                                >
+                                    <option value="">Выберите уведомление</option>
+                                    {unreadNotificationList.map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <button
                                 className="ghost-button"
                                 type="button"
@@ -734,13 +1226,19 @@ const SecurityPage = () => {
                     <div className="panel__section">
                         <h3>Создать уведомление</h3>
                         <div className="form-grid">
-                            <label>
-                                UUID получателя
-                                <input
+                            <label className="employee-select">
+                                Получатель
+                                <select
                                     value={notificationCreateRecipientId}
                                     onChange={(e) => setNotificationCreateRecipientId(e.target.value)}
-                                    placeholder="UUID получателя"
-                                />
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                             <label>
                                 Тип
@@ -826,15 +1324,7 @@ const SecurityPage = () => {
                 </div>
             </section>
 
-            <section className="panel panel--wide">
-                <div className="panel__title">Последний ответ</div>
-                <div className="response-meta">
-                    <span>{lastRequest || "Выполните запрос, чтобы увидеть детали."}</span>
-                    <span>{lastStatus}</span>
-                    <span>{lastDuration}</span>
-                </div>
-                <pre className="response-body">{lastBody || "Тело ответа появится здесь."}</pre>
-            </section>
+
         </div>
     );
 };

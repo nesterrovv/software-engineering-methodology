@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {useAuth} from "../../auth/AuthContext.tsx";
 import "./finance-page.scss";
 
@@ -27,6 +27,185 @@ const formatBody = (data: unknown) => {
     return JSON.stringify(data, null, 2);
 };
 
+const generateUuid = () => {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+        return crypto.randomUUID();
+    }
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+        const rand = (Math.random() * 16) | 0;
+        const value = char === "x" ? rand : (rand & 0x3) | 0x8;
+        return value.toString(16);
+    });
+};
+
+type GameAnalysisItem = {
+    id: string;
+    gameTableId?: string;
+    cashDeskId?: string;
+    periodStart?: string;
+    periodEnd?: string;
+    totalSessions?: number;
+    totalBets?: number;
+    totalWins?: number;
+    rtp?: number;
+    expectedRtp?: number;
+    rtpDeviation?: number;
+    largeWinsCount?: number;
+    largestWinAmount?: number;
+    status?: string;
+    analyzedAt?: string;
+    notes?: string;
+};
+
+type AnomalyItem = {
+    id: string;
+    cashOperationId?: string;
+    type?: string;
+    riskLevel?: string;
+    reason?: string;
+    amount?: number | string;
+    detectedAt?: string;
+    status?: string;
+    reviewedBy?: string;
+    reviewedAt?: string;
+    reviewerNotes?: string;
+};
+
+type FinancialReportInfo = {
+    id?: string;
+    periodStart?: string;
+    periodEnd?: string;
+    csvUrl?: string;
+};
+
+type CashOperationItem = {
+    id: string;
+    cashDeskId?: string;
+    gameTableId?: string;
+    amount?: number | string;
+    type?: string;
+    currency?: string;
+    operatedAt?: string;
+};
+
+type CashReconciliationItem = {
+    id?: string;
+    cashDeskId?: string;
+    shiftStart?: string;
+    shiftEnd?: string;
+    expectedBalance?: number | string;
+    actualBalance?: number | string;
+    discrepancy?: number | string;
+    status?: string;
+    createdAt?: string;
+    notes?: string;
+};
+
+type EmployeeOption = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    middleName?: string;
+};
+
+const toGameAnalysisList = (data: unknown): GameAnalysisItem[] => {
+    if (Array.isArray(data)) {
+        return data as GameAnalysisItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as GameAnalysisItem];
+    }
+    return [];
+};
+
+const toAnomalyList = (data: unknown): AnomalyItem[] => {
+    if (Array.isArray(data)) {
+        return data as AnomalyItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as AnomalyItem];
+    }
+    return [];
+};
+
+const toFinancialReport = (data: unknown): FinancialReportInfo | null => {
+    if (!data) {
+        return null;
+    }
+    if (Array.isArray(data)) {
+        const first = data[0] as FinancialReportInfo | undefined;
+        return first ?? null;
+    }
+    if (typeof data === "object") {
+        return data as FinancialReportInfo;
+    }
+    return null;
+};
+
+const toCashOperationList = (data: unknown): CashOperationItem[] => {
+    if (Array.isArray(data)) {
+        return data as CashOperationItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as CashOperationItem];
+    }
+    return [];
+};
+
+const toCashReconciliation = (data: unknown): CashReconciliationItem | null => {
+    if (!data) {
+        return null;
+    }
+    if (Array.isArray(data)) {
+        const first = data[0] as CashReconciliationItem | undefined;
+        return first ?? null;
+    }
+    if (typeof data === "object") {
+        return data as CashReconciliationItem;
+    }
+    return null;
+};
+
+const toCashReconciliationList = (data: unknown): CashReconciliationItem[] => {
+    if (Array.isArray(data)) {
+        return data as CashReconciliationItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as CashReconciliationItem];
+    }
+    return [];
+};
+
+const toEmployeeOptions = (data: unknown): EmployeeOption[] => {
+    if (Array.isArray(data)) {
+        return data as EmployeeOption[];
+    }
+    if (data && typeof data === "object") {
+        return [data as EmployeeOption];
+    }
+    return [];
+};
+
+const formatEmployeeName = (employee?: EmployeeOption) => {
+    if (!employee) {
+        return "";
+    }
+    return [employee.lastName, employee.firstName, employee.middleName]
+        .filter(Boolean)
+        .join(" ");
+};
+
+const formatDateTime = (value?: string) => {
+    if (!value) {
+        return "-";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+    return date.toLocaleString();
+};
+
 const FinancePage = () => {
     const {token, baseUrl} = useAuth();
     const [isLoading, setIsLoading] = useState(false);
@@ -34,14 +213,16 @@ const FinancePage = () => {
     const [lastStatus, setLastStatus] = useState("");
     const [lastDuration, setLastDuration] = useState("");
     const [lastBody, setLastBody] = useState("");
+    const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
 
     const [operationCashDeskId, setOperationCashDeskId] = useState("");
     const [operationAmount, setOperationAmount] = useState("");
     const [operationType, setOperationType] = useState("DEPOSIT");
     const [operationCurrency, setOperationCurrency] = useState("RUB");
     const [operationId, setOperationId] = useState("");
+    const [operationResults, setOperationResults] = useState<CashOperationItem[]>([]);
 
-    const [reconciliationCashDeskId, setReconciliationCashDeskId] = useState("");
+    const [reconciliationCashDeskId, setReconciliationCashDeskId] = useState(() => generateUuid());
     const [reconciliationShiftStart, setReconciliationShiftStart] = useState("");
     const [reconciliationShiftEnd, setReconciliationShiftEnd] = useState("");
     const [reconciliationActualBalance, setReconciliationActualBalance] = useState("");
@@ -50,6 +231,8 @@ const FinancePage = () => {
     const [reconciliationCashDeskFilter, setReconciliationCashDeskFilter] = useState("");
     const [reconciliationStatusId, setReconciliationStatusId] = useState("");
     const [reconciliationStatus, setReconciliationStatus] = useState("PENDING");
+    const [reconciliationResult, setReconciliationResult] = useState<CashReconciliationItem | null>(null);
+    const [reconciliationResults, setReconciliationResults] = useState<CashReconciliationItem[]>([]);
 
     const [analysisStart, setAnalysisStart] = useState("");
     const [analysisEnd, setAnalysisEnd] = useState("");
@@ -58,9 +241,11 @@ const FinancePage = () => {
     const [analysisLargeWin, setAnalysisLargeWin] = useState("1000");
     const [analysisId, setAnalysisId] = useState("");
     const [analysisTableFilter, setAnalysisTableFilter] = useState("");
+    const [analysisResults, setAnalysisResults] = useState<GameAnalysisItem[]>([]);
 
     const [reportStart, setReportStart] = useState("");
     const [reportEnd, setReportEnd] = useState("");
+    const [reportInfo, setReportInfo] = useState<FinancialReportInfo | null>(null);
 
     const [anomalyStart, setAnomalyStart] = useState("");
     const [anomalyEnd, setAnomalyEnd] = useState("");
@@ -74,12 +259,14 @@ const FinancePage = () => {
     const [anomalyReviewStatus, setAnomalyReviewStatus] = useState("CONFIRMED");
     const [anomalyReviewerId, setAnomalyReviewerId] = useState("");
     const [anomalyReviewNotes, setAnomalyReviewNotes] = useState("");
+    const [anomalyResults, setAnomalyResults] = useState<AnomalyItem[]>([]);
 
     const runRequest = async (options: {
         method: string;
         path: string;
         query?: Record<string, string | undefined>;
         body?: unknown;
+        onSuccess?: (data: unknown) => void;
     }) => {
         const base = baseUrl.replace(/\/+$/, "");
         const query = options.query ? buildQuery(options.query) : "";
@@ -107,10 +294,15 @@ const FinancePage = () => {
             });
             const duration = `${Math.round(performance.now() - started)} ms`;
             const text = await response.text();
+            let parsed: unknown = text || "Empty response.";
             try {
-                setLastBody(formatBody(JSON.parse(text)));
+                parsed = JSON.parse(text);
             } catch {
-                setLastBody(text || "Empty response.");
+                parsed = text || "Empty response.";
+            }
+            setLastBody(formatBody(parsed));
+            if (response.ok && options.onSuccess) {
+                options.onSuccess(parsed);
             }
             setLastStatus(`${response.status} ${response.ok ? "OK" : "ERROR"}`);
             setLastDuration(duration);
@@ -124,6 +316,68 @@ const FinancePage = () => {
         }
     };
 
+    const resolveReportUrl = (url: string) => {
+        if (!url) {
+            return "";
+        }
+        if (/^https?:\/\//i.test(url)) {
+            return url;
+        }
+        const base = baseUrl.replace(/\/+$/, "");
+        if (!base) {
+            return url.startsWith("/") ? url : `/${url}`;
+        }
+        return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
+    };
+
+    const downloadFinancialReport = async () => {
+        if (!reportInfo?.csvUrl) {
+            return;
+        }
+        const url = resolveReportUrl(reportInfo.csvUrl);
+        setIsLoading(true);
+        setLastRequest(`GET ${url}`);
+        setLastStatus("");
+        setLastDuration("");
+        setLastBody("");
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `financial-report-${reportInfo.id ?? "report"}.csv`;
+        link.rel = "noreferrer";
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setLastStatus("OK");
+        setLastDuration("0 ms");
+        setLastBody("Ссылка на CSV открыта для скачивания.");
+        setIsLoading(false);
+    };
+
+    useEffect(() => {
+        if (!token) {
+            return;
+        }
+        const base = baseUrl.replace(/\/+$/, "");
+        fetch(`${base}/api/staff/employees`, {
+            headers: {
+                Accept: "application/json",
+                Authorization: token,
+            },
+        })
+            .then((response) => (response.ok ? response.json() : []))
+            .then((data) => setEmployeeOptions(toEmployeeOptions(data)))
+            .catch(() => setEmployeeOptions([]));
+    }, [token, baseUrl]);
+
+    const tableIdOptions = Array.from(
+        new Set(
+            operationResults
+                .map((item) => item.gameTableId || item.cashDeskId)
+                .filter((value): value is string => Boolean(value))
+        )
+    );
+
     return (
         <div className="finance-page">
             <section className="finance-page__hero">
@@ -134,9 +388,6 @@ const FinancePage = () => {
                         Регистрируйте операции, сверяйте кассы, анализируйте игры, выявляйте
                         аномалии и формируйте финансовые отчеты в одном центре управления.
                     </p>
-                    <div className="hero-note">
-                        База API: <strong>{baseUrl || "прокси"}</strong>
-                    </div>
                 </div>
                 <div className="finance-page__hero-stats">
                     <div className="hero-pill">Операции</div>
@@ -207,6 +458,7 @@ const FinancePage = () => {
                                         type: operationType,
                                         currency: operationCurrency || undefined,
                                     },
+                                    onSuccess: (data) => setOperationResults(toCashOperationList(data)),
                                 })
                             }
                         >
@@ -223,6 +475,7 @@ const FinancePage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: "/api/finance/operations",
+                                        onSuccess: (data) => setOperationResults(toCashOperationList(data)),
                                     })
                                 }
                             >
@@ -242,12 +495,35 @@ const FinancePage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/finance/operations/${operationId}`,
+                                        onSuccess: (data) => setOperationResults(toCashOperationList(data)),
                                     })
                                 }
                             >
                                 Операция по ID
                             </button>
                         </div>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Список операций</h3>
+                        {operationResults.length ? (
+                            <div className="operation-list">
+                                {operationResults.map((item) => (
+                                    <div className="operation-card" key={item.id}>
+                                        <div className="operation-card__title">
+                                            {item.type || "Операция"} {item.currency ? `· ${item.currency}` : ""}
+                                        </div>
+                                        <div className="operation-card__meta">
+                                            <span>UUID кассы: {item.cashDeskId || "—"}</span>
+                                            <span>Сумма: {item.amount ?? "—"}</span>
+                                            <span>Дата: {formatDateTime(item.operatedAt)}</span>
+                                        </div>
+                                        <div className="operation-card__id">UUID: {item.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Операции появятся после запроса.</div>
+                        )}
                     </div>
                 </div>
 
@@ -300,12 +576,16 @@ const FinancePage = () => {
                         <button
                             className="primary-button"
                             type="button"
-                            onClick={() =>
+                            onClick={() => {
+                                const cashDeskId = reconciliationCashDeskId || generateUuid();
+                                if (!reconciliationCashDeskId) {
+                                    setReconciliationCashDeskId(cashDeskId);
+                                }
                                 runRequest({
                                     method: "POST",
                                     path: "/api/finance/reconciliation",
                                     body: {
-                                        cashDeskId: reconciliationCashDeskId,
+                                        cashDeskId,
                                         shiftStart: toIso(reconciliationShiftStart),
                                         shiftEnd: toIso(reconciliationShiftEnd),
                                         actualBalance: reconciliationActualBalance
@@ -313,11 +593,17 @@ const FinancePage = () => {
                                             : undefined,
                                         notes: reconciliationNotes || undefined,
                                     },
-                                })
-                            }
+                                    onSuccess: (data) => setReconciliationResult(toCashReconciliation(data)),
+                                });
+                            }}
                         >
                             Запустить сверку
                         </button>
+                        {reconciliationResult?.id ? (
+                            <div className="reconciliation-output">
+                                UUID сверки: {reconciliationResult.id}
+                            </div>
+                        ) : null}
                     </div>
                     <div className="panel__section">
                         <h3>Поиск сверок</h3>
@@ -334,6 +620,7 @@ const FinancePage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/finance/reconciliation/${reconciliationId}`,
+                                        onSuccess: (data) => setReconciliationResults(toCashReconciliationList(data)),
                                     })
                                 }
                             >
@@ -353,6 +640,7 @@ const FinancePage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/finance/reconciliation/cashdesk/${reconciliationCashDeskFilter}`,
+                                        onSuccess: (data) => setReconciliationResults(toCashReconciliationList(data)),
                                     })
                                 }
                             >
@@ -381,18 +669,48 @@ const FinancePage = () => {
                             <button
                                 className="ghost-button"
                                 type="button"
-                                onClick={() =>
-                                    runRequest({
-                                        method: "PATCH",
-                                        path: `/api/finance/reconciliation/${reconciliationStatusId}/status`,
-                                        query: {status: reconciliationStatus},
-                                    })
-                                }
-                            >
-                                Обновить статус
-                            </button>
-                        </div>
+                            onClick={() =>
+                                runRequest({
+                                    method: "PATCH",
+                                    path: `/api/finance/reconciliation/${reconciliationStatusId}/status`,
+                                    query: {status: reconciliationStatus},
+                                    onSuccess: (data) => setReconciliationResults(toCashReconciliationList(data)),
+                                })
+                            }
+                        >
+                            Обновить статус
+                        </button>
                     </div>
+                    <div className="panel__section">
+                        <h3>Результаты сверок</h3>
+                        {reconciliationResults.length ? (
+                            <div className="reconciliation-list">
+                                {reconciliationResults.map((item) => (
+                                    <div className="reconciliation-card" key={item.id}>
+                                        <div className="reconciliation-card__title">
+                                            Сверка {item.status ? `· ${item.status}` : ""}
+                                        </div>
+                                        <div className="reconciliation-card__meta">
+                                            <span>UUID кассы: {item.cashDeskId || "—"}</span>
+                                            <span>Начало: {formatDateTime(item.shiftStart)}</span>
+                                            <span>Конец: {formatDateTime(item.shiftEnd)}</span>
+                                            <span>Ожид. баланс: {item.expectedBalance ?? "—"}</span>
+                                            <span>Факт. баланс: {item.actualBalance ?? "—"}</span>
+                                            <span>Расхождение: {item.discrepancy ?? "—"}</span>
+                                            <span>Создано: {formatDateTime(item.createdAt)}</span>
+                                        </div>
+                                        <div className="reconciliation-card__desc">
+                                            Примечание: {item.notes || "—"}
+                                        </div>
+                                        <div className="reconciliation-card__id">UUID: {item.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Сверки появятся после запроса.</div>
+                        )}
+                    </div>
+                </div>
                 </div>
 
                 <div className="panel">
@@ -418,11 +736,17 @@ const FinancePage = () => {
                             </label>
                             <label>
                                 ID игрового стола
-                                <input
+                                <select
                                     value={analysisTableId}
                                     onChange={(e) => setAnalysisTableId(e.target.value)}
-                                    placeholder="Необязательно"
-                                />
+                                >
+                                    <option value="">Все столы</option>
+                                    {tableIdOptions.map((tableId) => (
+                                        <option key={tableId} value={tableId}>
+                                            {tableId}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                             <label>
                                 Ожидаемый RTP %
@@ -459,6 +783,7 @@ const FinancePage = () => {
                                             ? Number(analysisLargeWin)
                                             : undefined,
                                     },
+                                    onSuccess: (data) => setAnalysisResults(toGameAnalysisList(data)),
                                 })
                             }
                         >
@@ -480,6 +805,7 @@ const FinancePage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/finance/game-analysis/${analysisId}`,
+                                        onSuccess: (data) => setAnalysisResults(toGameAnalysisList(data)),
                                     })
                                 }
                             >
@@ -487,11 +813,17 @@ const FinancePage = () => {
                             </button>
                         </div>
                         <div className="inline-row">
-                            <input
+                            <select
                                 value={analysisTableFilter}
                                 onChange={(e) => setAnalysisTableFilter(e.target.value)}
-                                placeholder="ID игрового стола"
-                            />
+                            >
+                                <option value="">Выберите стол</option>
+                                {tableIdOptions.map((tableId) => (
+                                    <option key={tableId} value={tableId}>
+                                        {tableId}
+                                    </option>
+                                ))}
+                            </select>
                             <button
                                 className="ghost-button"
                                 type="button"
@@ -499,12 +831,53 @@ const FinancePage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/finance/game-analysis/table/${analysisTableFilter}`,
+                                        onSuccess: (data) => setAnalysisResults(toGameAnalysisList(data)),
                                     })
                                 }
                             >
                                 По столу
                             </button>
                         </div>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Результаты анализа</h3>
+                        {analysisResults.length ? (
+                            <div className="analysis-list">
+                                {analysisResults.map((item) => (
+                                    <div className="analysis-card" key={item.id}>
+                                        <div className="analysis-card__title">
+                                            {item.gameTableId || "Все столы"} {item.status ? `· ${item.status}` : ""}
+                                        </div>
+                                        <div className="analysis-card__meta">
+                                            <span>UUID стола: {item.gameTableId || "—"}</span>
+                                            <span>UUID кассы: {item.cashDeskId || "—"}</span>
+                                            <span>Период: {formatDateTime(item.periodStart)} — {formatDateTime(item.periodEnd)}</span>
+                                            <span>Сессии: {item.totalSessions ?? 0}</span>
+                                            <span>Ставки: {item.totalBets ?? 0}</span>
+                                            <span>Выигрыши: {item.totalWins ?? 0}</span>
+                                            <span>RTP: {item.rtp ?? 0}%</span>
+                                            <span>Ожидаемый RTP: {item.expectedRtp ?? 0}%</span>
+                                            {item.rtpDeviation !== undefined ? (
+                                                <span>Отклонение: {item.rtpDeviation}%</span>
+                                            ) : null}
+                                            {item.largeWinsCount !== undefined ? (
+                                                <span>Крупные выигрыши: {item.largeWinsCount}</span>
+                                            ) : null}
+                                            {item.largestWinAmount !== undefined ? (
+                                                <span>Макс. выигрыш: {item.largestWinAmount}</span>
+                                            ) : null}
+                                            {item.analyzedAt ? <span>Проанализировано: {formatDateTime(item.analyzedAt)}</span> : null}
+                                        </div>
+                                        {item.notes ? (
+                                            <div className="analysis-card__desc">{item.notes}</div>
+                                        ) : null}
+                                        <div className="analysis-card__id">{item.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Результаты появятся после запроса.</div>
+                        )}
                     </div>
                 </div>
 
@@ -541,11 +914,28 @@ const FinancePage = () => {
                                         periodStart: reportStart || undefined,
                                         periodEnd: reportEnd || undefined,
                                     },
+                                    onSuccess: (data) => setReportInfo(toFinancialReport(data)),
                                 })
                             }
                         >
                             Сформировать отчет
                         </button>
+                        {reportInfo ? (
+                            <div className="report-output">
+                                <div>UUID отчета: {reportInfo.id || "—"}</div>
+                                <div>CSV ссылка: {reportInfo.csvUrl || "—"}</div>
+                                <button
+                                    className="ghost-button"
+                                    type="button"
+                                    onClick={downloadFinancialReport}
+                                    disabled={!reportInfo.csvUrl}
+                                >
+                                    Скачать отчет
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="hint">После формирования появится ссылка на отчет.</div>
+                        )}
                     </div>
                 </div>
 
@@ -615,6 +1005,7 @@ const FinancePage = () => {
                                             ? Number(anomalyWindow)
                                             : undefined,
                                     },
+                                    onSuccess: (data) => setAnomalyResults(toAnomalyList(data)),
                                 })
                             }
                         >
@@ -657,6 +1048,7 @@ const FinancePage = () => {
                                             status: anomalyStatusFilter || undefined,
                                             riskLevel: anomalyRiskFilter || undefined,
                                         },
+                                        onSuccess: (data) => setAnomalyResults(toAnomalyList(data)),
                                     })
                             }
                         >
@@ -676,6 +1068,7 @@ const FinancePage = () => {
                                     runRequest({
                                         method: "GET",
                                         path: `/api/finance/anomalies/${anomalyId}`,
+                                        onSuccess: (data) => setAnomalyResults(toAnomalyList(data)),
                                     })
                                 }
                             >
@@ -709,11 +1102,17 @@ const FinancePage = () => {
                             </label>
                             <label>
                                 UUID проверяющего
-                                <input
+                                <select
                                     value={anomalyReviewerId}
                                     onChange={(e) => setAnomalyReviewerId(e.target.value)}
-                                    placeholder="UUID проверяющего"
-                                />
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee) || employee.id}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                             <label className="form-span">
                                 Примечания
@@ -736,24 +1135,47 @@ const FinancePage = () => {
                                         reviewerId: anomalyReviewerId,
                                         notes: anomalyReviewNotes || undefined,
                                     },
+                                    onSuccess: (data) => setAnomalyResults(toAnomalyList(data)),
                                 })
                             }
                         >
                             Отправить проверку
                         </button>
                     </div>
+                    <div className="panel__section">
+                        <h3>Результаты по аномалиям</h3>
+                        {anomalyResults.length ? (
+                            <div className="anomaly-list">
+                                {anomalyResults.map((item) => (
+                                    <div className="anomaly-card" key={item.id}>
+                                        <div className="anomaly-card__title">
+                                            Аномалия
+                                        </div>
+                                        <div className="anomaly-card__meta">
+                                            <span>Тип: {item.type || "—"}</span>
+                                            <span>Статус: {item.status || "—"}</span>
+                                            <span>Операция: {item.cashOperationId || "—"}</span>
+                                            <span>Риск: {item.riskLevel || "—"}</span>
+                                            <span>Сумма: {item.amount ?? "—"}</span>
+                                            <span>Обнаружено: {formatDateTime(item.detectedAt)}</span>
+                                            <span>Проверил: {item.reviewedBy || "—"}</span>
+                                            <span>Проверено: {formatDateTime(item.reviewedAt)}</span>
+                                        </div>
+                                        <div className="anomaly-card__desc">Причина: {item.reason || "—"}</div>
+                                        <div className="anomaly-card__desc">
+                                            Комментарий: {item.reviewerNotes || "—"}
+                                        </div>
+                                        <div className="anomaly-card__id">UUID: {item.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Результаты появятся после запроса.</div>
+                        )}
+                    </div>
                 </div>
             </section>
 
-            <section className="panel panel--wide">
-                <div className="panel__title">Последний ответ</div>
-                <div className="response-meta">
-                    <span>{lastRequest || "Выполните запрос, чтобы увидеть детали."}</span>
-                    <span>{lastStatus}</span>
-                    <span>{lastDuration}</span>
-                </div>
-                <pre className="response-body">{lastBody || "Тело ответа появится здесь."}</pre>
-            </section>
         </div>
     );
 };

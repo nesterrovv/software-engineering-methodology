@@ -288,9 +288,6 @@ const StaffPage = () => {
                         Управляйте сотрудниками, сменами, учетом времени и историей нарушений.
                         Каждая ручка подключена для быстрых рабочих операций.
                     </p>
-                    <div className="hero-note">
-                        База API: <strong>{baseUrl || "прокси"}</strong>
-                    </div>
                 </div>
                 <div className="staff-page__hero-stats">
                     <div className="hero-pill">Сотрудники</div>
@@ -1205,15 +1202,6 @@ const StaffPage = () => {
                 </div>
             </section>
 
-            <section className="panel panel--wide">
-                <div className="panel__title">Последний ответ</div>
-                <div className="response-meta">
-                    <span>{lastRequest || "Выполните запрос, чтобы увидеть детали."}</span>
-                    <span>{lastStatus}</span>
-                    <span>{lastDuration}</span>
-                </div>
-                <pre className="response-body">{lastBody || "Тело ответа появится здесь."}</pre>
-            </section>
         </div>
     );
 };

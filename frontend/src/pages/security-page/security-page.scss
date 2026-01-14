@@ -212,6 +212,215 @@
   border: 1px solid rgba(255, 128, 189, 0.3);
 }
 
+.hall-status {
+  display: grid;
+  gap: 12px;
+}
+
+.hall-status__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.hall-status__section {
+  display: grid;
+  gap: 8px;
+}
+
+.hall-status__title {
+  font-weight: 700;
+  color: var(--pink-700);
+}
+
+.hall-status__list {
+  display: grid;
+  gap: 10px;
+}
+
+.hall-status__card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 128, 189, 0.25);
+  display: grid;
+  gap: 6px;
+}
+
+.hall-status__card-title {
+  font-weight: 700;
+  color: var(--pink-700);
+}
+
+.hall-status__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.session-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 128, 189, 0.25);
+  display: grid;
+  gap: 6px;
+}
+
+.session-card__title {
+  font-weight: 700;
+  color: var(--pink-700);
+}
+
+.session-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.session-card__desc {
+  font-size: 12px;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.contact-list {
+  display: grid;
+  gap: 10px;
+}
+
+.contact-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 128, 189, 0.25);
+  display: grid;
+  gap: 6px;
+}
+
+.contact-card__title {
+  font-weight: 700;
+  color: var(--pink-700);
+}
+
+.contact-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.fraud-list {
+  display: grid;
+  gap: 10px;
+}
+
+.fraud-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 128, 189, 0.25);
+  display: grid;
+  gap: 6px;
+}
+
+.fraud-card__title {
+  font-weight: 700;
+  color: var(--pink-700);
+}
+
+.fraud-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.fraud-card__desc {
+  font-size: 12px;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.fraud-card__id {
+  font-size: 11px;
+  color: rgba(59, 21, 36, 0.5);
+  word-break: break-all;
+}
+
+.fraud-check-card {
+  margin-top: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 128, 189, 0.25);
+  display: grid;
+  gap: 6px;
+}
+
+.fraud-check-card__title {
+  font-weight: 700;
+  color: var(--pink-700);
+}
+
+.fraud-check-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.fraud-check-card__desc {
+  font-size: 12px;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.notification-list {
+  display: grid;
+  gap: 10px;
+}
+
+.notification-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 128, 189, 0.25);
+  display: grid;
+  gap: 6px;
+}
+
+.notification-card__title {
+  font-weight: 700;
+  color: var(--pink-700);
+}
+
+.notification-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.notification-card__desc {
+  font-size: 12px;
+  color: rgba(59, 21, 36, 0.7);
+}
+
 @media (max-width: 720px) {
   .security-page__hero {
     border-radius: 24px;

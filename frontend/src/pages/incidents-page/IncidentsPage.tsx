@@ -7,7 +7,6 @@ const COMPLAINT_CATEGORIES = ["SERVICE_QUALITY", "STAFF_BEHAVIOR", "GAME_ISSUES"
 const COMPLAINT_SOURCES = ["VISITOR", "EMPLOYEE", "SYSTEM", "TERMINAL"] as const;
 const COMPLAINT_STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const;
 const VIOLATION_TYPES = ["LATE", "OUT_OF_ZONE", "CONFLICT", "OTHER"] as const;
-const REPORT_TYPES = ["INCIDENTS", "MANAGEMENT", "REGULATORY"] as const;
 
 type DownloadState = { url: string; filename: string } | null;
 
@@ -65,6 +64,92 @@ const formatEmployeeName = (employee?: EmployeeOption) => {
         .join(" ");
 };
 
+type IncidentItem = {
+    id: string;
+    type: string;
+    location?: string;
+    occurredAt?: string;
+    description?: string;
+    participants?: string[];
+    attachmentUrls?: string[];
+    status?: string;
+    reportedBy?: string;
+};
+
+type ComplaintItem = {
+    id: string;
+    category: string;
+    description: string;
+    reportedAt?: string;
+    source: string;
+    status?: string;
+    reporterName?: string;
+    relatedIncidentId?: string;
+};
+
+type ViolationItem = {
+    id: string;
+    employeeId: string;
+    type: string;
+    description?: string;
+    occurredAt?: string;
+    status?: string;
+    attachmentUrls?: string[];
+};
+
+const extractReportId = (data: unknown) => {
+    if (data && typeof data === "object") {
+        if (Array.isArray(data)) {
+            const first = data[0] as { id?: string } | undefined;
+            return first?.id ?? "";
+        }
+        const record = data as { id?: string };
+        return record.id ?? "";
+    }
+    return "";
+};
+
+const toIncidentList = (data: unknown): IncidentItem[] => {
+    if (Array.isArray(data)) {
+        return data as IncidentItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as IncidentItem];
+    }
+    return [];
+};
+
+const toComplaintList = (data: unknown): ComplaintItem[] => {
+    if (Array.isArray(data)) {
+        return data as ComplaintItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as ComplaintItem];
+    }
+    return [];
+};
+
+const toViolationList = (data: unknown): ViolationItem[] => {
+    if (Array.isArray(data)) {
+        return data as ViolationItem[];
+    }
+    if (data && typeof data === "object") {
+        return [data as ViolationItem];
+    }
+    return [];
+};
+
+const formatDateTime = (value?: string) => {
+    if (!value) {
+        return "-";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+    return date.toLocaleString();
+};
+
 const IncidentsPage = () => {
     const {token, baseUrl} = useAuth();
     const [isLoading, setIsLoading] = useState(false);
@@ -117,10 +202,14 @@ const IncidentsPage = () => {
     const [repeatedStart, setRepeatedStart] = useState("");
     const [repeatedEnd, setRepeatedEnd] = useState("");
     const [repeatedThreshold, setRepeatedThreshold] = useState("3");
-    const [reportFilterType, setReportFilterType] = useState("");
-    const [reportId, setReportId] = useState("");
     const [exportReportId, setExportReportId] = useState("");
     const [employeeOptions, setEmployeeOptions] = useState<EmployeeOption[]>([]);
+    const [incidentResults, setIncidentResults] = useState<IncidentItem[]>([]);
+    const [complaintResults, setComplaintResults] = useState<ComplaintItem[]>([]);
+    const [violationResults, setViolationResults] = useState<ViolationItem[]>([]);
+    const [incidentReportId, setIncidentReportId] = useState("");
+    const [managementReportId, setManagementReportId] = useState("");
+    const [regulatoryReportId, setRegulatoryReportId] = useState("");
 
     useEffect(() => {
         return () => {
@@ -129,6 +218,17 @@ const IncidentsPage = () => {
             }
         };
     }, [download]);
+
+    useEffect(() => {
+        if (!token) {
+            return;
+        }
+        runRequest({
+            method: "GET",
+            path: "/api/staff/employees",
+            onSuccess: (data) => setEmployeeOptions(toEmployeeOptions(data)),
+        });
+    }, [token]);
 
     const runRequest = async (options: {
         method: string;
@@ -144,7 +244,7 @@ const IncidentsPage = () => {
         const url = `${base}${options.path}${query}`;
         const started = performance.now();
         const headers: Record<string, string> = {
-            Accept: "application/json",
+            Accept: options.responseType === "blob" ? "*/*" : "application/json",
         };
         if (options.body) {
             headers["Content-Type"] = "application/json";
@@ -166,11 +266,17 @@ const IncidentsPage = () => {
             });
             const duration = `${Math.round(performance.now() - started)} ms`;
             if (options.responseType === "blob") {
-                const blob = await response.blob();
-                const safeName = options.downloadName ?? "report.bin";
-                const downloadUrl = URL.createObjectURL(blob);
-                setDownload({url: downloadUrl, filename: safeName});
-                setLastBody(`Binary response (${blob.type || "unknown"}) ready for download.`);
+                if (!response.ok) {
+                    const text = await response.text();
+                    setLastBody(text || "Empty response.");
+                } else {
+                    const blob = await response.blob();
+                    const safeName = options.downloadName ?? "report.bin";
+                    const downloadUrl = URL.createObjectURL(blob);
+                    const contentType = response.headers.get("content-type") || blob.type || "unknown";
+                    setDownload({url: downloadUrl, filename: safeName});
+                    setLastBody(`Binary response (${contentType}) ready for download.`);
+                }
             } else {
                 const text = await response.text();
                 let parsed: unknown = text || "Empty response.";
@@ -212,9 +318,6 @@ const IncidentsPage = () => {
                         Полный контроль над инцидентами, жалобами, нарушениями и отчетами. Каждый
                         блок ниже соответствует ручке бэка с мгновенным превью ответа.
                     </p>
-                    <div className="hero-note">
-                        База API: <strong>{baseUrl || "прокси"}</strong>
-                    </div>
                 </div>
                 <div className="incidents-page__hero-stats">
                     <div className="hero-pill">Инциденты</div>
@@ -290,7 +393,7 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "POST",
-                                    path: "/incidents",
+                                    path: "/api/incident/incidents",
                                     body: {
                                         type: incidentType,
                                         location: incidentLocation || undefined,
@@ -345,17 +448,45 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "GET",
-                                    path: "/incidents",
+                                    path: "/api/incident/incidents",
                                     query: {
                                         start: toIso(incidentStart),
                                         end: toIso(incidentEnd),
                                         type: incidentFilterType || undefined,
                                     },
+                                    onSuccess: (data) => setIncidentResults(toIncidentList(data)),
                                 })
                             }
                         >
                             Получить инциденты
                         </button>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Список инцидентов</h3>
+                        {incidentResults.length ? (
+                            <div className="incident-list">
+                                {incidentResults.map((incident) => (
+                                    <div className="incident-card" key={incident.id}>
+                                        <div className="incident-card__title">
+                                            {incident.type} {incident.status ? `· ${incident.status}` : ""}
+                                        </div>
+                                        <div className="incident-card__meta">
+                                            <span>Дата: {formatDateTime(incident.occurredAt)}</span>
+                                            {incident.location ? <span>Локация: {incident.location}</span> : null}
+                                            {incident.reportedBy ? (
+                                                <span>Сообщил: {incident.reportedBy}</span>
+                                            ) : null}
+                                        </div>
+                                        {incident.description ? (
+                                            <div className="incident-card__desc">{incident.description}</div>
+                                        ) : null}
+                                        <div className="incident-card__id">{incident.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Инциденты появятся после запроса.</div>
+                        )}
                     </div>
                     <div className="panel__section">
                         <h3>Инцидент по ID</h3>
@@ -371,7 +502,8 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "GET",
-                                        path: `/incidents/${incidentId}`,
+                                        path: `/api/incident/incidents/${incidentId}`,
+                                        onSuccess: (data) => setIncidentResults(toIncidentList(data)),
                                     })
                                 }
                             >
@@ -443,7 +575,7 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "POST",
-                                    path: "/complaints",
+                                    path: "/api/incident/complaints",
                                     body: {
                                         category: complaintCategory,
                                         description: complaintDescription,
@@ -511,18 +643,49 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "GET",
-                                    path: "/complaints",
+                                    path: "/api/incident/complaints",
                                     query: {
                                         start: toIso(complaintStart),
                                         end: toIso(complaintEnd),
                                         category: complaintFilterCategory || undefined,
                                         source: complaintFilterSource || undefined,
                                     },
+                                    onSuccess: (data) => setComplaintResults(toComplaintList(data)),
                                 })
                             }
                         >
                             Получить жалобы
                         </button>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Список жалоб</h3>
+                        {complaintResults.length ? (
+                            <div className="complaint-list">
+                                {complaintResults.map((complaint) => (
+                                    <div className="complaint-card" key={complaint.id}>
+                                        <div className="complaint-card__title">
+                                            {complaint.category} {complaint.status ? `· ${complaint.status}` : ""}
+                                        </div>
+                                        <div className="complaint-card__meta">
+                                            <span>Источник: {complaint.source}</span>
+                                            <span>Дата: {formatDateTime(complaint.reportedAt)}</span>
+                                            {complaint.reporterName ? (
+                                                <span>Заявитель: {complaint.reporterName}</span>
+                                            ) : null}
+                                            {complaint.relatedIncidentId ? (
+                                                <span>Инцидент: {complaint.relatedIncidentId}</span>
+                                            ) : null}
+                                        </div>
+                                        {complaint.description ? (
+                                            <div className="complaint-card__desc">{complaint.description}</div>
+                                        ) : null}
+                                        <div className="complaint-card__id">{complaint.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Жалобы появятся после запроса.</div>
+                        )}
                     </div>
                     <div className="panel__section">
                         <h3>Жалоба по ID</h3>
@@ -538,7 +701,8 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "GET",
-                                        path: `/complaints/${complaintId}`,
+                                        path: `/api/incident/complaints/${complaintId}`,
+                                        onSuccess: (data) => setComplaintResults(toComplaintList(data)),
                                     })
                                 }
                             >
@@ -570,7 +734,7 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "PATCH",
-                                        path: `/complaints/${complaintStatusId}/status`,
+                                        path: `/api/incident/complaints/${complaintStatusId}/status`,
                                         query: {status: complaintStatus},
                                     })
                                 }
@@ -654,7 +818,7 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "POST",
-                                    path: "/violations",
+                                    path: "/api/incident/violations",
                                     body: {
                                         employeeId: violationEmployeeId,
                                         type: violationType,
@@ -675,12 +839,37 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "GET",
-                                    path: "/violations",
+                                    path: "/api/incident/violations",
+                                    onSuccess: (data) => setViolationResults(toViolationList(data)),
                                 })
                             }
                         >
                             Получить нарушения
                         </button>
+                    </div>
+                    <div className="panel__section">
+                        <h3>Список нарушений</h3>
+                        {violationResults.length ? (
+                            <div className="violation-list">
+                                {violationResults.map((violation) => (
+                                    <div className="violation-card" key={violation.id}>
+                                        <div className="violation-card__title">
+                                            {violation.type} {violation.status ? `· ${violation.status}` : ""}
+                                        </div>
+                                        <div className="violation-card__meta">
+                                            <span>Сотрудник: {violation.employeeId}</span>
+                                            <span>Дата: {formatDateTime(violation.occurredAt)}</span>
+                                        </div>
+                                        {violation.description ? (
+                                            <div className="violation-card__desc">{violation.description}</div>
+                                        ) : null}
+                                        <div className="violation-card__id">{violation.id}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="hint">Нарушения появятся после запроса.</div>
+                        )}
                     </div>
                     <div className="panel__section">
                         <h3>Нарушение по ID</h3>
@@ -696,7 +885,8 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "GET",
-                                        path: `/violations/${violationId}`,
+                                        path: `/api/incident/violations/${violationId}`,
+                                        onSuccess: (data) => setViolationResults(toViolationList(data)),
                                     })
                                 }
                             >
@@ -744,11 +934,17 @@ const IncidentsPage = () => {
                             </label>
                             <label>
                                 Сформировал (UUID)
-                                <input
+                                <select
                                     value={reportGeneratedBy}
                                     onChange={(e) => setReportGeneratedBy(e.target.value)}
-                                    placeholder="UUID пользователя"
-                                />
+                                >
+                                    <option value="">Выберите сотрудника</option>
+                                    {employeeOptions.map((employee) => (
+                                        <option key={employee.id} value={employee.id}>
+                                            {formatEmployeeName(employee)}
+                                        </option>
+                                    ))}
+                                </select>
                             </label>
                         </div>
                         <button
@@ -757,7 +953,7 @@ const IncidentsPage = () => {
                             onClick={() =>
                                 runRequest({
                                     method: "POST",
-                                    path: "/reports/incidents",
+                                    path: "/api/incident/reports/incidents",
                                     body: {
                                         periodStart: toIso(reportStart),
                                         periodEnd: toIso(reportEnd),
@@ -766,11 +962,15 @@ const IncidentsPage = () => {
                                             : null,
                                         generatedBy: reportGeneratedBy || undefined,
                                     },
+                                    onSuccess: (data) => setIncidentReportId(extractReportId(data)),
                                 })
                             }
                         >
                             Сформировать отчет
                         </button>
+                        <div className="hint">
+                            UUID отчета: {incidentReportId || "появится после создания"}
+                        </div>
                     </div>
                     <div className="panel__section">
                         <h3>Отчет для руководства</h3>
@@ -804,19 +1004,23 @@ const IncidentsPage = () => {
                             className="primary-button"
                             type="button"
                             onClick={() =>
-                                runRequest({
-                                    method: "POST",
-                                    path: "/reports/management",
-                                    body: {
-                                        periodStart: toIso(managementReportStart),
-                                        periodEnd: toIso(managementReportEnd),
-                                        generatedBy: managementReportGeneratedBy || undefined,
-                                    },
+                                    runRequest({
+                                        method: "POST",
+                                        path: "/api/incident/reports/management",
+                                        body: {
+                                            periodStart: toIso(managementReportStart),
+                                            periodEnd: toIso(managementReportEnd),
+                                            generatedBy: managementReportGeneratedBy || undefined,
+                                        },
+                                    onSuccess: (data) => setManagementReportId(extractReportId(data)),
                                 })
                             }
                         >
                             Сформировать отчет
                         </button>
+                        <div className="hint">
+                            UUID отчета: {managementReportId || "появится после создания"}
+                        </div>
                     </div>
                     <div className="panel__section">
                         <h3>Регуляторный отчет</h3>
@@ -850,19 +1054,23 @@ const IncidentsPage = () => {
                             className="primary-button"
                             type="button"
                             onClick={() =>
-                                runRequest({
-                                    method: "POST",
-                                    path: "/reports/regulatory",
-                                    body: {
-                                        periodStart: toIso(regulatoryReportStart),
-                                        periodEnd: toIso(regulatoryReportEnd),
-                                        generatedBy: regulatoryReportGeneratedBy || undefined,
-                                    },
+                                    runRequest({
+                                        method: "POST",
+                                        path: "/api/incident/reports/regulatory",
+                                        body: {
+                                            periodStart: toIso(regulatoryReportStart),
+                                            periodEnd: toIso(regulatoryReportEnd),
+                                            generatedBy: regulatoryReportGeneratedBy || undefined,
+                                        },
+                                    onSuccess: (data) => setRegulatoryReportId(extractReportId(data)),
                                 })
                             }
                         >
                             Сформировать отчет
                         </button>
+                        <div className="hint">
+                            UUID отчета: {regulatoryReportId || "появится после создания"}
+                        </div>
                     </div>
                     <div className="panel__section">
                         <h3>Повторяющиеся нарушения</h3>
@@ -897,67 +1105,19 @@ const IncidentsPage = () => {
                             className="ghost-button"
                             type="button"
                             onClick={() =>
-                                runRequest({
-                                    method: "POST",
-                                    path: "/reports/repeated-violations",
-                                    body: {
-                                        periodStart: toIso(repeatedStart),
-                                        periodEnd: toIso(repeatedEnd),
-                                        threshold: Number(repeatedThreshold || 3),
+                                    runRequest({
+                                        method: "POST",
+                                        path: "/api/incident/reports/repeated-violations",
+                                        body: {
+                                            periodStart: toIso(repeatedStart),
+                                            periodEnd: toIso(repeatedEnd),
+                                            threshold: Number(repeatedThreshold || 3),
                                     },
                                 })
                             }
                         >
                             Получить повторяющиеся
                         </button>
-                    </div>
-                    <div className="panel__section">
-                        <h3>Реестр отчетов</h3>
-                        <div className="inline-row">
-                            <select
-                                value={reportFilterType}
-                                onChange={(e) => setReportFilterType(e.target.value)}
-                            >
-                                <option value="">Все типы</option>
-                                {REPORT_TYPES.map((type) => (
-                                    <option key={type} value={type}>
-                                        {type}
-                                    </option>
-                                ))}
-                            </select>
-                            <button
-                                className="ghost-button"
-                                type="button"
-                                onClick={() =>
-                                    runRequest({
-                                        method: "GET",
-                                        path: "/reports",
-                                        query: {type: reportFilterType || undefined},
-                                    })
-                            }
-                        >
-                            Получить отчеты
-                        </button>
-                        </div>
-                        <div className="inline-row">
-                            <input
-                                value={reportId}
-                                onChange={(e) => setReportId(e.target.value)}
-                                placeholder="UUID отчета"
-                            />
-                            <button
-                                className="ghost-button"
-                                type="button"
-                                onClick={() =>
-                                    runRequest({
-                                        method: "GET",
-                                        path: `/reports/${reportId}`,
-                                    })
-                                }
-                            >
-                                Получить отчет
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -977,7 +1137,7 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "GET",
-                                        path: `/reports/${exportReportId}/export/pdf`,
+                                        path: `/api/incident/reports/${exportReportId}/export/pdf`,
                                         responseType: "blob",
                                         downloadName: `report-${exportReportId || "export"}.pdf`,
                                     })
@@ -991,7 +1151,7 @@ const IncidentsPage = () => {
                                 onClick={() =>
                                     runRequest({
                                         method: "GET",
-                                        path: `/reports/${exportReportId}/export/excel`,
+                                        path: `/api/incident/reports/${exportReportId}/export/excel`,
                                         responseType: "blob",
                                         downloadName: `report-${exportReportId || "export"}.xlsx`,
                                     })
@@ -1011,15 +1171,6 @@ const IncidentsPage = () => {
                 </div>
             </section>
 
-            <section className="panel panel--wide">
-                <div className="panel__title">Последний ответ</div>
-                <div className="response-meta">
-                    <span>{lastRequest || "Выполните запрос, чтобы увидеть детали."}</span>
-                    <span>{lastStatus}</span>
-                    <span>{lastDuration}</span>
-                </div>
-                <pre className="response-body">{lastBody || "Тело ответа появится здесь."}</pre>
-            </section>
         </div>
     );
 };

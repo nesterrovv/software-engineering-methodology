@@ -16,7 +16,6 @@ const Header = () => {
             </div>
             <div className="header__auth">
                 <span className="header__badge">{username ?? "гость"}</span>
-                <span className="header__badge">{baseUrl ? baseUrl : "прокси"}</span>
                 <button className="header__logout" type="button" onClick={logout}>
                     Выйти
                 </button>

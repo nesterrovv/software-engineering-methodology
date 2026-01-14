@@ -261,6 +261,123 @@
   width: 100%;
 }
 
+.incident-list {
+  display: grid;
+  gap: 10px;
+}
+
+.incident-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 128, 189, 0.25);
+  display: grid;
+  gap: 6px;
+}
+
+.incident-card__title {
+  font-weight: 700;
+  color: var(--pink-700);
+}
+
+.incident-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.incident-card__desc {
+  font-size: 12px;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.incident-card__id {
+  font-size: 11px;
+  color: rgba(59, 21, 36, 0.5);
+  word-break: break-all;
+}
+
+.complaint-list {
+  display: grid;
+  gap: 10px;
+}
+
+.complaint-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 128, 189, 0.25);
+  display: grid;
+  gap: 6px;
+}
+
+.complaint-card__title {
+  font-weight: 700;
+  color: var(--pink-700);
+}
+
+.complaint-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.complaint-card__desc {
+  font-size: 12px;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.complaint-card__id {
+  font-size: 11px;
+  color: rgba(59, 21, 36, 0.5);
+  word-break: break-all;
+}
+
+.violation-list {
+  display: grid;
+  gap: 10px;
+}
+
+.violation-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 128, 189, 0.25);
+  display: grid;
+  gap: 6px;
+}
+
+.violation-card__title {
+  font-weight: 700;
+  color: var(--pink-700);
+}
+
+.violation-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.violation-card__desc {
+  font-size: 12px;
+  color: rgba(59, 21, 36, 0.7);
+}
+
+.violation-card__id {
+  font-size: 11px;
+  color: rgba(59, 21, 36, 0.5);
+  word-break: break-all;
+}
+
 
 
 @media (max-width: 720px) {
