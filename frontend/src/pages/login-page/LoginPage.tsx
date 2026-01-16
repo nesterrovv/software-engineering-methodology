@@ -1,4 +1,5 @@
-import {FormEvent, useState} from "react";
+import {useState} from "react";
+import type {FormEvent} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
 import {useAuth} from "../../auth/AuthContext.tsx";
 import "./login-page.scss";
@@ -42,44 +43,49 @@ const LoginPage = () => {
 
     return (
         <div className="login-page">
-            <form className="login-card" onSubmit={handleSubmit}>
-                <div className="login-card__header">
-                    <div className="login-eyebrow">Casino MIS</div>
-                    <h1>Вход</h1>
-                    <p>Используйте Basic-auth. Оставьте базовый URL пустым, чтобы использовать прокси.</p>
-                </div>
-                <div className="login-card__fields">
-                    <label>
-                        Логин
-                        <input
-                            value={username}
-                            onChange={(event) => setUsername(event.target.value)}
-                            placeholder="admin"
-                        />
-                    </label>
-                    <label>
-                        Пароль
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(event) => setPassword(event.target.value)}
-                            placeholder="admin"
-                        />
-                    </label>
-                    <label>
-                        Базовый URL API (необязательно)
-                        <input
-                            value={baseUrl}
-                            onChange={(event) => setBaseUrl(event.target.value)}
-                            placeholder="http://localhost:8080"
-                        />
-                    </label>
-                </div>
-                {error ? <div className="login-error">{error}</div> : null}
-                <button className="primary-button" type="submit" disabled={isLoading}>
-                    {isLoading ? "Входим..." : "Войти"}
-                </button>
-            </form>
+            <div className="container">
+                <header className="page-header">
+                    <h1>Вход в систему</h1>
+                    <p>Доступ к информационной системе казино.</p>
+                </header>
+                <section className="page-section">
+                    <div className="card login-card">
+                        <h3>Авторизация</h3>
+                        <form onSubmit={handleSubmit}>
+                            <label>
+                                Логин
+                                <input
+                                    value={username}
+                                    onChange={(event) => setUsername(event.target.value)}
+                                />
+                            </label>
+                            <label>
+                                Пароль
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(event) => setPassword(event.target.value)}
+                                />
+                            </label>
+                            <label>
+                                Базовый URL API (необязательно)
+                                <input
+                                    value={baseUrl}
+                                    onChange={(event) => setBaseUrl(event.target.value)}
+                                    placeholder="https://api.example.com"
+                                />
+                            </label>
+                            {error ? <div className="login-error">{error}</div> : null}
+                            <button className="primary-button" type="submit" disabled={isLoading}>
+                                {isLoading ? "Входим..." : "Войти"}
+                            </button>
+                        </form>
+                    </div>
+                </section>
+                <footer>
+                    <p>© 2025 Казино - Все права защищены</p>
+                </footer>
+            </div>
         </div>
     );
 };
