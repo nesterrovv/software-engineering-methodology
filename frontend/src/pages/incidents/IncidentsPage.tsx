@@ -13,16 +13,22 @@ const IncidentsPage = () => {
     const [incidentLocation, setIncidentLocation] = useState("");
     const [incidentDescription, setIncidentDescription] = useState("");
     const [incidents, setIncidents] = useState<Incident[]>([]);
+    const [incidentLookupId, setIncidentLookupId] = useState("");
+    const [incidentDetails, setIncidentDetails] = useState<Incident | null>(null);
 
     const [complaintCategory, setComplaintCategory] = useState("SERVICE_QUALITY");
     const [complaintSource, setComplaintSource] = useState("VISITOR");
     const [complaintDescription, setComplaintDescription] = useState("");
     const [complaints, setComplaints] = useState<Complaint[]>([]);
+    const [complaintLookupId, setComplaintLookupId] = useState("");
+    const [complaintDetails, setComplaintDetails] = useState<Complaint | null>(null);
 
     const [violationEmployeeId, setViolationEmployeeId] = useState("");
     const [violationType, setViolationType] = useState("LATE");
     const [violationDescription, setViolationDescription] = useState("");
     const [violations, setViolations] = useState<Violation[]>([]);
+    const [violationLookupId, setViolationLookupId] = useState("");
+    const [violationDetails, setViolationDetails] = useState<Violation | null>(null);
 
     const [error, setError] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
@@ -75,6 +81,24 @@ const IncidentsPage = () => {
         }
     };
 
+    const handleFetchIncidentById = async () => {
+        setError("");
+        if (!incidentLookupId) {
+            setError("Введите ID инцидента.");
+            return;
+        }
+        try {
+            const data = await apiRequest<Incident>(
+                baseUrl,
+                token,
+                `/api/incident/incidents/${incidentLookupId}`
+            );
+            setIncidentDetails(data);
+        } catch {
+            setError("Не удалось получить инцидент по ID.");
+        }
+    };
+
     const handleCreateComplaint = async (event: FormEvent) => {
         event.preventDefault();
         setError("");
@@ -110,6 +134,24 @@ const IncidentsPage = () => {
         }
     };
 
+    const handleFetchComplaintById = async () => {
+        setError("");
+        if (!complaintLookupId) {
+            setError("Введите ID жалобы.");
+            return;
+        }
+        try {
+            const data = await apiRequest<Complaint>(
+                baseUrl,
+                token,
+                `/api/incident/complaints/${complaintLookupId}`
+            );
+            setComplaintDetails(data);
+        } catch {
+            setError("Не удалось получить жалобу по ID.");
+        }
+    };
+
     const handleCreateViolation = async (event: FormEvent) => {
         event.preventDefault();
         setError("");
@@ -142,6 +184,42 @@ const IncidentsPage = () => {
             setViolations(data || []);
         } catch {
             setError("Не удалось получить список нарушений.");
+        }
+    };
+
+    const handleFetchViolationById = async () => {
+        setError("");
+        if (!violationLookupId) {
+            setError("Введите ID нарушения.");
+            return;
+        }
+        try {
+            const data = await apiRequest<Violation>(
+                baseUrl,
+                token,
+                `/api/incident/violations/${violationLookupId}`
+            );
+            setViolationDetails(data);
+        } catch {
+            setError("Не удалось получить нарушение по ID.");
+        }
+    };
+
+    const handleFetchViolationsByEmployee = async () => {
+        setError("");
+        if (!violationEmployeeId) {
+            setError("Выберите сотрудника.");
+            return;
+        }
+        try {
+            const data = await apiRequest<Violation[]>(
+                baseUrl,
+                token,
+                `/api/incident/violations/employee/${violationEmployeeId}`
+            );
+            setViolations(data || []);
+        } catch {
+            setError("Не удалось получить нарушения сотрудника.");
         }
     };
 
@@ -191,6 +269,24 @@ const IncidentsPage = () => {
                     <button type="button" className="secondary-button" onClick={handleFetchIncidents}>
                         Получить инциденты
                     </button>
+                    <label>
+                        Найти по ID
+                        <input
+                            value={incidentLookupId}
+                            onChange={(event) => setIncidentLookupId(event.target.value)}
+                            placeholder="UUID инцидента"
+                        />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchIncidentById}>
+                        Найти инцидент
+                    </button>
+                    {incidentDetails ? (
+                        <div className="card">
+                            <h4>{incidentDetails.type}</h4>
+                            <p>{incidentDetails.description}</p>
+                            <p className="muted">Локация: {incidentDetails.location ?? "—"}</p>
+                        </div>
+                    ) : null}
                     {incidents.length ? (
                         <div className="card-list">
                             {incidents.map((incident) => (
@@ -246,6 +342,24 @@ const IncidentsPage = () => {
                     <button type="button" className="secondary-button" onClick={handleFetchComplaints}>
                         Получить жалобы
                     </button>
+                    <label>
+                        Найти по ID
+                        <input
+                            value={complaintLookupId}
+                            onChange={(event) => setComplaintLookupId(event.target.value)}
+                            placeholder="UUID жалобы"
+                        />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchComplaintById}>
+                        Найти жалобу
+                    </button>
+                    {complaintDetails ? (
+                        <div className="card">
+                            <h4>{complaintDetails.category}</h4>
+                            <p>{complaintDetails.description}</p>
+                            <p className="muted">Статус: {complaintDetails.status ?? "OPEN"}</p>
+                        </div>
+                    ) : null}
                     {complaints.length ? (
                         <div className="card-list">
                             {complaints.map((complaint) => (
@@ -305,6 +419,27 @@ const IncidentsPage = () => {
                     <button type="button" className="secondary-button" onClick={handleFetchViolations}>
                         Получить нарушения
                     </button>
+                    <button type="button" className="secondary-button" onClick={handleFetchViolationsByEmployee}>
+                        Нарушения сотрудника
+                    </button>
+                    <label>
+                        Найти по ID
+                        <input
+                            value={violationLookupId}
+                            onChange={(event) => setViolationLookupId(event.target.value)}
+                            placeholder="UUID нарушения"
+                        />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchViolationById}>
+                        Найти нарушение
+                    </button>
+                    {violationDetails ? (
+                        <div className="card">
+                            <h4>{violationDetails.type}</h4>
+                            <p>{violationDetails.description}</p>
+                            <p className="muted">Сотрудник: {violationDetails.employeeId}</p>
+                        </div>
+                    ) : null}
                     {violations.length ? (
                         <div className="card-list">
                             {violations.map((violation) => (

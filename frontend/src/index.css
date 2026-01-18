@@ -402,6 +402,13 @@ footer {
     border-radius: 6px;
 }
 
+.report-output pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: inherit;
+}
+
 .report-preview {
     margin-top: 20px;
 }

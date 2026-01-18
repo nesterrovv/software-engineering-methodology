@@ -11,6 +11,10 @@ const SecurityPage = () => {
     const [hallStatus, setHallStatus] = useState<HallStatus | null>(null);
     const [sessions, setSessions] = useState<HallSession[]>([]);
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+    const [unreadNotifications, setUnreadNotifications] = useState<NotificationItem[]>([]);
+    const [unreadCount, setUnreadCount] = useState<number | null>(null);
+    const [sessionId, setSessionId] = useState("");
+    const [sessionDetails, setSessionDetails] = useState<HallSession | null>(null);
 
     const [monitoringEmployeeId, setMonitoringEmployeeId] = useState("");
     const [notificationRecipientId, setNotificationRecipientId] = useState("");
@@ -127,6 +131,102 @@ const SecurityPage = () => {
             setNotifications(data || []);
         } catch {
             setError("Не удалось получить уведомления.");
+        }
+    };
+
+    const handleFetchUnread = async () => {
+        setError("");
+        setStatusMessage("");
+        if (!fetchRecipientId) {
+            setError("Выберите получателя.");
+            return;
+        }
+        try {
+            const data = await apiRequest<NotificationItem[]>(
+                baseUrl,
+                token,
+                `/api/security/notifications/recipient/${fetchRecipientId}/unread`
+            );
+            setUnreadNotifications(data || []);
+        } catch {
+            setError("Не удалось получить непрочитанные уведомления.");
+        }
+    };
+
+    const handleFetchUnreadCount = async () => {
+        setError("");
+        setStatusMessage("");
+        if (!fetchRecipientId) {
+            setError("Выберите получателя.");
+            return;
+        }
+        try {
+            const count = await apiRequest<number>(
+                baseUrl,
+                token,
+                `/api/security/notifications/recipient/${fetchRecipientId}/unread-count`
+            );
+            setUnreadCount(count ?? 0);
+        } catch {
+            setError("Не удалось получить количество непрочитанных.");
+        }
+    };
+
+    const handleMarkAsRead = async (id: string) => {
+        setError("");
+        try {
+            const updated = await apiRequest<NotificationItem>(
+                baseUrl,
+                token,
+                `/api/security/notifications/${id}/read`,
+                {method: "POST"}
+            );
+            setNotifications((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+            setUnreadNotifications((prev) => prev.filter((item) => item.id !== updated.id));
+        } catch {
+            setError("Не удалось отметить уведомление как прочитанное.");
+        }
+    };
+
+    const handleFetchSession = async (event: FormEvent) => {
+        event.preventDefault();
+        setError("");
+        setStatusMessage("");
+        if (!sessionId) {
+            setError("Укажите ID сессии.");
+            return;
+        }
+        try {
+            const data = await apiRequest<HallSession>(
+                baseUrl,
+                token,
+                `/api/security/monitoring/${sessionId}`
+            );
+            setSessionDetails(data);
+        } catch {
+            setError("Не удалось получить данные сессии.");
+        }
+    };
+
+    const handleEndSession = async () => {
+        setError("");
+        setStatusMessage("");
+        if (!sessionId) {
+            setError("Укажите ID сессии.");
+            return;
+        }
+        try {
+            const data = await apiRequest<HallSession>(
+                baseUrl,
+                token,
+                `/api/security/monitoring/${sessionId}/end`,
+                {method: "POST"}
+            );
+            setSessionDetails(data);
+            setSessions((prev) => prev.map((item) => (item.id === data.id ? data : item)));
+            setStatusMessage("Сессия завершена.");
+        } catch {
+            setError("Не удалось завершить сессию.");
         }
     };
 
@@ -268,6 +368,40 @@ const SecurityPage = () => {
                             Получить уведомления
                         </button>
                     </form>
+                    <div className="inline-actions">
+                        <button type="button" className="secondary-button" onClick={handleFetchUnread}>
+                            Непрочитанные
+                        </button>
+                        <button type="button" className="secondary-button" onClick={handleFetchUnreadCount}>
+                            Количество непрочитанных
+                        </button>
+                        {unreadCount !== null ? <span className="muted">Непрочитанных: {unreadCount}</span> : null}
+                    </div>
+                </div>
+
+                <div className="panel__section">
+                    <h3>Управление сессией мониторинга</h3>
+                    <form onSubmit={handleFetchSession} className="panel__form">
+                        <label>
+                            ID сессии
+                            <input value={sessionId} onChange={(event) => setSessionId(event.target.value)} />
+                        </label>
+                        <div className="inline-actions">
+                            <button type="submit" className="secondary-button">Получить сессию</button>
+                            <button type="button" className="primary-button" onClick={handleEndSession}>
+                                Завершить сессию
+                            </button>
+                        </div>
+                    </form>
+                    {sessionDetails ? (
+                        <div className="card">
+                            <p><strong>ID:</strong> {sessionDetails.id}</p>
+                            <p><strong>Статус:</strong> {sessionDetails.status}</p>
+                            <p><strong>Посетители:</strong> {sessionDetails.activeVisitors ?? 0}</p>
+                            <p><strong>Персонал:</strong> {sessionDetails.activeStaff ?? 0}</p>
+                            <p><strong>Аномалии:</strong> {sessionDetails.anomaliesDetected ?? 0}</p>
+                        </div>
+                    ) : null}
                 </div>
 
                 {error ? <div className="form-error">{error}</div> : null}
@@ -300,6 +434,37 @@ const SecurityPage = () => {
                                 <h4>{item.title}</h4>
                                 <p>{item.message}</p>
                                 <p className="muted">Тип: {item.type} · Статус: {item.status}</p>
+                                {item.status !== "READ" ? (
+                                    <button
+                                        type="button"
+                                        className="secondary-button"
+                                        onClick={() => handleMarkAsRead(item.id)}
+                                    >
+                                        Отметить прочитанным
+                                    </button>
+                                ) : null}
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            ) : null}
+
+            {unreadNotifications.length ? (
+                <section className="page-section">
+                    <h2>Непрочитанные уведомления</h2>
+                    <div className="card-list">
+                        {unreadNotifications.map((item) => (
+                            <div key={item.id} className="notification-card">
+                                <h4>{item.title}</h4>
+                                <p>{item.message}</p>
+                                <p className="muted">Тип: {item.type} · Статус: {item.status}</p>
+                                <button
+                                    type="button"
+                                    className="secondary-button"
+                                    onClick={() => handleMarkAsRead(item.id)}
+                                >
+                                    Отметить прочитанным
+                                </button>
                             </div>
                         ))}
                     </div>

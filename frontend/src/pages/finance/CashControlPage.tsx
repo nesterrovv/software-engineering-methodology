@@ -9,6 +9,9 @@ const CashControlPage = () => {
     const [cashDeskId, setCashDeskId] = useState("");
     const [operations, setOperations] = useState<CashOperation[]>([]);
     const [reconciliations, setReconciliations] = useState<CashReconciliation[]>([]);
+    const [reconciliationIdLookup, setReconciliationIdLookup] = useState("");
+    const [reconciliationDetails, setReconciliationDetails] = useState<CashReconciliation | null>(null);
+    const [reconciliationStatus, setReconciliationStatus] = useState("PENDING");
 
     useEffect(() => {
         const loadOperations = async () => {
@@ -56,6 +59,40 @@ const CashControlPage = () => {
         }
     };
 
+    const handleFetchById = async () => {
+        if (!reconciliationIdLookup) {
+            return;
+        }
+        try {
+            const data = await apiRequest<CashReconciliation>(
+                baseUrl,
+                token,
+                `/api/finance/reconciliation/${reconciliationIdLookup}`
+            );
+            setReconciliationDetails(data);
+        } catch {
+            setReconciliationDetails(null);
+        }
+    };
+
+    const handleUpdateStatus = async () => {
+        if (!reconciliationIdLookup) {
+            return;
+        }
+        try {
+            const data = await apiRequest<CashReconciliation>(
+                baseUrl,
+                token,
+                `/api/finance/reconciliation/${reconciliationIdLookup}/status?status=${reconciliationStatus}`,
+                {method: "PATCH"}
+            );
+            setReconciliationDetails(data);
+            setReconciliations((prev) => prev.map((item) => (item.id === data.id ? data : item)));
+        } catch {
+            // ignore
+        }
+    };
+
     return (
         <PageShell
             title="Контроль кассы"
@@ -80,6 +117,40 @@ const CashControlPage = () => {
                     </label>
                     <button type="submit" className="primary-button">Обновить сверку</button>
                 </form>
+                <div className="card">
+                    <h3>Сверка по ID</h3>
+                    <label>
+                        ID сверки
+                        <input
+                            value={reconciliationIdLookup}
+                            onChange={(event) => setReconciliationIdLookup(event.target.value)}
+                        />
+                    </label>
+                    <div className="inline-actions">
+                        <button type="button" className="secondary-button" onClick={handleFetchById}>
+                            Найти сверку
+                        </button>
+                        <button type="button" className="secondary-button" onClick={handleUpdateStatus}>
+                            Обновить статус
+                        </button>
+                    </div>
+                    <label>
+                        Новый статус
+                        <select value={reconciliationStatus} onChange={(event) => setReconciliationStatus(event.target.value)}>
+                            <option value="PENDING">PENDING</option>
+                            <option value="CONFIRMED">CONFIRMED</option>
+                            <option value="DISCREPANCY_FOUND">DISCREPANCY_FOUND</option>
+                            <option value="RESOLVED">RESOLVED</option>
+                        </select>
+                    </label>
+                    {reconciliationDetails ? (
+                        <div className="report-output">
+                            <p><strong>ID:</strong> {reconciliationDetails.id}</p>
+                            <p><strong>Статус:</strong> {reconciliationDetails.status}</p>
+                            <p><strong>Расхождение:</strong> {reconciliationDetails.discrepancy ?? "0"}</p>
+                        </div>
+                    ) : null}
+                </div>
             </section>
 
             <section className="history">

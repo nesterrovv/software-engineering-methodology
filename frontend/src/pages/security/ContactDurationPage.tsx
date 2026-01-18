@@ -3,6 +3,7 @@ import type {FormEvent} from "react";
 import PageShell from "../../components/PageShell";
 import {apiRequest} from "../../api/client";
 import {useAuth} from "../../auth/AuthContext";
+import type {ContactEvent} from "../../types";
 
 const ContactDurationPage = () => {
     const {token, baseUrl} = useAuth();
@@ -13,6 +14,8 @@ const ContactDurationPage = () => {
     const [contactDate, setContactDate] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
     const [error, setError] = useState("");
+    const [mockCount, setMockCount] = useState("10");
+    const [suspiciousContacts, setSuspiciousContacts] = useState<ContactEvent[]>([]);
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
@@ -39,6 +42,36 @@ const ContactDurationPage = () => {
             setDurationMinutes("");
         } catch {
             setError("Не удалось зарегистрировать контакт.");
+        }
+    };
+
+    const handleGenerateMocks = async () => {
+        setError("");
+        setStatusMessage("");
+        try {
+            await apiRequest<ContactEvent[]>(
+                baseUrl,
+                token,
+                `/api/security/contacts/generate-mocks?count=${mockCount}`,
+                {method: "POST"}
+            );
+            setStatusMessage("Моковые контакты сгенерированы.");
+        } catch {
+            setError("Не удалось сгенерировать контакты.");
+        }
+    };
+
+    const handleFetchSuspicious = async () => {
+        setError("");
+        try {
+            const data = await apiRequest<ContactEvent[]>(
+                baseUrl,
+                token,
+                "/api/security/contacts/suspicious"
+            );
+            setSuspiciousContacts(data || []);
+        } catch {
+            setError("Не удалось получить подозрительные контакты.");
         }
     };
 
@@ -100,6 +133,41 @@ const ContactDurationPage = () => {
                     </form>
                     {error ? <div className="form-error">{error}</div> : null}
                     {statusMessage ? <div className="form-success">{statusMessage}</div> : null}
+                </div>
+            </section>
+
+            <section className="page-section">
+                <h2>Подозрительные контакты</h2>
+                <div className="card">
+                    <label>
+                        Количество моков
+                        <input
+                            type="number"
+                            min="1"
+                            value={mockCount}
+                            onChange={(event) => setMockCount(event.target.value)}
+                        />
+                    </label>
+                    <div className="inline-actions">
+                        <button type="button" className="secondary-button" onClick={handleGenerateMocks}>
+                            Сгенерировать моковые контакты
+                        </button>
+                        <button type="button" className="secondary-button" onClick={handleFetchSuspicious}>
+                            Получить подозрительные
+                        </button>
+                    </div>
+                    {suspiciousContacts.length ? (
+                        <div className="card-list">
+                            {suspiciousContacts.map((item) => (
+                                <div key={item.id} className="card">
+                                    <p><strong>Участники:</strong> {item.personId1} / {item.personId2}</p>
+                                    <p><strong>Длительность:</strong> {item.durationSeconds ?? 0} сек</p>
+                                    <p><strong>Локация:</strong> {item.location ?? "—"}</p>
+                                    <p className="muted">Статус: {item.status ?? "SUSPICIOUS"}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : null}
                 </div>
             </section>
         </PageShell>

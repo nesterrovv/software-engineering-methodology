@@ -93,7 +93,7 @@ const DisciplinaryViolationsPage = () => {
                                 placeholder="Описание ситуации..."
                             />
                         </label>
-                        <button type="submit">Зарегистрировать нарушение</button>
+                        <button type="submit" className="primary-button">Зарегистрировать нарушение</button>
                     </form>
                     {statusMessage ? <div className="form-success">{statusMessage}</div> : null}
                     {error ? <div className="form-error">{error}</div> : null}

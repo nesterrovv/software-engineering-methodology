@@ -46,6 +46,42 @@ export type NotificationItem = {
     createdAt?: string | null;
 };
 
+export type ContactEvent = {
+    id: string;
+    personId1: string;
+    personId2: string;
+    contactStartTime?: string | null;
+    contactEndTime?: string | null;
+    durationSeconds?: number | null;
+    location?: string | null;
+    status?: string | null;
+    suspicious?: boolean | null;
+    suspiciousActivityId?: string | null;
+};
+
+export type FraudRecord = {
+    id: string;
+    personId: string;
+    fullName: string;
+    description?: string | null;
+    photoUrl?: string | null;
+    fraudType: string;
+    addedAt?: string | null;
+    addedBy?: string | null;
+    lastCheckedAt?: string | null;
+    matchCount?: number | null;
+    status?: string | null;
+};
+
+export type SuspiciousActivity = {
+    id: string;
+    shortDescription?: string | null;
+    location?: string | null;
+    occurredAt?: string | null;
+    risk?: string | null;
+    status?: string | null;
+};
+
 export type HallStatus = {
     totalVisitors?: number | null;
     totalStaff?: number | null;

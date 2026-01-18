@@ -13,6 +13,7 @@ const ViolationHistoryPage = () => {
     const [severity, setSeverity] = useState("LOW");
     const [date, setDate] = useState("");
     const [result, setResult] = useState<ViolationHistoryResponse | null>(null);
+    const [departmentLookup, setDepartmentLookup] = useState("");
 
     const employeeOptions = useMemo(() => employees.map((employee) => ({
         value: employee.id,
@@ -30,6 +31,38 @@ const ViolationHistoryPage = () => {
                     startDate: date ? new Date(date).toISOString() : null,
                 }),
             });
+            setResult(data);
+        } catch {
+            setResult(null);
+        }
+    };
+
+    const handleFetchByEmployee = async () => {
+        if (!employeeId) {
+            return;
+        }
+        try {
+            const data = await apiRequest<ViolationHistoryResponse>(
+                baseUrl,
+                token,
+                `/api/staff/violation-history/employee/${employeeId}`
+            );
+            setResult(data);
+        } catch {
+            setResult(null);
+        }
+    };
+
+    const handleFetchByDepartment = async () => {
+        if (!departmentLookup) {
+            return;
+        }
+        try {
+            const data = await apiRequest<ViolationHistoryResponse>(
+                baseUrl,
+                token,
+                `/api/staff/violation-history/department/${departmentLookup}`
+            );
             setResult(data);
         } catch {
             setResult(null);
@@ -78,8 +111,20 @@ const ViolationHistoryPage = () => {
                             Дата
                             <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
                         </label>
-                        <button type="submit">Применить фильтры</button>
+                        <button type="submit" className="primary-button">Применить фильтры</button>
                     </form>
+                    <div className="inline-actions">
+                        <button type="button" className="secondary-button" onClick={handleFetchByEmployee}>
+                            История сотрудника
+                        </button>
+                        <label>
+                            Подразделение
+                            <input value={departmentLookup} onChange={(event) => setDepartmentLookup(event.target.value)} />
+                        </label>
+                        <button type="button" className="secondary-button" onClick={handleFetchByDepartment}>
+                            По подразделению
+                        </button>
+                    </div>
                 </div>
             </section>
 

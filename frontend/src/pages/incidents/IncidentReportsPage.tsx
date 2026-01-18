@@ -9,6 +9,9 @@ const IncidentReportsPage = () => {
     const [period, setPeriod] = useState("week");
     const [incidentType, setIncidentType] = useState("ALL");
     const [report, setReport] = useState<ReportResponse | null>(null);
+    const [reports, setReports] = useState<ReportResponse[]>([]);
+    const [reportIdLookup, setReportIdLookup] = useState("");
+    const [reportDetails, setReportDetails] = useState<ReportResponse | null>(null);
     const [error, setError] = useState("");
 
     const mapPeriod = () => {
@@ -59,6 +62,34 @@ const IncidentReportsPage = () => {
         }
     };
 
+    const handleFetchAllReports = async () => {
+        setError("");
+        try {
+            const data = await apiRequest<ReportResponse[]>(baseUrl, token, "/api/incident/reports");
+            setReports(data || []);
+        } catch {
+            setError("Не удалось получить список отчётов.");
+        }
+    };
+
+    const handleFetchReportById = async () => {
+        setError("");
+        if (!reportIdLookup) {
+            setError("Укажите ID отчёта.");
+            return;
+        }
+        try {
+            const data = await apiRequest<ReportResponse>(
+                baseUrl,
+                token,
+                `/api/incident/reports/${reportIdLookup}`
+            );
+            setReportDetails(data);
+        } catch {
+            setError("Не удалось получить отчёт по ID.");
+        }
+    };
+
     return (
         <PageShell
             title="Формирование отчётов по инцидентам"
@@ -103,6 +134,45 @@ const IncidentReportsPage = () => {
                     )}
                     {error ? <div className="form-error">{error}</div> : null}
                 </div>
+
+                <div className="card">
+                    <h3>Список отчётов</h3>
+                    <div className="inline-actions">
+                        <button type="button" className="secondary-button" onClick={handleFetchAllReports}>
+                            Получить все отчёты
+                        </button>
+                    </div>
+                    <label>
+                        Найти по ID
+                        <input
+                            value={reportIdLookup}
+                            onChange={(event) => setReportIdLookup(event.target.value)}
+                            placeholder="UUID отчёта"
+                        />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchReportById}>
+                        Найти отчёт
+                    </button>
+                    {reportDetails ? (
+                        <div className="report-output">
+                            <p><strong>ID:</strong> {reportDetails.id}</p>
+                            <p><strong>Тип:</strong> {reportDetails.type}</p>
+                            <p><strong>Статус:</strong> {reportDetails.status}</p>
+                        </div>
+                    ) : null}
+                </div>
+
+                {reports.length ? (
+                    <div className="card-list">
+                        {reports.map((item) => (
+                            <div key={item.id} className="card">
+                                <h4>Отчёт #{item.id.slice(0, 8)}</h4>
+                                <p>Тип: {item.type}</p>
+                                <p className="muted">Статус: {item.status}</p>
+                            </div>
+                        ))}
+                    </div>
+                ) : null}
             </section>
         </PageShell>
     );

@@ -3,6 +3,7 @@ import type {FormEvent} from "react";
 import PageShell from "../../components/PageShell";
 import {apiRequest} from "../../api/client";
 import {useAuth} from "../../auth/AuthContext";
+import type {CashOperation} from "../../types";
 
 const OperationsPage = () => {
     const {token, baseUrl} = useAuth();
@@ -13,6 +14,8 @@ const OperationsPage = () => {
     const [cashDeskId, setCashDeskId] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
     const [error, setError] = useState("");
+    const [operationIdLookup, setOperationIdLookup] = useState("");
+    const [operationDetails, setOperationDetails] = useState<CashOperation | null>(null);
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
@@ -37,6 +40,24 @@ const OperationsPage = () => {
             setDescription("");
         } catch {
             setError("Не удалось сохранить операцию.");
+        }
+    };
+
+    const handleFetchOperation = async () => {
+        setError("");
+        if (!operationIdLookup) {
+            setError("Укажите ID операции.");
+            return;
+        }
+        try {
+            const data = await apiRequest<CashOperation>(
+                baseUrl,
+                token,
+                `/api/finance/operations/${operationIdLookup}`
+            );
+            setOperationDetails(data);
+        } catch {
+            setError("Не удалось получить операцию.");
         }
     };
 
@@ -93,6 +114,26 @@ const OperationsPage = () => {
                     {statusMessage ? <div className="form-success">{statusMessage}</div> : null}
                     {error ? <div className="form-error">{error}</div> : null}
                 </form>
+            </section>
+
+            <section className="page-section">
+                <h2>Поиск операции</h2>
+                <div className="card">
+                    <label>
+                        ID операции
+                        <input value={operationIdLookup} onChange={(event) => setOperationIdLookup(event.target.value)} />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchOperation}>
+                        Найти операцию
+                    </button>
+                    {operationDetails ? (
+                        <div className="report-output">
+                            <p><strong>Тип:</strong> {operationDetails.type}</p>
+                            <p><strong>Сумма:</strong> {operationDetails.amount}</p>
+                            <p><strong>Касса:</strong> {operationDetails.cashDeskId}</p>
+                        </div>
+                    ) : null}
+                </div>
             </section>
         </PageShell>
     );

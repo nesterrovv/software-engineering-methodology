@@ -29,6 +29,18 @@ const ShiftManagementPage = () => {
 
     const [schedules, setSchedules] = useState<ShiftSchedule[]>([]);
     const [statusMessage, setStatusMessage] = useState("");
+    const [shiftIdLookup, setShiftIdLookup] = useState("");
+    const [shiftDetails, setShiftDetails] = useState<ShiftSchedule | null>(null);
+    const [availabilityStart, setAvailabilityStart] = useState("");
+    const [availabilityEnd, setAvailabilityEnd] = useState("");
+    const [availabilityData, setAvailabilityData] = useState<Record<string, unknown> | null>(null);
+    const [employeeShiftLookup, setEmployeeShiftLookup] = useState("");
+    const [employeeShifts, setEmployeeShifts] = useState<ShiftSchedule[]>([]);
+    const [rangeStart, setRangeStart] = useState("");
+    const [rangeEnd, setRangeEnd] = useState("");
+    const [rangeShifts, setRangeShifts] = useState<ShiftSchedule[]>([]);
+    const [confirmShiftId, setConfirmShiftId] = useState("");
+    const [confirmById, setConfirmById] = useState("");
 
     useEffect(() => {
         if (!employees.length || employeeId) {
@@ -88,6 +100,112 @@ const ShiftManagementPage = () => {
             setStatusMessage("Смена перераспределена.");
         } catch {
             setStatusMessage("Не удалось перераспределить смену.");
+        }
+    };
+
+    const handleFetchShiftById = async () => {
+        if (!shiftIdLookup) {
+            setStatusMessage("Укажите ID смены.");
+            return;
+        }
+        try {
+            const data = await apiRequest<ShiftSchedule>(
+                baseUrl,
+                token,
+                `/api/staff/shifts/${shiftIdLookup}`
+            );
+            setShiftDetails(data);
+        } catch {
+            setStatusMessage("Не удалось получить смену.");
+        }
+    };
+
+    const handleFetchAvailability = async () => {
+        if (!availabilityStart || !availabilityEnd) {
+            setStatusMessage("Укажите даты периода.");
+            return;
+        }
+        try {
+            const data = await apiRequest<Record<string, unknown>>(
+                baseUrl,
+                token,
+                `/api/staff/shifts/availability?startDate=${availabilityStart}&endDate=${availabilityEnd}`
+            );
+            setAvailabilityData(data || {});
+        } catch {
+            setStatusMessage("Не удалось получить доступность.");
+        }
+    };
+
+    const handleFetchByEmployee = async () => {
+        if (!employeeShiftLookup) {
+            setStatusMessage("Укажите ID сотрудника.");
+            return;
+        }
+        try {
+            const data = await apiRequest<ShiftSchedule[]>(
+                baseUrl,
+                token,
+                `/api/staff/shifts/employee/${employeeShiftLookup}`
+            );
+            setEmployeeShifts(data || []);
+        } catch {
+            setStatusMessage("Не удалось получить смены сотрудника.");
+        }
+    };
+
+    const handleFetchByRange = async () => {
+        if (!rangeStart || !rangeEnd) {
+            setStatusMessage("Укажите период.");
+            return;
+        }
+        try {
+            const data = await apiRequest<ShiftSchedule[]>(
+                baseUrl,
+                token,
+                `/api/staff/shifts?startDate=${rangeStart}&endDate=${rangeEnd}`
+            );
+            setRangeShifts(data || []);
+        } catch {
+            setStatusMessage("Не удалось получить смены по периоду.");
+        }
+    };
+
+    const handlePublishShift = async () => {
+        if (!shiftIdLookup) {
+            setStatusMessage("Укажите ID смены.");
+            return;
+        }
+        try {
+            const data = await apiRequest<ShiftSchedule>(
+                baseUrl,
+                token,
+                `/api/staff/shifts/${shiftIdLookup}/publish`,
+                {method: "POST"}
+            );
+            setShiftDetails(data);
+            setStatusMessage("Смена опубликована.");
+        } catch {
+            setStatusMessage("Не удалось опубликовать смену.");
+        }
+    };
+
+    const handleConfirmShift = async () => {
+        if (!confirmShiftId || !confirmById) {
+            setStatusMessage("Укажите ID смены и подтверждающего.");
+            return;
+        }
+        try {
+            const data = await apiRequest<ShiftSchedule>(
+                baseUrl,
+                token,
+                `/api/staff/shifts/${confirmShiftId}/confirm?confirmedBy=${confirmById}`,
+                {method: "POST"}
+            );
+            setShiftDetails(data);
+            setStatusMessage("Смена подтверждена.");
+        } catch {
+            setStatusMessage("Не удалось подтвердить смену.");
         }
     };
 
@@ -151,7 +269,7 @@ const ShiftManagementPage = () => {
                                 placeholder="Комментарий, причина корректировки или другие важные детали..."
                             />
                         </label>
-                        <button type="submit">Сохранить смену</button>
+                        <button type="submit" className="primary-button">Сохранить смену</button>
                     </form>
                 </div>
             </section>
@@ -175,8 +293,113 @@ const ShiftManagementPage = () => {
                                 ))}
                             </select>
                         </label>
-                        <button type="submit">Перераспределить смену</button>
+                        <button type="submit" className="primary-button">Перераспределить смену</button>
                     </form>
+                </div>
+            </section>
+
+            <section className="form-section">
+                <div className="form-card">
+                    <h3>Управление сменами</h3>
+                    <label>
+                        ID смены
+                        <input value={shiftIdLookup} onChange={(event) => setShiftIdLookup(event.target.value)} />
+                    </label>
+                    <div className="inline-actions">
+                        <button type="button" className="secondary-button" onClick={handleFetchShiftById}>
+                            Найти смену
+                        </button>
+                        <button type="button" className="secondary-button" onClick={handlePublishShift}>
+                            Опубликовать
+                        </button>
+                    </div>
+                    <label>
+                        Подтверждающий (UUID)
+                        <input value={confirmById} onChange={(event) => setConfirmById(event.target.value)} />
+                    </label>
+                    <label>
+                        ID смены для подтверждения
+                        <input value={confirmShiftId} onChange={(event) => setConfirmShiftId(event.target.value)} />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleConfirmShift}>
+                        Подтвердить смену
+                    </button>
+                    {shiftDetails ? (
+                        <div className="report-output">
+                            <p><strong>ID:</strong> {shiftDetails.id}</p>
+                            <p><strong>Статус:</strong> {shiftDetails.status ?? "DRAFT"}</p>
+                            <p><strong>Дата:</strong> {shiftDetails.shiftDate ?? "—"}</p>
+                            <p><strong>Тип:</strong> {shiftDetails.shiftType ?? "—"}</p>
+                        </div>
+                    ) : null}
+                </div>
+            </section>
+
+            <section className="form-section">
+                <div className="form-card">
+                    <h3>Доступность сотрудников</h3>
+                    <label>
+                        Начало периода
+                        <input type="date" value={availabilityStart} onChange={(event) => setAvailabilityStart(event.target.value)} />
+                    </label>
+                    <label>
+                        Конец периода
+                        <input type="date" value={availabilityEnd} onChange={(event) => setAvailabilityEnd(event.target.value)} />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchAvailability}>
+                        Получить доступность
+                    </button>
+                    {availabilityData ? (
+                        <div className="report-output">
+                            <pre>{JSON.stringify(availabilityData, null, 2)}</pre>
+                        </div>
+                    ) : null}
+                </div>
+            </section>
+
+            <section className="form-section">
+                <div className="form-card">
+                    <h3>Поиск смен</h3>
+                    <label>
+                        ID сотрудника
+                        <input value={employeeShiftLookup} onChange={(event) => setEmployeeShiftLookup(event.target.value)} />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchByEmployee}>
+                        Смены сотрудника
+                    </button>
+                    <label>
+                        Период начала
+                        <input type="date" value={rangeStart} onChange={(event) => setRangeStart(event.target.value)} />
+                    </label>
+                    <label>
+                        Период окончания
+                        <input type="date" value={rangeEnd} onChange={(event) => setRangeEnd(event.target.value)} />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchByRange}>
+                        Смены по периоду
+                    </button>
+                    {employeeShifts.length ? (
+                        <div className="card-list">
+                            {employeeShifts.map((shift) => (
+                                <div key={shift.id} className="card">
+                                    <p><strong>ID:</strong> {shift.id}</p>
+                                    <p>Дата: {shift.shiftDate ?? "—"}</p>
+                                    <p>Статус: {shift.status ?? "DRAFT"}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : null}
+                    {rangeShifts.length ? (
+                        <div className="card-list">
+                            {rangeShifts.map((shift) => (
+                                <div key={shift.id} className="card">
+                                    <p><strong>ID:</strong> {shift.id}</p>
+                                    <p>Дата: {shift.shiftDate ?? "—"}</p>
+                                    <p>Статус: {shift.status ?? "DRAFT"}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : null}
                 </div>
             </section>
 

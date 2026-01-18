@@ -21,6 +21,9 @@ const GameAnalysisPage = () => {
     const [expectedRtp, setExpectedRtp] = useState("95");
     const [largeWin, setLargeWin] = useState("1000");
     const [analysis, setAnalysis] = useState<GameAnalysis | null>(null);
+    const [analysisIdLookup, setAnalysisIdLookup] = useState("");
+    const [tableLookup, setTableLookup] = useState("");
+    const [analysisList, setAnalysisList] = useState<GameAnalysis[]>([]);
     const [operations, setOperations] = useState<CashOperation[]>([]);
 
     useEffect(() => {
@@ -51,6 +54,38 @@ const GameAnalysisPage = () => {
             setAnalysis(data);
         } catch {
             setAnalysis(null);
+        }
+    };
+
+    const handleFetchById = async () => {
+        if (!analysisIdLookup) {
+            return;
+        }
+        try {
+            const data = await apiRequest<GameAnalysis>(
+                baseUrl,
+                token,
+                `/api/finance/game-analysis/${analysisIdLookup}`
+            );
+            setAnalysis(data);
+        } catch {
+            setAnalysis(null);
+        }
+    };
+
+    const handleFetchByTable = async () => {
+        if (!tableLookup) {
+            return;
+        }
+        try {
+            const data = await apiRequest<GameAnalysis[]>(
+                baseUrl,
+                token,
+                `/api/finance/game-analysis/table/${tableLookup}`
+            );
+            setAnalysisList(data || []);
+        } catch {
+            setAnalysisList([]);
         }
     };
 
@@ -89,6 +124,31 @@ const GameAnalysisPage = () => {
                         </label>
                         <button type="submit" className="primary-button">Запустить анализ</button>
                     </form>
+                    <label>
+                        ID анализа
+                        <input value={analysisIdLookup} onChange={(event) => setAnalysisIdLookup(event.target.value)} />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchById}>
+                        Получить анализ по ID
+                    </button>
+                    <label>
+                        ID стола
+                        <input value={tableLookup} onChange={(event) => setTableLookup(event.target.value)} />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchByTable}>
+                        Анализы по столу
+                    </button>
+                    {analysisList.length ? (
+                        <div className="card-list">
+                            {analysisList.map((item) => (
+                                <div key={item.id} className="card">
+                                    <p><strong>ID:</strong> {item.id}</p>
+                                    <p><strong>RTP:</strong> {item.rtp ?? "—"}</p>
+                                    <p><strong>Статус:</strong> {item.status ?? "—"}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : null}
                 </div>
             </section>
 

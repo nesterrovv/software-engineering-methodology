@@ -3,6 +3,7 @@ import type {FormEvent} from "react";
 import PageShell from "../../components/PageShell";
 import {apiRequest} from "../../api/client";
 import {useAuth} from "../../auth/AuthContext";
+import type {SuspiciousActivity} from "../../types";
 
 const SuspiciousActivityPage = () => {
     const {token, baseUrl} = useAuth();
@@ -12,6 +13,9 @@ const SuspiciousActivityPage = () => {
     const [risk, setRisk] = useState("MEDIUM");
     const [statusMessage, setStatusMessage] = useState("");
     const [error, setError] = useState("");
+    const [activities, setActivities] = useState<SuspiciousActivity[]>([]);
+    const [activityIdLookup, setActivityIdLookup] = useState("");
+    const [activityDetails, setActivityDetails] = useState<SuspiciousActivity | null>(null);
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
@@ -36,6 +40,38 @@ const SuspiciousActivityPage = () => {
             setStatusMessage("Активность зарегистрирована.");
         } catch {
             setError("Не удалось зафиксировать активность.");
+        }
+    };
+
+    const handleFetchAll = async () => {
+        setError("");
+        try {
+            const data = await apiRequest<SuspiciousActivity[]>(
+                baseUrl,
+                token,
+                "/api/incident/suspicious-activities"
+            );
+            setActivities(data || []);
+        } catch {
+            setError("Не удалось получить список активностей.");
+        }
+    };
+
+    const handleFetchById = async () => {
+        setError("");
+        if (!activityIdLookup) {
+            setError("Укажите ID активности.");
+            return;
+        }
+        try {
+            const data = await apiRequest<SuspiciousActivity>(
+                baseUrl,
+                token,
+                `/api/incident/suspicious-activities/${activityIdLookup}`
+            );
+            setActivityDetails(data);
+        } catch {
+            setError("Не удалось получить активность по ID.");
         }
     };
 
@@ -89,6 +125,48 @@ const SuspiciousActivityPage = () => {
                     {error ? <div className="form-error">{error}</div> : null}
                     {statusMessage ? <div className="form-success">{statusMessage}</div> : null}
                 </div>
+            </section>
+
+            <section className="page-section">
+                <h2>Список активностей</h2>
+                <div className="card">
+                    <div className="inline-actions">
+                        <button type="button" className="secondary-button" onClick={handleFetchAll}>
+                            Получить все
+                        </button>
+                    </div>
+                    <label>
+                        Найти по ID
+                        <input
+                            value={activityIdLookup}
+                            onChange={(event) => setActivityIdLookup(event.target.value)}
+                            placeholder="UUID активности"
+                        />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchById}>
+                        Найти активность
+                    </button>
+                    {activityDetails ? (
+                        <div className="report-output">
+                            <p><strong>{activityDetails.shortDescription ?? "Активность"}</strong></p>
+                            <p>Локация: {activityDetails.location ?? "—"}</p>
+                            <p>Риск: {activityDetails.risk ?? "MEDIUM"}</p>
+                            <p>Статус: {activityDetails.status ?? "OPEN"}</p>
+                        </div>
+                    ) : null}
+                </div>
+
+                {activities.length ? (
+                    <div className="card-list">
+                        {activities.map((item) => (
+                            <div key={item.id} className="card">
+                                <h4>{item.shortDescription ?? "Активность"}</h4>
+                                <p>Локация: {item.location ?? "—"}</p>
+                                <p className="muted">Риск: {item.risk ?? "MEDIUM"} · Статус: {item.status ?? "OPEN"}</p>
+                            </div>
+                        ))}
+                    </div>
+                ) : null}
             </section>
         </PageShell>
     );

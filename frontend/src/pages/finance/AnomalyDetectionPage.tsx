@@ -16,6 +16,8 @@ const AnomalyDetectionPage = () => {
     const [reviewerId, setReviewerId] = useState("");
     const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
     const [error, setError] = useState("");
+    const [anomalyIdLookup, setAnomalyIdLookup] = useState("");
+    const [anomalyDetails, setAnomalyDetails] = useState<Anomaly | null>(null);
 
     const handleDetect = async (event: FormEvent) => {
         event.preventDefault();
@@ -34,6 +36,34 @@ const AnomalyDetectionPage = () => {
             setAnomalies(data || []);
         } catch {
             setError("Не удалось загрузить аномалии.");
+        }
+    };
+
+    const handleFetchAll = async () => {
+        setError("");
+        try {
+            const data = await apiRequest<Anomaly[]>(baseUrl, token, "/api/finance/anomalies");
+            setAnomalies(data || []);
+        } catch {
+            setError("Не удалось получить список аномалий.");
+        }
+    };
+
+    const handleFetchById = async () => {
+        setError("");
+        if (!anomalyIdLookup) {
+            setError("Укажите ID аномалии.");
+            return;
+        }
+        try {
+            const data = await apiRequest<Anomaly>(
+                baseUrl,
+                token,
+                `/api/finance/anomalies/${anomalyIdLookup}`
+            );
+            setAnomalyDetails(data);
+        } catch {
+            setError("Не удалось получить аномалию.");
         }
     };
 
@@ -90,6 +120,25 @@ const AnomalyDetectionPage = () => {
                         </label>
                         <button type="submit" className="primary-button">Запустить анализ</button>
                     </form>
+                    <div className="inline-actions">
+                        <button type="button" className="secondary-button" onClick={handleFetchAll}>
+                            Получить все аномалии
+                        </button>
+                    </div>
+                    <label>
+                        Найти по ID
+                        <input value={anomalyIdLookup} onChange={(event) => setAnomalyIdLookup(event.target.value)} />
+                    </label>
+                    <button type="button" className="secondary-button" onClick={handleFetchById}>
+                        Найти аномалию
+                    </button>
+                    {anomalyDetails ? (
+                        <div className="report-output">
+                            <p><strong>ID:</strong> {anomalyDetails.id}</p>
+                            <p><strong>Статус:</strong> {anomalyDetails.status}</p>
+                            <p><strong>Сумма:</strong> {anomalyDetails.amount ?? "—"}</p>
+                        </div>
+                    ) : null}
                 </div>
             </section>
             <section>
