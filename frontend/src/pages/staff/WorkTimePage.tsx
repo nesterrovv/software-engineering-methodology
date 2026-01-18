@@ -41,6 +41,13 @@ const WorkTimePage = () => {
         setSelectedEmployee(employees[0].id);
     }, [employees, selectedEmployee]);
 
+    useEffect(() => {
+        if (!employees.length || employeeStatusId) {
+            return;
+        }
+        setEmployeeStatusId(employees[0].id);
+    }, [employees, employeeStatusId]);
+
     const employeeOptions = useMemo(() => employees.map((employee) => ({
         value: employee.id,
         label: [employee.lastName, employee.firstName, employee.middleName].filter(Boolean).join(" ").trim(),
@@ -279,8 +286,15 @@ const WorkTimePage = () => {
                 <div className="form-card">
                     <h3>Обновление статуса сотрудника</h3>
                     <label>
-                        ID сотрудника
-                        <input value={employeeStatusId} onChange={(event) => setEmployeeStatusId(event.target.value)} />
+                        Сотрудник
+                        <select value={employeeStatusId} onChange={(event) => setEmployeeStatusId(event.target.value)}>
+                            <option value="">Выберите сотрудника</option>
+                            {employeeOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label || option.value}
+                                </option>
+                            ))}
+                        </select>
                     </label>
                     <label>
                         Новый статус

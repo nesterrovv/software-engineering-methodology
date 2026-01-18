@@ -5,6 +5,9 @@ import {apiRequest} from "../../api/client";
 import {useAuth} from "../../auth/AuthContext";
 import {useEmployees} from "../../hooks/useEmployees";
 import type {HallSession, HallStatus, NotificationItem} from "../../types";
+
+type NotificationsView = "hidden" | "all" | "unread";
+
 const SecurityPage = () => {
     const {token, baseUrl} = useAuth();
     const {employees, refresh: refreshEmployees} = useEmployees();
@@ -27,6 +30,8 @@ const SecurityPage = () => {
     const [error, setError] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
 
+    const [isSessionsShown, setIsSessionsShown] = useState(false);
+    const [notificationsView, setNotificationsView] = useState<NotificationsView>("hidden");
     useEffect(() => {
         const loadStatus = async () => {
             try {
@@ -58,6 +63,15 @@ const SecurityPage = () => {
         value: employee.id,
         label: [employee.lastName, employee.firstName, employee.middleName].filter(Boolean).join(" ").trim(),
     })), [employees]);
+
+    const employeeNameById = useMemo(() => {
+        const map = new Map<string, string>();
+        employees.forEach((employee) => {
+            const name = [employee.lastName, employee.firstName, employee.middleName].filter(Boolean).join(" ").trim();
+            map.set(employee.id, name || employee.id);
+        });
+        return map;
+    }, [employees]);
 
     const handleStartMonitoring = async (event: FormEvent) => {
         event.preventDefault();
@@ -114,11 +128,10 @@ const SecurityPage = () => {
         }
     };
 
-    const handleFetchNotifications = async (event: FormEvent) => {
-        event.preventDefault();
+    const fetchNotifications = async (recipientId: string) => {
         setError("");
         setStatusMessage("");
-        if (!fetchRecipientId) {
+        if (!recipientId) {
             setError("Выберите получателя.");
             return;
         }
@@ -126,7 +139,7 @@ const SecurityPage = () => {
             const data = await apiRequest<NotificationItem[]>(
                 baseUrl,
                 token,
-                `/api/security/notifications/recipient/${fetchRecipientId}`
+                `/api/security/notifications/recipient/${recipientId}`
             );
             setNotifications(data || []);
         } catch {
@@ -134,10 +147,10 @@ const SecurityPage = () => {
         }
     };
 
-    const handleFetchUnread = async () => {
+    const fetchUnread = async (recipientId: string) => {
         setError("");
         setStatusMessage("");
-        if (!fetchRecipientId) {
+        if (!recipientId) {
             setError("Выберите получателя.");
             return;
         }
@@ -145,13 +158,25 @@ const SecurityPage = () => {
             const data = await apiRequest<NotificationItem[]>(
                 baseUrl,
                 token,
-                `/api/security/notifications/recipient/${fetchRecipientId}/unread`
+                `/api/security/notifications/recipient/${recipientId}/unread`
             );
             setUnreadNotifications(data || []);
         } catch {
             setError("Не удалось получить непрочитанные уведомления.");
         }
     };
+
+    useEffect(() => {
+        if (!fetchRecipientId) {
+            return;
+        }
+        if (notificationsView === "all") {
+            void fetchNotifications(fetchRecipientId);
+        }
+        if (notificationsView === "unread") {
+            void fetchUnread(fetchRecipientId);
+        }
+    }, [fetchRecipientId, notificationsView, baseUrl, token]);
 
     const handleFetchUnreadCount = async () => {
         setError("");
@@ -223,7 +248,27 @@ const SecurityPage = () => {
                 {method: "POST"}
             );
             setSessionDetails(data);
+            setSessions((prev) => prev.filter((item) => item.id !== data.id));
+            setStatusMessage("Сессия завершена.");
+        } catch {
+            setError("Не удалось завершить сессию.");
+        }
+    };
+
+    const handleEndSessionById = async (id: string) => {
+        setError("");
+        setStatusMessage("");
+        try {
+            const data = await apiRequest<HallSession>(
+                baseUrl,
+                token,
+                `/api/security/monitoring/${id}/end`,
+                {method: "POST"}
+            );
             setSessions((prev) => prev.map((item) => (item.id === data.id ? data : item)));
+            if (sessionId === id) {
+                setSessionDetails(data);
+            }
             setStatusMessage("Сессия завершена.");
         } catch {
             setError("Не удалось завершить сессию.");
@@ -257,7 +302,7 @@ const SecurityPage = () => {
             ) : null}
 
             <section className="panel">
-                <div className="panel__title">Оперативные действия</div>
+                <div className="panel__title">Мониторинг</div>
                 <div className="panel__section">
                     <h3>Начать мониторинг</h3>
                     <form onSubmit={handleStartMonitoring} className="panel__form">
@@ -280,7 +325,76 @@ const SecurityPage = () => {
                         </button>
                     </form>
                 </div>
+                <button className='secondary-button'
+                        onClick={() => setIsSessionsShown(!isSessionsShown)}>{isSessionsShown ? 'Скрыть сессии' : 'Показать сессии'}</button>
+                {/*<div className="panel__section">*/}
+                {/*    <h3>Управление сессией</h3>*/}
+                {/*    <form onSubmit={handleFetchSession} className="panel__form">*/}
+                {/*        <label>*/}
+                {/*            ID сессии*/}
+                {/*            <input value={sessionId} onChange={(event) => setSessionId(event.target.value)}/>*/}
+                {/*        </label>*/}
+                {/*        <div className="inline-actions">*/}
+                {/*            <button type="submit" className="secondary-button">Получить сессию</button>*/}
+                {/*            <button type="button" className="secondary-button" onClick={handleEndSession}>*/}
+                {/*                Завершить сессию*/}
+                {/*            </button>*/}
+                {/*        </div>*/}
+                {/*    </form>*/}
+                {/*    {sessionDetails ? (*/}
+                {/*        <div className="card">*/}
+                {/*            <p><strong>ID:</strong> {sessionDetails.id}</p>*/}
+                {/*            <p><strong>Статус:</strong> {sessionDetails.status}</p>*/}
+                {/*            <p><strong>Посетители:</strong> {sessionDetails.activeVisitors ?? 0}</p>*/}
+                {/*            <p><strong>Персонал:</strong> {sessionDetails.activeStaff ?? 0}</p>*/}
+                {/*            <p><strong>Аномалии:</strong> {sessionDetails.anomaliesDetected ?? 0}</p>*/}
+                {/*        </div>*/}
+                {/*    ) : null}*/}
+                {/*</div>*/}
+            </section>
+            {isSessionsShown && (
+                <section className="page-section">
+                    <h2>Активные сессии</h2>
 
+                    {sessions.length > 0 ? (
+                        <div className="card-list">
+                            {sessions.map(session => (
+                                <div key={session.id} className="session-card">
+                                    <p>
+                                        <strong>Сотрудник:</strong>{' '}
+                                        {employeeNameById.get(session.securityOfficerId) ?? '—'}
+                                    </p>
+                                    <p>
+                                        <strong>Статус:</strong> {session.status ?? 'ACTIVE'}
+                                    </p>
+                                    <p>
+                                        <strong>Посетители:</strong> {session.activeVisitors ?? 0}
+                                    </p>
+                                    <p>
+                                        <strong>Персонал:</strong> {session.activeStaff ?? 0}
+                                    </p>
+                                    <p>
+                                        <strong>Аномалии:</strong> {session.anomaliesDetected ?? 0}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        className="secondary-button"
+                                        onClick={() => handleEndSessionById(session.id)}
+                                    >
+                                        Завершить сессию
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="empty-state">
+                            Активных сессий нет
+                        </div>
+                    )}
+                </section>
+            )}
+            <section className="panel">
+                <div className="panel__title">Уведомления</div>
                 <div className="panel__section">
                     <h3>Создать уведомление</h3>
                     <form onSubmit={handleCreateNotification} className="panel__form">
@@ -349,7 +463,7 @@ const SecurityPage = () => {
 
                 <div className="panel__section">
                     <h3>Получить уведомления</h3>
-                    <form onSubmit={handleFetchNotifications} className="panel__form">
+                    <div className="panel__form">
                         <label>
                             Получатель
                             <select
@@ -364,77 +478,79 @@ const SecurityPage = () => {
                                 ))}
                             </select>
                         </label>
-                        <button type="submit" className="secondary-button">
-                            Получить уведомления
-                        </button>
-                    </form>
+
+                    </div>
                     <div className="inline-actions">
-                        <button type="button" className="secondary-button" onClick={handleFetchUnread}>
-                            Непрочитанные
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => setNotificationsView((prev) => (prev === "unread" ? "hidden" : "unread"))}
+                        >
+                            {notificationsView === "unread" ? "Скрыть непрочитанные" : "Показать непрочитанные"}
                         </button>
-                        <button type="button" className="secondary-button" onClick={handleFetchUnreadCount}>
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => setNotificationsView((prev) => (prev === "all" ? "hidden" : "all"))}
+                        >
+                            {notificationsView === "all" ? "Скрыть уведомления" : "Показать уведомления"}
+                        </button>
+                        {/*<button type="button" className="secondary-button" onClick={handleFetchUnreadCount}>
                             Количество непрочитанных
                         </button>
-                        {unreadCount !== null ? <span className="muted">Непрочитанных: {unreadCount}</span> : null}
+                        {unreadCount !== null ? <span className="muted">Непрочитанных: {unreadCount}</span> : null}*/}
                     </div>
-                </div>
-
-                <div className="panel__section">
-                    <h3>Управление сессией мониторинга</h3>
-                    <form onSubmit={handleFetchSession} className="panel__form">
-                        <label>
-                            ID сессии
-                            <input value={sessionId} onChange={(event) => setSessionId(event.target.value)} />
-                        </label>
-                        <div className="inline-actions">
-                            <button type="submit" className="secondary-button">Получить сессию</button>
-                            <button type="button" className="primary-button" onClick={handleEndSession}>
-                                Завершить сессию
-                            </button>
-                        </div>
-                    </form>
-                    {sessionDetails ? (
-                        <div className="card">
-                            <p><strong>ID:</strong> {sessionDetails.id}</p>
-                            <p><strong>Статус:</strong> {sessionDetails.status}</p>
-                            <p><strong>Посетители:</strong> {sessionDetails.activeVisitors ?? 0}</p>
-                            <p><strong>Персонал:</strong> {sessionDetails.activeStaff ?? 0}</p>
-                            <p><strong>Аномалии:</strong> {sessionDetails.anomaliesDetected ?? 0}</p>
-                        </div>
-                    ) : null}
                 </div>
 
                 {error ? <div className="form-error">{error}</div> : null}
                 {statusMessage ? <div className="form-success">{statusMessage}</div> : null}
             </section>
 
-            {sessions.length ? (
-                <section className="page-section">
-                    <h2>Активные сессии</h2>
-                    <div className="card-list">
-                        {sessions.map((session) => (
-                            <div key={session.id} className="session-card">
-                                <p><strong>ID:</strong> {session.id}</p>
-                                <p><strong>Статус:</strong> {session.status ?? "ACTIVE"}</p>
-                                <p><strong>Посетители:</strong> {session.activeVisitors ?? 0}</p>
-                                <p><strong>Персонал:</strong> {session.activeStaff ?? 0}</p>
-                                <p><strong>Аномалии:</strong> {session.anomaliesDetected ?? 0}</p>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            ) : null}
-
-            {notifications.length ? (
+            {notificationsView === "all" && (
                 <section className="page-section">
                     <h2>Уведомления</h2>
-                    <div className="card-list">
-                        {notifications.map((item) => (
-                            <div key={item.id} className="notification-card">
-                                <h4>{item.title}</h4>
-                                <p>{item.message}</p>
-                                <p className="muted">Тип: {item.type} · Статус: {item.status}</p>
-                                {item.status !== "READ" ? (
+
+                    {notifications.length > 0 ? (
+                        <div className="card-list">
+                            {notifications.map(item => (
+                                <div key={item.id} className="notification-card">
+                                    <h4>{item.title}</h4>
+                                    <p>{item.message}</p>
+                                    <p className="muted">
+                                        Тип: {item.type} · Статус: {item.status}
+                                    </p>
+
+                                    {item.status !== 'READ' && (
+                                        <button
+                                            type="button"
+                                            className="secondary-button"
+                                            onClick={() => handleMarkAsRead(item.id)}
+                                        >
+                                            Отметить прочитанным
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="empty-state">
+                            Уведомлений нет
+                        </div>
+                    )}
+                </section>
+            )}
+
+
+            {notificationsView === "unread" ? (
+                <section className="page-section">
+                    <h2>Непрочитанные уведомления</h2>
+                    {unreadNotifications.length > 0 ? (
+                        <div className="card-list">
+                            {unreadNotifications.map((item) => (
+                                <div key={item.id} className="notification-card">
+                                    <h4>{item.title}</h4>
+                                    <p>{item.message}</p>
+                                    <p className="muted">Тип: {item.type} · Статус: {item.status}</p>
                                     <button
                                         type="button"
                                         className="secondary-button"
@@ -442,40 +558,17 @@ const SecurityPage = () => {
                                     >
                                         Отметить прочитанным
                                     </button>
-                                ) : null}
-                            </div>
-                        ))}
-                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="empty-state">
+                            Непрочитанных уведомлений нет
+                        </div>
+                    )}
                 </section>
             ) : null}
 
-            {unreadNotifications.length ? (
-                <section className="page-section">
-                    <h2>Непрочитанные уведомления</h2>
-                    <div className="card-list">
-                        {unreadNotifications.map((item) => (
-                            <div key={item.id} className="notification-card">
-                                <h4>{item.title}</h4>
-                                <p>{item.message}</p>
-                                <p className="muted">Тип: {item.type} · Статус: {item.status}</p>
-                                <button
-                                    type="button"
-                                    className="secondary-button"
-                                    onClick={() => handleMarkAsRead(item.id)}
-                                >
-                                    Отметить прочитанным
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            ) : null}
-
-            <div className="inline-actions">
-                <button type="button" className="secondary-button" onClick={refreshEmployees}>
-                    Обновить список сотрудников
-                </button>
-            </div>
         </PageShell>
     );
 };
