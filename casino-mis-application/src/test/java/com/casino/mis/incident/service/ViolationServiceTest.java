@@ -5,6 +5,7 @@ import com.casino.mis.incident.domain.ViolationStatus;
 import com.casino.mis.incident.domain.ViolationType;
 import com.casino.mis.incident.dto.CreateViolationRequest;
 import com.casino.mis.incident.repository.DisciplinaryViolationRepository;
+import com.casino.mis.security.HtmlSanitizer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +18,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,6 +26,9 @@ class ViolationServiceTest {
 
     @Mock
     private DisciplinaryViolationRepository repository;
+
+    @Mock
+    private HtmlSanitizer htmlSanitizer;
 
     @InjectMocks
     private ViolationService service;
@@ -51,6 +56,10 @@ class ViolationServiceTest {
         violation.setDescription("Опоздание на работу");
         violation.setStatus(ViolationStatus.OPEN);
         violation.setOccurredAt(OffsetDateTime.now());
+        
+        // Mock HtmlSanitizer to return the same string (pass-through)
+        // Using lenient() to avoid UnnecessaryStubbingException for tests that don't call create()
+        lenient().when(htmlSanitizer.sanitizeToPlainText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test

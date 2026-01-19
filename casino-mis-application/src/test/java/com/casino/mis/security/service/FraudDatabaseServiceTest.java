@@ -26,7 +26,7 @@ class FraudDatabaseServiceTest {
     private FraudDatabaseService service;
 
     private FraudRecordRequest request;
-    private FraudDatabase record;
+    private FraudDatabase fraudRecord;
     private UUID recordId;
     private UUID addedBy;
 
@@ -42,19 +42,19 @@ class FraudDatabaseServiceTest {
         request.setFraudType(FraudDatabase.FraudType.CHEATING);
         request.setAddedBy(addedBy);
 
-        record = new FraudDatabase();
-        record.setId(recordId);
-        record.setPersonId("PERSON_001");
-        record.setFullName("Иван Иванов");
-        record.setDescription("Известный мошенник");
-        record.setFraudType(FraudDatabase.FraudType.CHEATING);
-        record.setStatus(FraudDatabase.FraudStatus.ACTIVE);
-        record.setAddedBy(addedBy);
+        fraudRecord = new FraudDatabase();
+        fraudRecord.setId(recordId);
+        fraudRecord.setPersonId("PERSON_001");
+        fraudRecord.setFullName("Иван Иванов");
+        fraudRecord.setDescription("Известный мошенник");
+        fraudRecord.setFraudType(FraudDatabase.FraudType.CHEATING);
+        fraudRecord.setStatus(FraudDatabase.FraudStatus.ACTIVE);
+        fraudRecord.setAddedBy(addedBy);
     }
 
     @Test
     void testCreateRecord() {
-        when(repository.save(any(FraudDatabase.class))).thenReturn(record);
+        when(repository.save(any(FraudDatabase.class))).thenReturn(fraudRecord);
 
         FraudDatabase result = service.createRecord(request);
 
@@ -68,7 +68,7 @@ class FraudDatabaseServiceTest {
     @Test
     void testCreateRecordWithNullAddedBy() {
         request.setAddedBy(null);
-        when(repository.save(any(FraudDatabase.class))).thenReturn(record);
+        when(repository.save(any(FraudDatabase.class))).thenReturn(fraudRecord);
 
         FraudDatabase result = service.createRecord(request);
 
@@ -78,7 +78,7 @@ class FraudDatabaseServiceTest {
 
     @Test
     void testFindById() {
-        when(repository.findById(recordId)).thenReturn(Optional.of(record));
+        when(repository.findById(recordId)).thenReturn(Optional.of(fraudRecord));
 
         FraudDatabase result = service.findById(recordId);
 
@@ -97,8 +97,8 @@ class FraudDatabaseServiceTest {
 
     @Test
     void testFindAll() {
-        List<FraudDatabase> records = Arrays.asList(record);
-        when(repository.findAll()).thenReturn(records);
+        List<FraudDatabase> fraudRecords = Arrays.asList(fraudRecord);
+        when(repository.findAll()).thenReturn(fraudRecords);
 
         List<FraudDatabase> result = service.findAll();
 
@@ -109,8 +109,8 @@ class FraudDatabaseServiceTest {
 
     @Test
     void testFindByType() {
-        List<FraudDatabase> records = Arrays.asList(record);
-        when(repository.findByFraudType(FraudDatabase.FraudType.CHEATING)).thenReturn(records);
+        List<FraudDatabase> fraudRecords = Arrays.asList(fraudRecord);
+        when(repository.findByFraudType(FraudDatabase.FraudType.CHEATING)).thenReturn(fraudRecords);
 
         List<FraudDatabase> result = service.findByType(FraudDatabase.FraudType.CHEATING);
 
@@ -121,8 +121,8 @@ class FraudDatabaseServiceTest {
 
     @Test
     void testSearch() {
-        List<FraudDatabase> records = Arrays.asList(record);
-        when(repository.search("Иван")).thenReturn(records);
+        List<FraudDatabase> fraudRecords = Arrays.asList(fraudRecord);
+        when(repository.search("Иван")).thenReturn(fraudRecords);
 
         List<FraudDatabase> result = service.search("Иван");
 
@@ -133,8 +133,8 @@ class FraudDatabaseServiceTest {
 
     @Test
     void testUpdateStatus() {
-        when(repository.findById(recordId)).thenReturn(Optional.of(record));
-        when(repository.save(any(FraudDatabase.class))).thenReturn(record);
+        when(repository.findById(recordId)).thenReturn(Optional.of(fraudRecord));
+        when(repository.save(any(FraudDatabase.class))).thenReturn(fraudRecord);
 
         FraudDatabase result = service.updateStatus(recordId, FraudDatabase.FraudStatus.ARCHIVED);
 

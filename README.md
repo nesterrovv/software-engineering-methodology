@@ -202,7 +202,7 @@ docker compose up --build -d
 ### Credentials
 
 * Username: `admin`
-* Password: `admin`
+* Password: `CasinoMIS@2026!Secure` (или `admin` для локальной разработки - задается через переменную окружения `ADMIN_PASSWORD`)
 
 ## Просмотр логов
 

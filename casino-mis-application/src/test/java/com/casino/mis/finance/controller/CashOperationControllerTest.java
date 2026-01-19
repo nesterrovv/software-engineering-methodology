@@ -65,7 +65,7 @@ class CashOperationControllerTest {
         when(service.create(any(CashOperationRequest.class))).thenReturn(operation);
 
         mockMvc.perform(post("/api/finance/operations")
-                        .with(csrf())
+                        .with(csrf()) // Required for Spring Security test context
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

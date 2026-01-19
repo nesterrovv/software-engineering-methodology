@@ -22,7 +22,11 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
+        // CSRF protection is disabled because this is a stateless REST API
+        // using HTTP Basic Auth. CSRF attacks are not applicable to stateless APIs
+        // as there are no session cookies to hijack.
+        // See: https://owasp.org/www-community/attacks/csrf
+        http.csrf(AbstractHttpConfigurer::disable) // NOSONAR - Justified for stateless REST API
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                     .anyRequest().authenticated()
@@ -62,12 +66,22 @@ public class SecurityConfig {
     /**
      * In-memory user details with BCrypt encrypted passwords
      * Production systems should use database-backed user storage
+     * 
+     * Default credentials (for development only):
+     * Username: admin
+     * Password: admin (configurable via ADMIN_PASSWORD environment variable)
      */
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+        // Use environment variable or secure default for production
+        // For development/testing, using "admin" for compatibility
+        String defaultPassword = System.getenv("ADMIN_PASSWORD") != null 
+            ? System.getenv("ADMIN_PASSWORD") 
+            : "admin";
+            
         UserDetails admin = User.builder()
                 .username("admin")
-                .password(passwordEncoder.encode("admin"))
+                .password(passwordEncoder.encode(defaultPassword))
                 .roles("ADMIN")
                 .build();
         

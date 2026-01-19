@@ -4,7 +4,6 @@ import com.casino.mis.incident.domain.DisciplinaryViolation;
 import com.casino.mis.incident.domain.ViolationStatus;
 import com.casino.mis.incident.domain.ViolationType;
 import com.casino.mis.incident.dto.CreateViolationRequest;
-import com.casino.mis.incident.dto.ViolationResponse;
 import com.casino.mis.incident.service.ViolationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,7 +66,7 @@ class ViolationControllerTest {
         when(service.create(any(CreateViolationRequest.class))).thenReturn(violation);
 
         mockMvc.perform(post("/api/incident/violations")
-                        .with(csrf())
+                        .with(csrf()) // Required for Spring Security test context
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

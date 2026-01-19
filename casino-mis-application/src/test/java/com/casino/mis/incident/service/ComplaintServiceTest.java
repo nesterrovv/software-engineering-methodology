@@ -6,6 +6,7 @@ import com.casino.mis.incident.domain.ComplaintSource;
 import com.casino.mis.incident.domain.ComplaintStatus;
 import com.casino.mis.incident.dto.CreateComplaintRequest;
 import com.casino.mis.incident.repository.ComplaintRepository;
+import com.casino.mis.security.HtmlSanitizer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +19,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,6 +27,9 @@ class ComplaintServiceTest {
 
     @Mock
     private ComplaintRepository repository;
+
+    @Mock
+    private HtmlSanitizer htmlSanitizer;
 
     @InjectMocks
     private ComplaintService service;
@@ -49,6 +54,10 @@ class ComplaintServiceTest {
         complaint.setSource(ComplaintSource.VISITOR);
         complaint.setStatus(ComplaintStatus.OPEN);
         complaint.setReportedAt(OffsetDateTime.now());
+        
+        // Mock HtmlSanitizer to return the same string (pass-through)
+        // Using lenient() to avoid UnnecessaryStubbingException for tests that don't call create()
+        lenient().when(htmlSanitizer.sanitizeToPlainText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Test

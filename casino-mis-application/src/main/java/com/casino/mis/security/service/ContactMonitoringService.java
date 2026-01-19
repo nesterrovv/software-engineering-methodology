@@ -19,6 +19,8 @@ public class ContactMonitoringService {
     private final FraudCheckService fraudCheckService;
     private final NotificationService notificationService;
     private final IncidentServiceClient incidentServiceClient;
+    // Using SecureRandom for better security in mock data generation
+    private final java.security.SecureRandom random = new java.security.SecureRandom();
 
     @Value("${security.contact.max-duration-minutes:10}")
     private Long maxContactDurationMinutes = 10L;
@@ -103,7 +105,6 @@ public class ContactMonitoringService {
     // Генерация моковых событий для тестирования
     @Transactional
     public List<ContactEvent> generateMockContacts(int count) {
-        Random random = new Random();
         List<ContactEvent> events = new ArrayList<>();
         
         for (int i = 0; i < count; i++) {

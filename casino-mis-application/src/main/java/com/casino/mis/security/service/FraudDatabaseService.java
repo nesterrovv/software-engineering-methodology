@@ -20,15 +20,15 @@ public class FraudDatabaseService {
 
     @Transactional
     public FraudDatabase createRecord(FraudRecordRequest request) {
-        FraudDatabase record = new FraudDatabase();
-        record.setPersonId(request.getPersonId());
-        record.setFullName(request.getFullName());
-        record.setDescription(request.getDescription());
-        record.setPhotoUrl(request.getPhotoUrl());
-        record.setFraudType(request.getFraudType());
-        record.setAddedBy(request.getAddedBy() != null ? request.getAddedBy() : UUID.randomUUID());
-        record.setStatus(FraudDatabase.FraudStatus.ACTIVE);
-        return repository.save(record);
+        FraudDatabase fraudRecord = new FraudDatabase();
+        fraudRecord.setPersonId(request.getPersonId());
+        fraudRecord.setFullName(request.getFullName());
+        fraudRecord.setDescription(request.getDescription());
+        fraudRecord.setPhotoUrl(request.getPhotoUrl());
+        fraudRecord.setFraudType(request.getFraudType());
+        fraudRecord.setAddedBy(request.getAddedBy() != null ? request.getAddedBy() : UUID.randomUUID());
+        fraudRecord.setStatus(FraudDatabase.FraudStatus.ACTIVE);
+        return repository.save(fraudRecord);
     }
 
     public FraudDatabase findById(UUID id) {
@@ -50,9 +50,9 @@ public class FraudDatabaseService {
 
     @Transactional
     public FraudDatabase updateStatus(UUID id, FraudDatabase.FraudStatus status) {
-        FraudDatabase record = findById(id);
-        record.setStatus(status);
-        return repository.save(record);
+        FraudDatabase fraudRecord = findById(id);
+        fraudRecord.setStatus(status);
+        return repository.save(fraudRecord);
     }
 
     @Transactional

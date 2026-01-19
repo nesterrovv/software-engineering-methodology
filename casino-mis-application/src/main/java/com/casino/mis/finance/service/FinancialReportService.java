@@ -31,6 +31,7 @@ public class FinancialReportService {
     private final S3Client s3;
 
     private static final String BUCKET = "reports";
+    private static final String S3_PROTOCOL_PREFIX = "s3://";
 
     public FinancialReportService(FinancialReportRepository reportRepo,
                          CashOperationRepository opRepo,
@@ -79,7 +80,7 @@ public class FinancialReportService {
         FinancialReport report = new FinancialReport();
         report.setPeriodStart(req.getPeriodStart());
         report.setPeriodEnd(req.getPeriodEnd());
-        report.setCsvUrl("s3://" + BUCKET + "/" + key);
+        report.setCsvUrl(S3_PROTOCOL_PREFIX + BUCKET + "/" + key);
         return reportRepo.save(report);
     }
 
@@ -93,10 +94,11 @@ public class FinancialReportService {
 
         // Извлекаем ключ из URL формата s3://bucket/key
         String csvUrl = report.getCsvUrl();
-        if (!csvUrl.startsWith("s3://" + BUCKET + "/")) {
+        String s3Prefix = S3_PROTOCOL_PREFIX + BUCKET + "/";
+        if (!csvUrl.startsWith(s3Prefix)) {
             throw new RuntimeException("Invalid CSV URL format: " + csvUrl);
         }
-        String key = csvUrl.substring(("s3://" + BUCKET + "/").length());
+        String key = csvUrl.substring(s3Prefix.length());
 
         try {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()

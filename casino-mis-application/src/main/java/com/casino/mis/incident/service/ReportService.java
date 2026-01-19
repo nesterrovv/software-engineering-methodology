@@ -14,6 +14,9 @@ import java.util.stream.Collectors;
 @Service
 public class ReportService {
 
+    private static final String FIELD_PERIOD_START = "periodStart";
+    private static final String FIELD_PERIOD_END = "periodEnd";
+
     private final ReportRepository reportRepository;
     private final IncidentRepository incidentRepository;
     private final ComplaintRepository complaintRepository;
@@ -51,8 +54,8 @@ public class ReportService {
         List<Complaint> complaints = complaintRepository.findByReportedAtBetween(start, end);
 
         Map<String, Object> reportData = new HashMap<>();
-        reportData.put("periodStart", start.toString());
-        reportData.put("periodEnd", end.toString());
+        reportData.put(FIELD_PERIOD_START, start.toString());
+        reportData.put(FIELD_PERIOD_END, end.toString());
         reportData.put("totalIncidents", incidents.size());
         reportData.put("totalComplaints", complaints.size());
         reportData.put("incidentsByType", incidents.stream()
@@ -102,8 +105,8 @@ public class ReportService {
         List<Object[]> repeatedViolations = violationRepository.findEmployeesWithRepeatedViolations(start, end, 3L);
 
         Map<String, Object> reportData = new HashMap<>();
-        reportData.put("periodStart", start.toString());
-        reportData.put("periodEnd", end.toString());
+        reportData.put(FIELD_PERIOD_START, start.toString());
+        reportData.put(FIELD_PERIOD_END, end.toString());
         Map<String, Object> summary = new HashMap<>();
         summary.put("totalIncidents", incidents.size());
         summary.put("totalComplaints", complaints.size());
@@ -165,8 +168,8 @@ public class ReportService {
 
         // Для регуляторов нужна более детальная информация
         Map<String, Object> reportData = new HashMap<>();
-        reportData.put("periodStart", start.toString());
-        reportData.put("periodEnd", end.toString());
+        reportData.put(FIELD_PERIOD_START, start.toString());
+        reportData.put(FIELD_PERIOD_END, end.toString());
         reportData.put("incidents", incidents.stream()
                 .map(i -> {
                     Map<String, String> map = new HashMap<>();

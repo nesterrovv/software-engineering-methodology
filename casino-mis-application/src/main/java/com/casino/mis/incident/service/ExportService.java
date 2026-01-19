@@ -115,10 +115,103 @@ public class ExportService {
             @SuppressWarnings("unchecked")
             Map<String, Object> reportData = objectMapper.readValue(report.getReportData(), Map.class);
             StringBuilder html = new StringBuilder();
-            html.append("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Report</title></head><body>");
+            
+            // HTML заголовок с CSS стилями
+            html.append("<!DOCTYPE html>");
+            html.append("<html><head>");
+            html.append("<meta charset='UTF-8'/>");
+            html.append("<title>Report</title>");
+            html.append("<style>");
+            html.append("body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }");
+            html.append("h1 { color: #333; font-size: 24px; border-bottom: 2px solid #333; padding-bottom: 10px; }");
+            html.append("h2 { color: #555; font-size: 18px; margin-top: 20px; }");
+            html.append(".info { background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 20px; }");
+            html.append(".info p { margin: 5px 0; }");
+            html.append("table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }");
+            html.append("th { background-color: #4CAF50; color: white; padding: 10px; text-align: left; }");
+            html.append("td { padding: 8px; border-bottom: 1px solid #ddd; }");
+            html.append("tr:hover { background-color: #f5f5f5; }");
+            html.append(".summary { display: inline-block; margin-right: 20px; padding: 10px; background-color: #e3f2fd; border-radius: 5px; }");
+            html.append(".label { font-weight: bold; color: #555; }");
+            html.append("</style>");
+            html.append("</head><body>");
+            
+            // Заголовок отчета
             html.append("<h1>Report: ").append(report.getType().name()).append("</h1>");
-            html.append("<p>Period: ").append(report.getPeriodStart()).append(" - ").append(report.getPeriodEnd()).append("</p>");
-            html.append("<pre>").append(reportData.toString()).append("</pre>");
+            
+            // Информация о периоде
+            html.append("<div class='info'>");
+            html.append("<p><span class='label'>Period:</span> ")
+                .append(report.getPeriodStart()).append(" - ").append(report.getPeriodEnd()).append("</p>");
+            html.append("<p><span class='label'>Generated:</span> ").append(report.getGeneratedAt()).append("</p>");
+            html.append("<p><span class='label'>Report ID:</span> ").append(report.getId()).append("</p>");
+            html.append("</div>");
+            
+            // Сводная статистика
+            html.append("<h2>Summary</h2>");
+            html.append("<div>");
+            if (reportData.containsKey("totalIncidents")) {
+                html.append("<div class='summary'>");
+                html.append("<span class='label'>Total Incidents:</span> ").append(reportData.get("totalIncidents"));
+                html.append("</div>");
+            }
+            html.append("</div>");
+            
+            // Инциденты по типам
+            if (reportData.containsKey("incidentsByType")) {
+                html.append("<h2>Incidents by Type</h2>");
+                html.append("<table>");
+                html.append("<tr><th>Type</th><th>Count</th></tr>");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> incidentsByType = (Map<String, Object>) reportData.get("incidentsByType");
+                for (Map.Entry<String, Object> entry : incidentsByType.entrySet()) {
+                    html.append("<tr>");
+                    html.append("<td>").append(entry.getKey()).append("</td>");
+                    html.append("<td>").append(entry.getValue()).append("</td>");
+                    html.append("</tr>");
+                }
+                html.append("</table>");
+            }
+            
+            // Жалобы по категориям
+            if (reportData.containsKey("complaintsByCategory")) {
+                html.append("<h2>Complaints by Category</h2>");
+                html.append("<table>");
+                html.append("<tr><th>Category</th><th>Count</th></tr>");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> complaintsByCategory = (Map<String, Object>) reportData.get("complaintsByCategory");
+                for (Map.Entry<String, Object> entry : complaintsByCategory.entrySet()) {
+                    html.append("<tr>");
+                    html.append("<td>").append(entry.getKey()).append("</td>");
+                    html.append("<td>").append(entry.getValue()).append("</td>");
+                    html.append("</tr>");
+                }
+                html.append("</table>");
+            }
+            
+            // Список инцидентов
+            if (reportData.containsKey("incidents")) {
+                html.append("<h2>Incidents Details</h2>");
+                html.append("<table>");
+                html.append("<tr><th>ID</th><th>Type</th><th>Description</th><th>Location</th><th>Status</th></tr>");
+                @SuppressWarnings("unchecked")
+                java.util.List<Map<String, Object>> incidents = (java.util.List<Map<String, Object>>) reportData.get("incidents");
+                for (Map<String, Object> incident : incidents) {
+                    html.append("<tr>");
+                    html.append("<td>").append(incident.getOrDefault("id", "N/A").toString().substring(0, 8)).append("...</td>");
+                    html.append("<td>").append(incident.getOrDefault("type", "N/A")).append("</td>");
+                    String description = incident.getOrDefault("description", "N/A").toString();
+                    if (description.length() > 50) {
+                        description = description.substring(0, 47) + "...";
+                    }
+                    html.append("<td>").append(description).append("</td>");
+                    html.append("<td>").append(incident.getOrDefault("location", "N/A")).append("</td>");
+                    html.append("<td>").append(incident.getOrDefault("status", "N/A")).append("</td>");
+                    html.append("</tr>");
+                }
+                html.append("</table>");
+            }
+            
             html.append("</body></html>");
             return html.toString();
         } catch (Exception e) {

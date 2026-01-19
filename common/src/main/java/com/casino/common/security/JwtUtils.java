@@ -8,8 +8,11 @@ import java.util.Date;
 
 public class JwtUtils {
 
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private final long expirationMs = 3600_000;
+    private static final Key KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private static final long EXPIRATION_MS = 3600_000;
+    
+    private final Key key = KEY;
+    private final long expirationMs = EXPIRATION_MS;
 
     public String generateToken(String username) {
         Date now = new Date();

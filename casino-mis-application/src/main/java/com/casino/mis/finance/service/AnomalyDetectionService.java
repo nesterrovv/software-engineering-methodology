@@ -40,27 +40,37 @@ public class AnomalyDetectionService {
         List<AnomalousTransaction> anomalies = new ArrayList<>();
 
         // Проверка на крупные суммы
+        detectLargeAmountAnomalies(request, operations, anomalies);
+
+        // Проверка на частоту транзакций
+        detectHighFrequencyAnomalies(request, operations, anomalies);
+
+        // Сохраняем все обнаруженные аномалии
+        return anomalyRepo.saveAll(anomalies);
+    }
+
+    private void detectLargeAmountAnomalies(AnomalyDetectionRequest request, 
+                                            List<CashOperation> operations, 
+                                            List<AnomalousTransaction> anomalies) {
         BigDecimal largeAmountThreshold = request.getLargeAmountThreshold() != null ?
                 request.getLargeAmountThreshold() : new BigDecimal("10000");
         
         for (CashOperation op : operations) {
-            if (op.getAmount().abs().compareTo(largeAmountThreshold) > 0) {
-                // Проверяем, не была ли уже добавлена аномалия для этой операции
-                boolean alreadyExists = anomalies.stream()
-                        .anyMatch(a -> a.getCashOperationId().equals(op.getId()));
-                if (!alreadyExists) {
-                    AnomalousTransaction anomaly = createAnomaly(
-                            op,
-                            AnomalousTransaction.AnomalyType.LARGE_AMOUNT,
-                            "Amount " + op.getAmount() + " exceeds threshold: " + largeAmountThreshold,
-                            calculateRiskLevel(op.getAmount().abs(), largeAmountThreshold)
-                    );
-                    anomalies.add(anomaly);
-                }
+            if (isLargeAmount(op, largeAmountThreshold) && !isAlreadyDetected(op, anomalies)) {
+                AnomalousTransaction anomaly = createAnomaly(
+                        op,
+                        AnomalousTransaction.AnomalyType.LARGE_AMOUNT,
+                        "Amount " + op.getAmount() + " exceeds threshold: " + largeAmountThreshold,
+                        calculateRiskLevel(op.getAmount().abs(), largeAmountThreshold)
+                );
+                anomalies.add(anomaly);
             }
         }
+    }
 
-        // Проверка на частоту транзакций
+    private void detectHighFrequencyAnomalies(AnomalyDetectionRequest request, 
+                                              List<CashOperation> operations, 
+                                              List<AnomalousTransaction> anomalies) {
         Integer frequencyThreshold = request.getFrequencyThreshold() != null ?
                 request.getFrequencyThreshold() : 10;
         Long timeWindowMinutes = request.getTimeWindowMinutes() != null ?
@@ -69,36 +79,49 @@ public class AnomalyDetectionService {
         Map<UUID, List<CashOperation>> operationsByDesk = operations.stream()
                 .collect(Collectors.groupingBy(CashOperation::getCashDeskId));
 
-        for (Map.Entry<UUID, List<CashOperation>> entry : operationsByDesk.entrySet()) {
-            List<CashOperation> deskOps = entry.getValue();
-            if (deskOps.size() >= frequencyThreshold) {
-                // Проверяем частоту в окне времени
-                for (int i = 0; i < deskOps.size() - frequencyThreshold + 1; i++) {
-                    CashOperation first = deskOps.get(i);
-                    CashOperation last = deskOps.get(Math.min(i + frequencyThreshold - 1, deskOps.size() - 1));
-                    
-                    long minutesBetween = java.time.Duration.between(
-                            first.getOperatedAt(), 
-                            last.getOperatedAt()
-                    ).toMinutes();
+        for (List<CashOperation> deskOps : operationsByDesk.values()) {
+            checkFrequencyForDesk(deskOps, frequencyThreshold, timeWindowMinutes, anomalies);
+        }
+    }
 
-                    if (minutesBetween <= timeWindowMinutes) {
-                        AnomalousTransaction anomaly = createAnomaly(
-                                first,
-                                AnomalousTransaction.AnomalyType.HIGH_FREQUENCY,
-                                "High frequency detected: " + frequencyThreshold + 
-                                        " transactions in " + minutesBetween + " minutes",
-                                AnomalousTransaction.RiskLevel.MEDIUM
-                        );
-                        anomalies.add(anomaly);
-                        break; // Одна аномалия на кассу достаточно
-                    }
-                }
-            }
+    private void checkFrequencyForDesk(List<CashOperation> deskOps, 
+                                       Integer frequencyThreshold, 
+                                       Long timeWindowMinutes, 
+                                       List<AnomalousTransaction> anomalies) {
+        if (deskOps.size() < frequencyThreshold) {
+            return;
         }
 
-        // Сохраняем все обнаруженные аномалии
-        return anomalyRepo.saveAll(anomalies);
+        for (int i = 0; i < deskOps.size() - frequencyThreshold + 1; i++) {
+            CashOperation first = deskOps.get(i);
+            CashOperation last = deskOps.get(Math.min(i + frequencyThreshold - 1, deskOps.size() - 1));
+            
+            long minutesBetween = java.time.Duration.between(
+                    first.getOperatedAt(), 
+                    last.getOperatedAt()
+            ).toMinutes();
+
+            if (minutesBetween <= timeWindowMinutes) {
+                AnomalousTransaction anomaly = createAnomaly(
+                        first,
+                        AnomalousTransaction.AnomalyType.HIGH_FREQUENCY,
+                        "High frequency detected: " + frequencyThreshold + 
+                                " transactions in " + minutesBetween + " minutes",
+                        AnomalousTransaction.RiskLevel.MEDIUM
+                );
+                anomalies.add(anomaly);
+                break; // Одна аномалия на кассу достаточно
+            }
+        }
+    }
+
+    private boolean isLargeAmount(CashOperation op, BigDecimal threshold) {
+        return op.getAmount().abs().compareTo(threshold) > 0;
+    }
+
+    private boolean isAlreadyDetected(CashOperation op, List<AnomalousTransaction> anomalies) {
+        return anomalies.stream()
+                .anyMatch(a -> a.getCashOperationId().equals(op.getId()));
     }
 
     private AnomalousTransaction createAnomaly(CashOperation op, 

@@ -21,6 +21,17 @@ import java.util.UUID;
 @Tag(name = "Reference Data", description = "Справочные данные для UI")
 public class ReferenceController {
 
+    // Status constants
+    private static final String STATUS_ACTIVE = "ACTIVE";
+    private static final String STATUS_MAINTENANCE = "MAINTENANCE";
+    
+    // Location constants
+    private static final String LOCATION_MAIN_HALL = "Главный зал";
+    private static final String LOCATION_VIP_HALL = "VIP зал";
+    private static final String LOCATION_SLOT_HALL = "Слот-зал";
+    private static final String LOCATION_POKER_ROOM = "Покер-рум";
+    private static final String LOCATION_SECOND_FLOOR = "Второй этаж";
+
     // Хардкодные UUID для касс (для тестирования и разработки)
     private static final UUID CASH_DESK_1 = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID CASH_DESK_2 = UUID.fromString("22222222-2222-2222-2222-222222222222");
@@ -32,11 +43,11 @@ public class ReferenceController {
     @Operation(summary = "Получить список касс", description = "Возвращает список всех касс для использования в UI (выбор кассы при создании операций)")
     public List<CashDeskInfo> getCashDesks() {
         return Arrays.asList(
-                new CashDeskInfo(CASH_DESK_1, "Касса №1", "Главный зал", "ACTIVE"),
-                new CashDeskInfo(CASH_DESK_2, "Касса №2", "VIP зал", "ACTIVE"),
-                new CashDeskInfo(CASH_DESK_3, "Касса №3", "Слот-зал", "ACTIVE"),
-                new CashDeskInfo(CASH_DESK_4, "Касса №4", "Второй этаж", "ACTIVE"),
-                new CashDeskInfo(CASH_DESK_5, "Касса №5", "Покер-рум", "MAINTENANCE")
+                new CashDeskInfo(CASH_DESK_1, "Касса №1", LOCATION_MAIN_HALL, STATUS_ACTIVE),
+                new CashDeskInfo(CASH_DESK_2, "Касса №2", LOCATION_VIP_HALL, STATUS_ACTIVE),
+                new CashDeskInfo(CASH_DESK_3, "Касса №3", LOCATION_SLOT_HALL, STATUS_ACTIVE),
+                new CashDeskInfo(CASH_DESK_4, "Касса №4", LOCATION_SECOND_FLOOR, STATUS_ACTIVE),
+                new CashDeskInfo(CASH_DESK_5, "Касса №5", LOCATION_POKER_ROOM, STATUS_MAINTENANCE)
         );
     }
 
@@ -44,16 +55,16 @@ public class ReferenceController {
     @Operation(summary = "Получить список игровых столов", description = "Возвращает список всех игровых столов и автоматов для использования в UI")
     public List<GameTableInfo> getGameTables() {
         return Arrays.asList(
-                new GameTableInfo("TABLE-001", "Рулетка №1", "ROULETTE", "Главный зал", "ACTIVE"),
-                new GameTableInfo("TABLE-002", "Рулетка №2", "ROULETTE", "Главный зал", "ACTIVE"),
-                new GameTableInfo("TABLE-003", "Блэкджек №1", "BLACKJACK", "Главный зал", "ACTIVE"),
-                new GameTableInfo("TABLE-004", "Блэкджек №2", "BLACKJACK", "VIP зал", "ACTIVE"),
-                new GameTableInfo("TABLE-005", "Покер №1", "POKER", "Покер-рум", "ACTIVE"),
-                new GameTableInfo("TABLE-006", "Покер №2", "POKER", "Покер-рум", "ACTIVE"),
-                new GameTableInfo("TABLE-007", "Баккара", "BACCARAT", "VIP зал", "ACTIVE"),
-                new GameTableInfo("SLOT-001", "Слот-автомат №1", "SLOT", "Слот-зал", "ACTIVE"),
-                new GameTableInfo("SLOT-002", "Слот-автомат №2", "SLOT", "Слот-зал", "ACTIVE"),
-                new GameTableInfo("SLOT-003", "Слот-автомат №3", "SLOT", "Слот-зал", "MAINTENANCE")
+                new GameTableInfo("TABLE-001", "Рулетка №1", "ROULETTE", LOCATION_MAIN_HALL, STATUS_ACTIVE),
+                new GameTableInfo("TABLE-002", "Рулетка №2", "ROULETTE", LOCATION_MAIN_HALL, STATUS_ACTIVE),
+                new GameTableInfo("TABLE-003", "Блэкджек №1", "BLACKJACK", LOCATION_MAIN_HALL, STATUS_ACTIVE),
+                new GameTableInfo("TABLE-004", "Блэкджек №2", "BLACKJACK", LOCATION_VIP_HALL, STATUS_ACTIVE),
+                new GameTableInfo("TABLE-005", "Покер №1", "POKER", LOCATION_POKER_ROOM, STATUS_ACTIVE),
+                new GameTableInfo("TABLE-006", "Покер №2", "POKER", LOCATION_POKER_ROOM, STATUS_ACTIVE),
+                new GameTableInfo("TABLE-007", "Баккара", "BACCARAT", LOCATION_VIP_HALL, STATUS_ACTIVE),
+                new GameTableInfo("SLOT-001", "Слот-автомат №1", "SLOT", LOCATION_SLOT_HALL, STATUS_ACTIVE),
+                new GameTableInfo("SLOT-002", "Слот-автомат №2", "SLOT", LOCATION_SLOT_HALL, STATUS_ACTIVE),
+                new GameTableInfo("SLOT-003", "Слот-автомат №3", "SLOT", LOCATION_SLOT_HALL, STATUS_MAINTENANCE)
         );
     }
 }
