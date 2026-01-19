@@ -7,31 +7,31 @@ import {useEmployees} from "../../hooks/useEmployees";
 import type {Complaint, Incident, Violation} from "../../types";
 const IncidentsPage = () => {
     const {token, baseUrl} = useAuth();
-    const {employees, refresh: refreshEmployees} = useEmployees();
+    const {employees, } = useEmployees();
 
     const [incidentType, setIncidentType] = useState("THEFT");
     const [incidentLocation, setIncidentLocation] = useState("");
     const [incidentDescription, setIncidentDescription] = useState("");
     const [incidents, setIncidents] = useState<Incident[]>([]);
     const [isIncidentsShown, setIsIncidentsShown] = useState(false);
-    const [incidentLookupId, setIncidentLookupId] = useState("");
-    const [incidentDetails, setIncidentDetails] = useState<Incident | null>(null);
+    // const [incidentLookupId, ] = useState("");
+    const [incidentDetails, ] = useState<Incident | null>(null);
 
     const [complaintCategory, setComplaintCategory] = useState("SERVICE_QUALITY");
     const [complaintSource, setComplaintSource] = useState("VISITOR");
     const [complaintDescription, setComplaintDescription] = useState("");
     const [complaints, setComplaints] = useState<Complaint[]>([]);
     const [isComplaintsShown, setIsComplaintsShown] = useState(false);
-    const [complaintLookupId, setComplaintLookupId] = useState("");
-    const [complaintDetails, setComplaintDetails] = useState<Complaint | null>(null);
+    // const [complaintLookupId, ] = useState("");
+    const [complaintDetails, ] = useState<Complaint | null>(null);
 
     const [violationEmployeeId, setViolationEmployeeId] = useState("");
     const [violationType, setViolationType] = useState("LATE");
     const [violationDescription, setViolationDescription] = useState("");
     const [violations, setViolations] = useState<Violation[]>([]);
     const [isViolationsShown, setIsViolationsShown] = useState(false);
-    const [violationLookupId, setViolationLookupId] = useState("");
-    const [violationDetails, setViolationDetails] = useState<Violation | null>(null);
+    // const [violationLookupId, ] = useState("");
+    const [violationDetails, ] = useState<Violation | null>(null);
 
     const [error, setError] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
@@ -103,23 +103,23 @@ const IncidentsPage = () => {
         void handleFetchComplaints();
     }, [baseUrl, token]);
 
-    const handleFetchIncidentById = async () => {
-        setError("");
-        if (!incidentLookupId) {
-            setError("Введите ID инцидента.");
-            return;
-        }
-        try {
-            const data = await apiRequest<Incident>(
-                baseUrl,
-                token,
-                `/api/incident/incidents/${incidentLookupId}`
-            );
-            setIncidentDetails(data);
-        } catch {
-            setError("Не удалось получить инцидент по ID.");
-        }
-    };
+    // const handleFetchIncidentById = async () => {
+    //     setError("");
+    //     if (!incidentLookupId) {
+    //         setError("Введите ID инцидента.");
+    //         return;
+    //     }
+    //     try {
+    //         const data = await apiRequest<Incident>(
+    //             baseUrl,
+    //             token,
+    //             `/api/incident/incidents/${incidentLookupId}`
+    //         );
+    //         setIncidentDetails(data);
+    //     } catch {
+    //         setError("Не удалось получить инцидент по ID.");
+    //     }
+    // };
 
     const handleCreateComplaint = async (event: FormEvent) => {
         event.preventDefault();
@@ -156,23 +156,23 @@ const IncidentsPage = () => {
         }
     };
 
-    const handleFetchComplaintById = async () => {
-        setError("");
-        if (!complaintLookupId) {
-            setError("Введите ID жалобы.");
-            return;
-        }
-        try {
-            const data = await apiRequest<Complaint>(
-                baseUrl,
-                token,
-                `/api/incident/complaints/${complaintLookupId}`
-            );
-            setComplaintDetails(data);
-        } catch {
-            setError("Не удалось получить жалобу по ID.");
-        }
-    };
+    // const handleFetchComplaintById = async () => {
+    //     setError("");
+    //     if (!complaintLookupId) {
+    //         setError("Введите ID жалобы.");
+    //         return;
+    //     }
+    //     try {
+    //         const data = await apiRequest<Complaint>(
+    //             baseUrl,
+    //             token,
+    //             `/api/incident/complaints/${complaintLookupId}`
+    //         );
+    //         setComplaintDetails(data);
+    //     } catch {
+    //         setError("Не удалось получить жалобу по ID.");
+    //     }
+    // };
 
     const handleCreateViolation = async (event: FormEvent) => {
         event.preventDefault();
@@ -213,23 +213,23 @@ const IncidentsPage = () => {
         void handleFetchViolations();
     }, [baseUrl, token]);
 
-    const handleFetchViolationById = async () => {
-        setError("");
-        if (!violationLookupId) {
-            setError("Введите ID нарушения.");
-            return;
-        }
-        try {
-            const data = await apiRequest<Violation>(
-                baseUrl,
-                token,
-                `/api/incident/violations/${violationLookupId}`
-            );
-            setViolationDetails(data);
-        } catch {
-            setError("Не удалось получить нарушение по ID.");
-        }
-    };
+    // const handleFetchViolationById = async () => {
+    //     setError("");
+    //     if (!violationLookupId) {
+    //         setError("Введите ID нарушения.");
+    //         return;
+    //     }
+    //     try {
+    //         const data = await apiRequest<Violation>(
+    //             baseUrl,
+    //             token,
+    //             `/api/incident/violations/${violationLookupId}`
+    //         );
+    //         setViolationDetails(data);
+    //     } catch {
+    //         setError("Не удалось получить нарушение по ID.");
+    //     }
+    // };
 
     const handleFetchViolationsByEmployee = async () => {
         setError("");

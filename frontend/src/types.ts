@@ -73,6 +73,21 @@ export type FraudRecord = {
     status?: string | null;
 };
 
+export type CashDeskInfo = {
+    id: string;
+    name: string;
+    location: string;
+    status: string;
+};
+
+export type GameTableInfo = {
+    id: string;
+    name: string;
+    gameType: string;
+    location: string;
+    status: string;
+};
+
 export type SuspiciousActivity = {
     id: string;
     shortDescription?: string | null;

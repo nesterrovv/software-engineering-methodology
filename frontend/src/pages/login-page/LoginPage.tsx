@@ -10,7 +10,7 @@ const LoginPage = () => {
     const location = useLocation();
     const [username, setUsername] = useState("admin");
     const [password, setPassword] = useState("admin");
-    const [baseUrl, setBaseUrl] = useState("");
+    const [baseUrl, ] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -67,14 +67,14 @@ const LoginPage = () => {
                                     onChange={(event) => setPassword(event.target.value)}
                                 />
                             </label>
-                            <label>
-                                Базовый URL API (необязательно)
-                                <input
-                                    value={baseUrl}
-                                    onChange={(event) => setBaseUrl(event.target.value)}
-                                    placeholder="https://api.example.com"
-                                />
-                            </label>
+                            {/*<label>*/}
+                            {/*    Базовый URL API (необязательно)*/}
+                            {/*    <input*/}
+                            {/*        value={baseUrl}*/}
+                            {/*        onChange={(event) => setBaseUrl(event.target.value)}*/}
+                            {/*        placeholder="https://api.example.com"*/}
+                            {/*    />*/}
+                            {/*</label>*/}
                             {error ? <div className="login-error">{error}</div> : null}
                             <button className="primary-button" type="submit" disabled={isLoading}>
                                 {isLoading ? "Входим..." : "Войти"}

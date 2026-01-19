@@ -3,15 +3,22 @@ import type {FormEvent} from "react";
 import PageShell from "../../components/PageShell";
 import {apiRequest} from "../../api/client";
 import {useAuth} from "../../auth/AuthContext";
+import {useReferenceData} from "../../hooks/useReferenceData";
 import type {CashOperation, CashReconciliation} from "../../types";
 const CashControlPage = () => {
     const {token, baseUrl} = useAuth();
+    const {cashDesks} = useReferenceData();
     const [cashDeskId, setCashDeskId] = useState("");
     const [operations, setOperations] = useState<CashOperation[]>([]);
     const [reconciliations, setReconciliations] = useState<CashReconciliation[]>([]);
     const [reconciliationIdLookup, setReconciliationIdLookup] = useState("");
     const [reconciliationDetails, setReconciliationDetails] = useState<CashReconciliation | null>(null);
     const [reconciliationStatus, setReconciliationStatus] = useState("PENDING");
+
+    const cashDeskOptions = useMemo(() => cashDesks.map((desk) => ({
+        value: desk.id,
+        label: `${desk.name}${desk.location ? ` · ${desk.location}` : ""}`,
+    })), [cashDesks]);
 
     useEffect(() => {
         const loadOperations = async () => {
@@ -112,8 +119,15 @@ const CashControlPage = () => {
                 </div>
                 <form onSubmit={handleFetch} className="stacked-form">
                     <label>
-                        UUID кассы
-                        <input value={cashDeskId} onChange={(event) => setCashDeskId(event.target.value)} />
+                        Касса
+                        <select value={cashDeskId} onChange={(event) => setCashDeskId(event.target.value)}>
+                            <option value="">Выберите кассу</option>
+                            {cashDeskOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label || option.value}
+                                </option>
+                            ))}
+                        </select>
                     </label>
                     <button type="submit" className="primary-button">Обновить сверку</button>
                 </form>
