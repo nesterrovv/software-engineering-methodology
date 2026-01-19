@@ -6,6 +6,7 @@ import com.casino.mis.incident.domain.ComplaintSource;
 import com.casino.mis.incident.dto.CreateComplaintRequest;
 import com.casino.mis.incident.mapper.ComplaintMapper;
 import com.casino.mis.incident.repository.ComplaintRepository;
+import com.casino.mis.security.HtmlSanitizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,13 +18,19 @@ import java.util.UUID;
 public class ComplaintService {
 
     private final ComplaintRepository repository;
+    private final HtmlSanitizer htmlSanitizer;
 
-    public ComplaintService(ComplaintRepository repository) {
+    public ComplaintService(ComplaintRepository repository, HtmlSanitizer htmlSanitizer) {
         this.repository = repository;
+        this.htmlSanitizer = htmlSanitizer;
     }
 
     @Transactional
     public Complaint create(CreateComplaintRequest request) {
+        // Sanitize description to prevent XSS attacks
+        if (request.getDescription() != null) {
+            request.setDescription(htmlSanitizer.sanitizeToPlainText(request.getDescription()));
+        }
         return repository.save(ComplaintMapper.toEntity(request));
     }
 

@@ -4,6 +4,7 @@ import com.casino.mis.incident.domain.DisciplinaryViolation;
 import com.casino.mis.incident.dto.CreateViolationRequest;
 import com.casino.mis.incident.mapper.ViolationMapper;
 import com.casino.mis.incident.repository.DisciplinaryViolationRepository;
+import com.casino.mis.security.HtmlSanitizer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,13 +15,19 @@ import java.util.UUID;
 public class ViolationService {
 
     private final DisciplinaryViolationRepository repo;
+    private final HtmlSanitizer htmlSanitizer;
 
-    public ViolationService(DisciplinaryViolationRepository repo) {
+    public ViolationService(DisciplinaryViolationRepository repo, HtmlSanitizer htmlSanitizer) {
         this.repo = repo;
+        this.htmlSanitizer = htmlSanitizer;
     }
 
     @Transactional
     public DisciplinaryViolation create(CreateViolationRequest req) {
+        // Sanitize description to prevent XSS attacks
+        if (req.getDescription() != null) {
+            req.setDescription(htmlSanitizer.sanitizeToPlainText(req.getDescription()));
+        }
         return repo.save(ViolationMapper.toEntity(req));
     }
 

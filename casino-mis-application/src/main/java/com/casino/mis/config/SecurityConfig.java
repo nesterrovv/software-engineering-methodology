@@ -5,8 +5,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Security configuration with enhanced security headers and password encryption
+ * Implements OWASP security best practices
+ */
 @Configuration
 public class SecurityConfig {
 
@@ -17,8 +27,51 @@ public class SecurityConfig {
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                     .anyRequest().authenticated()
             )
-            .httpBasic(Customizer.withDefaults());
+            .httpBasic(Customizer.withDefaults())
+            // Security Headers (OWASP recommendations)
+            .headers(headers -> headers
+                // Prevent MIME-sniffing attacks
+                .contentTypeOptions(Customizer.withDefaults())
+                // Prevent clickjacking attacks
+                .frameOptions(frameOptions -> frameOptions.deny())
+                // XSS protection (legacy but still useful)
+                .xssProtection(Customizer.withDefaults())
+                // Content Security Policy
+                .contentSecurityPolicy(csp -> csp
+                    .policyDirectives("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'")
+                )
+                // HSTS - only for HTTPS in production
+                // Uncomment when using HTTPS:
+                // .httpStrictTransportSecurity(hsts -> hsts
+                //     .maxAgeInSeconds(31536000)
+                //     .includeSubDomains(true)
+                // )
+            );
         return http.build();
+    }
+
+    /**
+     * BCrypt password encoder for secure password hashing
+     * Strength: 12 (default is 10, higher = more secure but slower)
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
+
+    /**
+     * In-memory user details with BCrypt encrypted passwords
+     * Production systems should use database-backed user storage
+     */
+    @Bean
+    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+        UserDetails admin = User.builder()
+                .username("admin")
+                .password(passwordEncoder.encode("admin"))
+                .roles("ADMIN")
+                .build();
+        
+        return new InMemoryUserDetailsManager(admin);
     }
 }
 
