@@ -17,6 +17,7 @@ import RepeatedViolationsPage from "./pages/incidents/RepeatedViolationsPage";
 import ManagementReportsPage from "./pages/incidents/ManagementReportsPage";
 import RegulatoryReportsPage from "./pages/incidents/RegulatoryReportsPage";
 import ExportReportsPage from "./pages/incidents/ExportReportsPage";
+import AllReportsPage from "./pages/reports/AllReportsPage";
 import FinancePage from "./pages/finance/FinancePage";
 import FinanceAnalysisPage from "./pages/finance/FinanceAnalysisPage";
 import OperationsPage from "./pages/finance/OperationsPage";
@@ -27,6 +28,7 @@ import WorkTimePage from "./pages/staff/WorkTimePage";
 import DisciplinaryViolationsPage from "./pages/staff/DisciplinaryViolationsPage";
 import ViolationHistoryPage from "./pages/staff/ViolationHistoryPage";
 import ShiftManagementPage from "./pages/staff/ShiftManagementPage";
+import StaffManagementPage from "./pages/staff/StaffManagementPage";
 
 function App() {
     return (
@@ -50,15 +52,17 @@ function App() {
 
                 <Route path="incidents" element={<IncidentsPage />} />
                 <Route path="incidents/register" element={<IncidentRegistrationPage />} />
-                <Route path="incidents/reports" element={<IncidentReportsPage />} />
+                <Route path="incidents/reports" element={<Navigate to="/reports/incidents" replace />} />
                 <Route path="incidents/complaints" element={<ComplaintsPage />} />
                 <Route path="incidents/repeated-violations" element={<RepeatedViolationsPage />} />
-                <Route path="incidents/management-reports" element={<ManagementReportsPage />} />
-                <Route path="incidents/regulatory-reports" element={<RegulatoryReportsPage />} />
+                <Route path="incidents/management-reports" element={<Navigate to="/reports/management" replace />} />
+                <Route path="incidents/regulatory-reports" element={<Navigate to="/reports/regulatory" replace />} />
                 <Route path="reports/export" element={<ExportReportsPage />} />
+                <Route path="reports/all" element={<AllReportsPage />} />
                 <Route path="reports/incidents" element={<IncidentReportsPage />} />
                 <Route path="reports/management" element={<ManagementReportsPage />} />
                 <Route path="reports/regulatory" element={<RegulatoryReportsPage />} />
+                <Route path="reports" element={<Navigate to="/reports/all" replace />} />
 
                 <Route path="finance" element={<FinancePage />} />
                 <Route path="finance/analysis" element={<FinanceAnalysisPage />} />
@@ -68,6 +72,7 @@ function App() {
                 <Route path="finance/game-analysis" element={<GameAnalysisPage />} />
 
                 <Route path="staff/time-tracking" element={<WorkTimePage />} />
+                <Route path="staff/management" element={<StaffManagementPage />} />
                 <Route path="staff/discipline" element={<DisciplinaryViolationsPage />} />
                 <Route path="staff/violations" element={<DisciplinaryViolationsPage />} />
                 <Route path="staff/violation-history" element={<ViolationHistoryPage />} />

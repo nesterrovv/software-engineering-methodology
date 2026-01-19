@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import type {FormEvent} from "react";
 import PageShell from "../../components/PageShell";
 import {apiRequest} from "../../api/client";
@@ -14,6 +14,7 @@ const SuspiciousActivityPage = () => {
     const [statusMessage, setStatusMessage] = useState("");
     const [error, setError] = useState("");
     const [activities, setActivities] = useState<SuspiciousActivity[]>([]);
+    const [isActivitiesShown, setIsActivitiesShown] = useState(false);
     const [activityIdLookup, setActivityIdLookup] = useState("");
     const [activityDetails, setActivityDetails] = useState<SuspiciousActivity | null>(null);
 
@@ -56,6 +57,10 @@ const SuspiciousActivityPage = () => {
             setError("Не удалось получить список активностей.");
         }
     };
+
+    useEffect(() => {
+        void handleFetchAll();
+    }, [baseUrl, token]);
 
     const handleFetchById = async () => {
         setError("");
@@ -131,11 +136,15 @@ const SuspiciousActivityPage = () => {
                 <h2>Список активностей</h2>
                 <div className="card">
                     <div className="inline-actions">
-                        <button type="button" className="secondary-button" onClick={handleFetchAll}>
-                            Получить все
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => setIsActivitiesShown((prev) => !prev)}
+                        >
+                            {isActivitiesShown ? "Скрыть список" : "Показать список"}
                         </button>
                     </div>
-                    <label>
+                    {/*<label>
                         Найти по ID
                         <input
                             value={activityIdLookup}
@@ -145,7 +154,7 @@ const SuspiciousActivityPage = () => {
                     </label>
                     <button type="button" className="secondary-button" onClick={handleFetchById}>
                         Найти активность
-                    </button>
+                    </button>*/}
                     {activityDetails ? (
                         <div className="report-output">
                             <p><strong>{activityDetails.shortDescription ?? "Активность"}</strong></p>
@@ -156,7 +165,7 @@ const SuspiciousActivityPage = () => {
                     ) : null}
                 </div>
 
-                {activities.length ? (
+                {isActivitiesShown && activities.length ? (
                     <div className="card-list">
                         {activities.map((item) => (
                             <div key={item.id} className="card">

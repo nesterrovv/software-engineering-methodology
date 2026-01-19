@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import type {FormEvent} from "react";
 import PageShell from "../../components/PageShell";
 import {apiRequest} from "../../api/client";
@@ -9,24 +9,32 @@ const ContactDurationPage = () => {
     const {token, baseUrl} = useAuth();
     const [personOne, setPersonOne] = useState("");
     const [personTwo, setPersonTwo] = useState("");
-    const [contactType, setContactType] = useState("game-play");
-    const [durationMinutes, setDurationMinutes] = useState("");
-    const [contactDate, setContactDate] = useState("");
+    const [contactLocation, setContactLocation] = useState("");
+    const [contactStart, setContactStart] = useState("");
+    const [contactEnd, setContactEnd] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
     const [error, setError] = useState("");
-    const [mockCount, setMockCount] = useState("10");
     const [suspiciousContacts, setSuspiciousContacts] = useState<ContactEvent[]>([]);
+    const [isContactsShown, setIsContactsShown] = useState(false);
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
         setError("");
         setStatusMessage("");
-        if (!personOne || !personTwo || !contactDate || !durationMinutes) {
+        if (!personOne || !personTwo || !contactStart || !contactEnd || !contactLocation) {
             setError("Заполните все поля контакта.");
             return;
         }
-        const start = new Date(contactDate);
-        const end = new Date(start.getTime() + Number(durationMinutes) * 60000);
+        const start = new Date(contactStart);
+        const end = new Date(contactEnd);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+            setError("Укажите корректные даты начала и конца контакта.");
+            return;
+        }
+        if (end <= start) {
+            setError("Конец контакта должен быть позже начала.");
+            return;
+        }
         try {
             await apiRequest(baseUrl, token, "/api/security/contacts", {
                 method: "POST",
@@ -35,29 +43,15 @@ const ContactDurationPage = () => {
                     personId2: personTwo,
                     contactStartTime: start.toISOString(),
                     contactEndTime: end.toISOString(),
-                    location: contactType,
+                    location: contactLocation,
                 }),
             });
             setStatusMessage("Контакт зарегистрирован.");
-            setDurationMinutes("");
+            setContactLocation("");
+            setContactStart("");
+            setContactEnd("");
         } catch {
             setError("Не удалось зарегистрировать контакт.");
-        }
-    };
-
-    const handleGenerateMocks = async () => {
-        setError("");
-        setStatusMessage("");
-        try {
-            await apiRequest<ContactEvent[]>(
-                baseUrl,
-                token,
-                `/api/security/contacts/generate-mocks?count=${mockCount}`,
-                {method: "POST"}
-            );
-            setStatusMessage("Моковые контакты сгенерированы.");
-        } catch {
-            setError("Не удалось сгенерировать контакты.");
         }
     };
 
@@ -75,6 +69,10 @@ const ContactDurationPage = () => {
         }
     };
 
+    useEffect(() => {
+        void handleFetchSuspicious();
+    }, [baseUrl, token]);
+
     return (
         <PageShell
             title="Контроль длительности контактов"
@@ -87,46 +85,43 @@ const ContactDurationPage = () => {
                     <h3>Информация о контакте</h3>
                     <form onSubmit={handleSubmit} className="stacked-form">
                         <label>
-                            ID участника 1:
+                            Имя участника 1:
                             <input
                                 value={personOne}
                                 onChange={(event) => setPersonOne(event.target.value)}
-                                placeholder="UUID или идентификатор"
+                                placeholder="Имя или UUID"
                             />
                         </label>
                         <label>
-                            ID участника 2:
+                            Имя участника 2:
                             <input
                                 value={personTwo}
                                 onChange={(event) => setPersonTwo(event.target.value)}
-                                placeholder="UUID или идентификатор"
+                                placeholder="Имя или UUID"
                             />
                         </label>
                         <label>
-                            Тип контакта:
-                            <select value={contactType} onChange={(event) => setContactType(event.target.value)}>
-                                <option value="game-play">Игровой процесс</option>
-                                <option value="cashier">Обслуживание кассой</option>
-                                <option value="customer-service">Обслуживание клиента</option>
-                                <option value="other">Другое</option>
-                            </select>
-                        </label>
-                        <label>
-                            Длительность контакта (минуты):
+                            Место контакта:
                             <input
-                                type="number"
-                                min="1"
-                                value={durationMinutes}
-                                onChange={(event) => setDurationMinutes(event.target.value)}
-                                placeholder="Время в минутах"
+                                value={contactLocation}
+                                onChange={(event) => setContactLocation(event.target.value)}
+                                placeholder="Зал, стол, зона"
                             />
                         </label>
                         <label>
-                            Дата и время контакта:
+                            Начало контакта:
                             <input
                                 type="datetime-local"
-                                value={contactDate}
-                                onChange={(event) => setContactDate(event.target.value)}
+                                value={contactStart}
+                                onChange={(event) => setContactStart(event.target.value)}
+                            />
+                        </label>
+                        <label>
+                            Конец контакта:
+                            <input
+                                type="datetime-local"
+                                value={contactEnd}
+                                onChange={(event) => setContactEnd(event.target.value)}
                             />
                         </label>
                         <button type="submit" className="primary-button">Зарегистрировать контакт</button>
@@ -139,24 +134,16 @@ const ContactDurationPage = () => {
             <section className="page-section">
                 <h2>Подозрительные контакты</h2>
                 <div className="card">
-                    <label>
-                        Количество моков
-                        <input
-                            type="number"
-                            min="1"
-                            value={mockCount}
-                            onChange={(event) => setMockCount(event.target.value)}
-                        />
-                    </label>
                     <div className="inline-actions">
-                        <button type="button" className="secondary-button" onClick={handleGenerateMocks}>
-                            Сгенерировать моковые контакты
-                        </button>
-                        <button type="button" className="secondary-button" onClick={handleFetchSuspicious}>
-                            Получить подозрительные
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => setIsContactsShown((prev) => !prev)}
+                        >
+                            {isContactsShown ? "Скрыть список" : "Показать список"}
                         </button>
                     </div>
-                    {suspiciousContacts.length ? (
+                    {isContactsShown && suspiciousContacts.length ? (
                         <div className="card-list">
                             {suspiciousContacts.map((item) => (
                                 <div key={item.id} className="card">

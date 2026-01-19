@@ -13,6 +13,7 @@ const IncidentsPage = () => {
     const [incidentLocation, setIncidentLocation] = useState("");
     const [incidentDescription, setIncidentDescription] = useState("");
     const [incidents, setIncidents] = useState<Incident[]>([]);
+    const [isIncidentsShown, setIsIncidentsShown] = useState(false);
     const [incidentLookupId, setIncidentLookupId] = useState("");
     const [incidentDetails, setIncidentDetails] = useState<Incident | null>(null);
 
@@ -20,6 +21,7 @@ const IncidentsPage = () => {
     const [complaintSource, setComplaintSource] = useState("VISITOR");
     const [complaintDescription, setComplaintDescription] = useState("");
     const [complaints, setComplaints] = useState<Complaint[]>([]);
+    const [isComplaintsShown, setIsComplaintsShown] = useState(false);
     const [complaintLookupId, setComplaintLookupId] = useState("");
     const [complaintDetails, setComplaintDetails] = useState<Complaint | null>(null);
 
@@ -27,6 +29,7 @@ const IncidentsPage = () => {
     const [violationType, setViolationType] = useState("LATE");
     const [violationDescription, setViolationDescription] = useState("");
     const [violations, setViolations] = useState<Violation[]>([]);
+    const [isViolationsShown, setIsViolationsShown] = useState(false);
     const [violationLookupId, setViolationLookupId] = useState("");
     const [violationDetails, setViolationDetails] = useState<Violation | null>(null);
 
@@ -44,6 +47,17 @@ const IncidentsPage = () => {
         value: employee.id,
         label: [employee.lastName, employee.firstName, employee.middleName].filter(Boolean).join(" ").trim(),
     })), [employees]);
+
+    const employeeNameById = useMemo(() => {
+        const map = new Map<string, string>();
+        employees.forEach((employee) => {
+            const name = [employee.lastName, employee.firstName, employee.middleName].filter(Boolean).join(" ").trim();
+            if (name) {
+                map.set(employee.id, name);
+            }
+        });
+        return map;
+    }, [employees]);
 
     const handleCreateIncident = async (event: FormEvent) => {
         event.preventDefault();
@@ -80,6 +94,14 @@ const IncidentsPage = () => {
             setError("Не удалось получить список инцидентов.");
         }
     };
+
+    useEffect(() => {
+        void handleFetchIncidents();
+    }, [baseUrl, token]);
+
+    useEffect(() => {
+        void handleFetchComplaints();
+    }, [baseUrl, token]);
 
     const handleFetchIncidentById = async () => {
         setError("");
@@ -187,6 +209,10 @@ const IncidentsPage = () => {
         }
     };
 
+    useEffect(() => {
+        void handleFetchViolations();
+    }, [baseUrl, token]);
+
     const handleFetchViolationById = async () => {
         setError("");
         if (!violationLookupId) {
@@ -266,10 +292,14 @@ const IncidentsPage = () => {
                 </div>
                 <div className="panel__section">
                     <h3>Список инцидентов</h3>
-                    <button type="button" className="secondary-button" onClick={handleFetchIncidents}>
-                        Получить инциденты
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => setIsIncidentsShown((prev) => !prev)}
+                    >
+                        {isIncidentsShown ? "Скрыть инциденты" : "Показать инциденты"}
                     </button>
-                    <label>
+                   {/* <label>
                         Найти по ID
                         <input
                             value={incidentLookupId}
@@ -279,7 +309,7 @@ const IncidentsPage = () => {
                     </label>
                     <button type="button" className="secondary-button" onClick={handleFetchIncidentById}>
                         Найти инцидент
-                    </button>
+                    </button>*/}
                     {incidentDetails ? (
                         <div className="card">
                             <h4>{incidentDetails.type}</h4>
@@ -287,7 +317,7 @@ const IncidentsPage = () => {
                             <p className="muted">Локация: {incidentDetails.location ?? "—"}</p>
                         </div>
                     ) : null}
-                    {incidents.length ? (
+                    {isIncidentsShown && incidents.length ? (
                         <div className="card-list">
                             {incidents.map((incident) => (
                                 <div key={incident.id} className="incident-card">
@@ -339,10 +369,14 @@ const IncidentsPage = () => {
                 </div>
                 <div className="panel__section">
                     <h3>Список жалоб</h3>
-                    <button type="button" className="secondary-button" onClick={handleFetchComplaints}>
-                        Получить жалобы
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => setIsComplaintsShown((prev) => !prev)}
+                    >
+                        {isComplaintsShown ? "Скрыть жалобы" : "Показать жалобы"}
                     </button>
-                    <label>
+                    {/*<label>
                         Найти по ID
                         <input
                             value={complaintLookupId}
@@ -352,7 +386,7 @@ const IncidentsPage = () => {
                     </label>
                     <button type="button" className="secondary-button" onClick={handleFetchComplaintById}>
                         Найти жалобу
-                    </button>
+                    </button>*/}
                     {complaintDetails ? (
                         <div className="card">
                             <h4>{complaintDetails.category}</h4>
@@ -360,7 +394,7 @@ const IncidentsPage = () => {
                             <p className="muted">Статус: {complaintDetails.status ?? "OPEN"}</p>
                         </div>
                     ) : null}
-                    {complaints.length ? (
+                    {isComplaintsShown && complaints.length ? (
                         <div className="card-list">
                             {complaints.map((complaint) => (
                                 <div key={complaint.id} className="complaint-card">
@@ -416,13 +450,20 @@ const IncidentsPage = () => {
                 </div>
                 <div className="panel__section">
                     <h3>Список нарушений</h3>
-                    <button type="button" className="secondary-button" onClick={handleFetchViolations}>
-                        Получить нарушения
-                    </button>
-                    <button type="button" className="secondary-button" onClick={handleFetchViolationsByEmployee}>
-                        Нарушения сотрудника
-                    </button>
-                    <label>
+                    <div className='inline-actions'>
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => setIsViolationsShown((prev) => !prev)}
+                        >
+                            {isViolationsShown ? "Скрыть нарушения" : "Показать нарушения"}
+                        </button>
+                        <button type="button" className="secondary-button" onClick={handleFetchViolationsByEmployee}>
+                            Нарушения сотрудника
+                        </button>
+                    </div>
+
+                    {/*<label>
                         Найти по ID
                         <input
                             value={violationLookupId}
@@ -432,31 +473,35 @@ const IncidentsPage = () => {
                     </label>
                     <button type="button" className="secondary-button" onClick={handleFetchViolationById}>
                         Найти нарушение
-                    </button>
+                    </button>*/}
                     {violationDetails ? (
                         <div className="card">
                             <h4>{violationDetails.type}</h4>
                             <p>{violationDetails.description}</p>
-                            <p className="muted">Сотрудник: {violationDetails.employeeId}</p>
+                            <p className="muted">
+                                Сотрудник: {employeeNameById.get(violationDetails.employeeId) ?? "-"}
+                            </p>
                         </div>
                     ) : null}
-                    {violations.length ? (
+                    {isViolationsShown && violations.length ? (
                         <div className="card-list">
                             {violations.map((violation) => (
                                 <div key={violation.id} className="violation-card">
                                     <h4>{violation.type}</h4>
                                     <p>{violation.description}</p>
-                                    <p className="muted">Сотрудник: {violation.employeeId}</p>
+                                    <p className="muted">
+                                        Сотрудник: {employeeNameById.get(violation.employeeId) ?? "-"}
+                                    </p>
                                 </div>
                             ))}
                         </div>
                     ) : null}
                 </div>
-                <div className="panel__section">
+                {/*<div className="panel__section">
                     <button type="button" className="secondary-button" onClick={refreshEmployees}>
                         Обновить список сотрудников
                     </button>
-                </div>
+                </div>*/}
             </section>
 
             {error ? <div className="form-error">{error}</div> : null}

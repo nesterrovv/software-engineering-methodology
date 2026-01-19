@@ -12,6 +12,7 @@ const ContactFrequencyPage = () => {
     const [interactionDate, setInteractionDate] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
     const [error, setError] = useState("");
+    // const [suspiciousContacts, setSuspiciousContacts] = useState<ContactEvent[]>([]);
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
@@ -22,7 +23,7 @@ const ContactFrequencyPage = () => {
             return;
         }
         try {
-            await apiRequest(baseUrl, token, 
+            await apiRequest(baseUrl, token,
                 `/api/security/contacts/check-frequency?personId1=${personOne}&personId2=${personTwo}`,
                 {method: "POST"}
             );
@@ -31,6 +32,20 @@ const ContactFrequencyPage = () => {
             setError("Не удалось проверить частоту взаимодействий.");
         }
     };
+
+    // const handleFetchSuspicious = async () => {
+    //     setError("");
+    //     try {
+    //         const data = await apiRequest<ContactEvent[]>(
+    //             baseUrl,
+    //             token,
+    //             "/api/security/contacts/suspicious"
+    //         );
+    //         setSuspiciousContacts(data || []);
+    //     } catch {
+    //         setError("Не удалось получить список подозрительных контактов.");
+    //     }
+    // };
 
     return (
         <PageShell
@@ -44,24 +59,25 @@ const ContactFrequencyPage = () => {
                     <h3>Информация о взаимодействии</h3>
                     <form onSubmit={handleSubmit} className="stacked-form">
                         <label>
-                            ID участника 1:
+                            Имя участника 1:
                             <input
                                 value={personOne}
                                 onChange={(event) => setPersonOne(event.target.value)}
-                                placeholder="UUID или идентификатор"
+                                placeholder="Имя или UUID"
                             />
                         </label>
                         <label>
-                            ID участника 2:
+                            Имя участника 2:
                             <input
                                 value={personTwo}
                                 onChange={(event) => setPersonTwo(event.target.value)}
-                                placeholder="UUID или идентификатор"
+                                placeholder="Имя или UUID"
                             />
                         </label>
                         <label>
                             Тип взаимодействия:
-                            <select value={interactionType} onChange={(event) => setInteractionType(event.target.value)}>
+                            <select value={interactionType}
+                                    onChange={(event) => setInteractionType(event.target.value)}>
                                 <option value="game-play">Игровой процесс</option>
                                 <option value="cashier">Обслуживание кассой</option>
                                 <option value="customer-service">Обслуживание клиента</option>
@@ -82,6 +98,29 @@ const ContactFrequencyPage = () => {
                     {statusMessage ? <div className="form-success">{statusMessage}</div> : null}
                 </div>
             </section>
+
+            {/*<section className="page-section">
+                <h2>Подозрительные контакты</h2>
+                <div className="card">
+                    <div className="inline-actions">
+                        <button type="button" className="secondary-button" onClick={handleFetchSuspicious}>
+                            Загрузить список
+                        </button>
+                    </div>
+                    {suspiciousContacts.length ? (
+                        <div className="card-list">
+                            {suspiciousContacts.map((item) => (
+                                <div key={item.id} className="card">
+                                    <p><strong>Участники:</strong> {item.personId1} / {item.personId2}</p>
+                                    <p><strong>Длительность:</strong> {item.durationSeconds ?? 0} сек</p>
+                                    <p><strong>Локация:</strong> {item.location ?? "—"}</p>
+                                    <p className="muted">Статус: {item.status ?? "SUSPICIOUS"}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : null}
+                </div>
+            </section>*/}
         </PageShell>
     );
 };

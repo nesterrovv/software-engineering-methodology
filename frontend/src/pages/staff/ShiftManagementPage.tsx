@@ -5,6 +5,36 @@ import {apiRequest} from "../../api/client";
 import {useAuth} from "../../auth/AuthContext";
 import {useEmployees} from "../../hooks/useEmployees";
 import type {ShiftSchedule} from "../../types";
+
+type AvailabilityEmployee = {
+    employeeId: string;
+    name?: string | null;
+    department?: string | null;
+    scheduledShifts?: number | null;
+    violationsCount?: number | null;
+    hasRecentViolations?: boolean | null;
+};
+
+type AvailabilityResponse = {
+    employees?: AvailabilityEmployee[];
+    totalEmployees?: number | null;
+    period?: {
+        start?: string | null;
+        end?: string | null;
+    };
+};
+
+const formatDateTime = (value?: string | null) => {
+    if (!value) {
+        return "—";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+    return date.toLocaleString("ru-RU");
+};
+
 const combineDateTime = (date: string, time: string) => {
     if (!date || !time) {
         return null;
@@ -16,51 +46,105 @@ const combineDateTime = (date: string, time: string) => {
 const ShiftManagementPage = () => {
     const {token, baseUrl} = useAuth();
     const {employees} = useEmployees();
-    const [employeeId, setEmployeeId] = useState("");
-    const [shiftDate, setShiftDate] = useState("");
-    const [shiftType, setShiftType] = useState("DAY");
-    const [shiftStart, setShiftStart] = useState("08:00");
-    const [shiftEnd, setShiftEnd] = useState("16:00");
-    const [location, setLocation] = useState("");
-    const [notes, setNotes] = useState("");
 
-    const [reassignShiftId, setReassignShiftId] = useState("");
-    const [reassignEmployeeId, setReassignEmployeeId] = useState("");
-
-    const [schedules, setSchedules] = useState<ShiftSchedule[]>([]);
-    const [statusMessage, setStatusMessage] = useState("");
-    const [shiftIdLookup, setShiftIdLookup] = useState("");
-    const [shiftDetails, setShiftDetails] = useState<ShiftSchedule | null>(null);
     const [availabilityStart, setAvailabilityStart] = useState("");
     const [availabilityEnd, setAvailabilityEnd] = useState("");
-    const [availabilityData, setAvailabilityData] = useState<Record<string, unknown> | null>(null);
-    const [employeeShiftLookup, setEmployeeShiftLookup] = useState("");
-    const [employeeShifts, setEmployeeShifts] = useState<ShiftSchedule[]>([]);
-    const [rangeStart, setRangeStart] = useState("");
-    const [rangeEnd, setRangeEnd] = useState("");
-    const [rangeShifts, setRangeShifts] = useState<ShiftSchedule[]>([]);
-    const [confirmShiftId, setConfirmShiftId] = useState("");
+    const [availability, setAvailability] = useState<AvailabilityResponse | null>(null);
+    const [availabilityMessage, setAvailabilityMessage] = useState("");
+    const [showAvailability, setShowAvailability] = useState(true);
+    const [availabilityError, setAvailabilityError] = useState("");
+
+    const [employeeId, setEmployeeId] = useState("");
+    const [createdBy, setCreatedBy] = useState("");
+    const [shiftDate, setShiftDate] = useState("");
+    const [shiftStart, setShiftStart] = useState("08:00");
+    const [shiftEnd, setShiftEnd] = useState("16:00");
+    const [shiftType, setShiftType] = useState("DAY");
+    const [location, setLocation] = useState("");
+    const [notes, setNotes] = useState("");
+    const [createError, setCreateError] = useState("");
+    const [createMessage, setCreateMessage] = useState("");
+
+    const [actionShiftId, setActionShiftId] = useState("");
     const [confirmById, setConfirmById] = useState("");
+    const [reassignEmployeeId, setReassignEmployeeId] = useState("");
+    const [actionError, setActionError] = useState("");
+    const [actionMessage, setActionMessage] = useState("");
+
+    const [shiftDetails, setShiftDetails] = useState<ShiftSchedule | null>(null);
 
     useEffect(() => {
-        if (!employees.length || employeeId) {
+        if (!employees.length) {
             return;
         }
-        setEmployeeId(employees[0].id);
-        setReassignEmployeeId(employees[0].id);
-    }, [employees, employeeId]);
+        if (!employeeId) {
+            setEmployeeId(employees[0].id);
+        }
+        if (!createdBy) {
+            setCreatedBy(employees[0].id);
+        }
+        if (!confirmById) {
+            setConfirmById(employees[0].id);
+        }
+        if (!reassignEmployeeId) {
+            setReassignEmployeeId(employees[0].id);
+        }
+    }, [employees, employeeId, createdBy, confirmById, reassignEmployeeId]);
 
     const employeeOptions = useMemo(() => employees.map((employee) => ({
         value: employee.id,
         label: [employee.lastName, employee.firstName, employee.middleName].filter(Boolean).join(" ").trim(),
     })), [employees]);
 
-    const handleCreate = async (event: FormEvent) => {
+    const employeeNameById = useMemo(() => {
+        const map = new Map<string, string>();
+        employees.forEach((employee) => {
+            const name = [employee.lastName, employee.firstName, employee.middleName].filter(Boolean).join(" ").trim();
+            if (name) {
+                map.set(employee.id, name);
+            }
+        });
+        return map;
+    }, [employees]);
+
+    const handleFetchAvailability = async () => {
+        setAvailabilityError("");
+        setAvailabilityMessage("");
+        setAvailability(null);
+        if (!availabilityStart || !availabilityEnd) {
+            setAvailabilityError("Укажите начало и конец периода.");
+            return;
+        }
+        try {
+            const data = await apiRequest<AvailabilityResponse>(
+                baseUrl,
+                token,
+                `/api/staff/shifts/availability?startDate=${availabilityStart}&endDate=${availabilityEnd}`
+            );
+            setAvailability(data || null);
+            setAvailabilityMessage("Доступность загружена.");
+            setShowAvailability(true);
+        } catch {
+            setAvailabilityError("Не удалось получить доступность сотрудников.");
+        }
+    };
+
+    const handleCreateShift = async (event: FormEvent) => {
         event.preventDefault();
+        setCreateError("");
+        setCreateMessage("");
         const plannedStartTime = combineDateTime(shiftDate, shiftStart);
         const plannedEndTime = combineDateTime(shiftDate, shiftEnd);
         if (!employeeId || !shiftDate || !plannedStartTime || !plannedEndTime) {
-            setStatusMessage("Заполните дату и время смены.");
+            setCreateError("Заполните дату, время и сотрудника для смены.");
+            return;
+        }
+        if (!createdBy) {
+            setCreateError("Выберите автора графика.");
+            return;
+        }
+        if (new Date(plannedEndTime) <= new Date(plannedStartTime)) {
+            setCreateError("Время окончания должно быть позже начала.");
             return;
         }
         try {
@@ -73,160 +157,166 @@ const ShiftManagementPage = () => {
                     plannedEndTime,
                     shiftType,
                     location,
-                    notes,
+                    createdBy,
+                    notes: notes || null,
                 }),
             });
-            setSchedules((prev) => [created, ...prev]);
-            setStatusMessage("Смена сохранена.");
+            setShiftDetails(created);
+            setCreateMessage("Смена создана и сохранена в черновиках.");
         } catch {
-            setStatusMessage("Не удалось сохранить смену.");
-        }
-    };
-
-    const handleReassign = async (event: FormEvent) => {
-        event.preventDefault();
-        if (!reassignShiftId || !reassignEmployeeId) {
-            setStatusMessage("Укажите смену и нового сотрудника.");
-            return;
-        }
-        try {
-            const updated = await apiRequest<ShiftSchedule>(
-                baseUrl,
-                token,
-                `/api/staff/shifts/${reassignShiftId}/reassign?newEmployeeId=${reassignEmployeeId}`,
-                {method: "POST"}
-            );
-            setSchedules((prev) => [updated, ...prev]);
-            setStatusMessage("Смена перераспределена.");
-        } catch {
-            setStatusMessage("Не удалось перераспределить смену.");
-        }
-    };
-
-    const handleFetchShiftById = async () => {
-        if (!shiftIdLookup) {
-            setStatusMessage("Укажите ID смены.");
-            return;
-        }
-        try {
-            const data = await apiRequest<ShiftSchedule>(
-                baseUrl,
-                token,
-                `/api/staff/shifts/${shiftIdLookup}`
-            );
-            setShiftDetails(data);
-        } catch {
-            setStatusMessage("Не удалось получить смену.");
-        }
-    };
-
-    const handleFetchAvailability = async () => {
-        if (!availabilityStart || !availabilityEnd) {
-            setStatusMessage("Укажите даты периода.");
-            return;
-        }
-        try {
-            const data = await apiRequest<Record<string, unknown>>(
-                baseUrl,
-                token,
-                `/api/staff/shifts/availability?startDate=${availabilityStart}&endDate=${availabilityEnd}`
-            );
-            setAvailabilityData(data || {});
-        } catch {
-            setStatusMessage("Не удалось получить доступность.");
-        }
-    };
-
-    const handleFetchByEmployee = async () => {
-        if (!employeeShiftLookup) {
-            setStatusMessage("Укажите ID сотрудника.");
-            return;
-        }
-        try {
-            const data = await apiRequest<ShiftSchedule[]>(
-                baseUrl,
-                token,
-                `/api/staff/shifts/employee/${employeeShiftLookup}`
-            );
-            setEmployeeShifts(data || []);
-        } catch {
-            setStatusMessage("Не удалось получить смены сотрудника.");
-        }
-    };
-
-    const handleFetchByRange = async () => {
-        if (!rangeStart || !rangeEnd) {
-            setStatusMessage("Укажите период.");
-            return;
-        }
-        try {
-            const data = await apiRequest<ShiftSchedule[]>(
-                baseUrl,
-                token,
-                `/api/staff/shifts?startDate=${rangeStart}&endDate=${rangeEnd}`
-            );
-            setRangeShifts(data || []);
-        } catch {
-            setStatusMessage("Не удалось получить смены по периоду.");
+            setCreateError("Не удалось создать смену.");
         }
     };
 
     const handlePublishShift = async () => {
-        if (!shiftIdLookup) {
-            setStatusMessage("Укажите ID смены.");
+        setActionError("");
+        setActionMessage("");
+        if (!actionShiftId) {
+            setActionError("Укажите ID смены для публикации.");
             return;
         }
         try {
             const data = await apiRequest<ShiftSchedule>(
                 baseUrl,
                 token,
-                `/api/staff/shifts/${shiftIdLookup}/publish`,
+                `/api/staff/shifts/${actionShiftId}/publish`,
                 {method: "POST"}
             );
             setShiftDetails(data);
-            setStatusMessage("Смена опубликована.");
+            setActionMessage("Смена опубликована.");
         } catch {
-            setStatusMessage("Не удалось опубликовать смену.");
+            setActionError("Не удалось опубликовать смену.");
         }
     };
 
     const handleConfirmShift = async () => {
-        if (!confirmShiftId || !confirmById) {
-            setStatusMessage("Укажите ID смены и подтверждающего.");
+        setActionError("");
+        setActionMessage("");
+        if (!actionShiftId || !confirmById) {
+            setActionError("Укажите смену и подтверждающего сотрудника.");
             return;
         }
         try {
             const data = await apiRequest<ShiftSchedule>(
                 baseUrl,
                 token,
-                `/api/staff/shifts/${confirmShiftId}/confirm?confirmedBy=${confirmById}`,
+                `/api/staff/shifts/${actionShiftId}/confirm?confirmedBy=${confirmById}`,
                 {method: "POST"}
             );
             setShiftDetails(data);
-            setStatusMessage("Смена подтверждена.");
+            setActionMessage("Смена подтверждена.");
         } catch {
-            setStatusMessage("Не удалось подтвердить смену.");
+            setActionError("Не удалось подтвердить смену.");
         }
     };
+
+    const handleReassignShift = async (event: FormEvent) => {
+        event.preventDefault();
+        setActionError("");
+        setActionMessage("");
+        if (!actionShiftId || !reassignEmployeeId) {
+            setActionError("Укажите смену и нового сотрудника.");
+            return;
+        }
+        try {
+            const data = await apiRequest<ShiftSchedule>(
+                baseUrl,
+                token,
+                `/api/staff/shifts/${actionShiftId}/reassign?newEmployeeId=${reassignEmployeeId}`,
+                {method: "POST"}
+            );
+            setShiftDetails(data);
+            setActionMessage("Смена перераспределена.");
+        } catch {
+            setActionError("Не удалось перераспределить смену.");
+        }
+    };
+
+    const availabilityEmployees = availability?.employees ?? [];
 
     return (
         <PageShell
             title="Управление сменами и загрузкой"
-            subtitle="Планирование и корректировка графиков смен сотрудников с учетом их загрузки и отпуска."
+            subtitle="Планирование графиков смен с учётом загрузки, отпусков и дисциплинарных замечаний."
             className="theme-green"
         >
             <section className="form-section">
                 <div className="form-card">
-                    <h3>Планирование смен</h3>
-                    <form onSubmit={handleCreate}>
-                        <label>
-                            Выберите период для планирования
-                            <div className="calendar">
-                                <span className="date-range">{shiftDate ? `Дата ${shiftDate}` : "Выберите дату"}</span>
+                    <h3>Доступность сотрудников</h3>
+                    <label>
+                        Начало периода
+                        <input
+                            type="date"
+                            value={availabilityStart}
+                            onChange={(event) => setAvailabilityStart(event.target.value)}
+                        />
+                    </label>
+                    <label>
+                        Конец периода
+                        <input
+                            type="date"
+                            value={availabilityEnd}
+                            onChange={(event) => setAvailabilityEnd(event.target.value)}
+                        />
+                    </label>
+                    <div className="inline-actions">
+                        <button type="button" className="secondary-button" onClick={handleFetchAvailability}>
+                            Получить доступность
+                        </button>
+                        {availability ? (
+                            <button
+                                type="button"
+                                className="secondary-button"
+                                onClick={() => setShowAvailability((prev) => !prev)}
+                            >
+                                {showAvailability ? "Скрыть список" : "Показать список"}
+                            </button>
+                        ) : null}
+                    </div>
+                    {availabilityError ? <div className="form-error">{availabilityError}</div> : null}
+                    {availabilityMessage ? <div className="form-success">{availabilityMessage}</div> : null}
+                    {availability ? (
+                        <div className="report-output">
+                            <div className="data-row">
+                                <span>Период</span>
+                                <span className="value">
+                                    {availability.period?.start ?? "—"} — {availability.period?.end ?? "—"}
+                                </span>
                             </div>
-                        </label>
+                            <div className="data-row">
+                                <span>Всего сотрудников</span>
+                                <span className="value">{availability.totalEmployees ?? 0}</span>
+                            </div>
+                        </div>
+                    ) : null}
+                </div>
+            </section>
+
+            {showAvailability && availabilityEmployees.length ? (
+                <section className="page-section">
+                    <h3>Распределение и нарушения</h3>
+                    <div className="card-list">
+                        {availabilityEmployees.map((employee) => (
+                            <div key={employee.employeeId} className="card">
+                                <p><strong>{employee.name || employeeNameById.get(employee.employeeId) || "—"}</strong></p>
+                                <p className="muted">Подразделение: {employee.department ?? "—"}</p>
+                                <p className="muted">Запланировано смен: {employee.scheduledShifts ?? 0}</p>
+                                <p className="muted">Нарушений: {employee.violationsCount ?? 0}</p>
+                                <p className="muted">
+                                    Рекомендация: {employee.hasRecentViolations ? "Снизить нагрузку" : "Можно назначать"}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            ) : null}
+
+            <section className="form-section">
+                <div className="form-card">
+                    <h3>Создать расписание смены</h3>
+                    <form onSubmit={handleCreateShift} className="stacked-form">
                         <label>
-                            Выберите сотрудника
+                            Сотрудник
                             <select value={employeeId} onChange={(event) => setEmployeeId(event.target.value)}>
                                 <option value="">Выберите сотрудника</option>
                                 {employeeOptions.map((option) => (
@@ -249,11 +339,11 @@ const ShiftManagementPage = () => {
                             <input type="time" value={shiftEnd} onChange={(event) => setShiftEnd(event.target.value)} />
                         </label>
                         <label>
-                            Выберите смену
+                            Тип смены
                             <select value={shiftType} onChange={(event) => setShiftType(event.target.value)}>
-                                <option value="DAY">Утро (8:00 - 16:00)</option>
-                                <option value="EVENING">Вечер (16:00 - 00:00)</option>
-                                <option value="NIGHT">Ночь (00:00 - 8:00)</option>
+                                <option value="DAY">Дневная</option>
+                                <option value="EVENING">Вечерняя</option>
+                                <option value="NIGHT">Ночная</option>
                             </select>
                         </label>
                         <label>
@@ -261,30 +351,8 @@ const ShiftManagementPage = () => {
                             <input value={location} onChange={(event) => setLocation(event.target.value)} />
                         </label>
                         <label>
-                            Комментарий или примечание
-                            <textarea
-                                rows={4}
-                                value={notes}
-                                onChange={(event) => setNotes(event.target.value)}
-                                placeholder="Комментарий, причина корректировки или другие важные детали..."
-                            />
-                        </label>
-                        <button type="submit" className="primary-button">Сохранить смену</button>
-                    </form>
-                </div>
-            </section>
-
-            <section className="form-section">
-                <div className="form-card">
-                    <h3>Экстренное перераспределение смен</h3>
-                    <form onSubmit={handleReassign}>
-                        <label>
-                            ID смены для перераспределения
-                            <input value={reassignShiftId} onChange={(event) => setReassignShiftId(event.target.value)} />
-                        </label>
-                        <label>
-                            Выберите сотрудника для перераспределения
-                            <select value={reassignEmployeeId} onChange={(event) => setReassignEmployeeId(event.target.value)}>
+                            Автор графика
+                            <select value={createdBy} onChange={(event) => setCreatedBy(event.target.value)}>
                                 <option value="">Выберите сотрудника</option>
                                 {employeeOptions.map((option) => (
                                     <option key={option.value} value={option.value}>
@@ -293,130 +361,110 @@ const ShiftManagementPage = () => {
                                 ))}
                             </select>
                         </label>
-                        <button type="submit" className="primary-button">Перераспределить смену</button>
+                        <label>
+                            Примечание
+                            <textarea
+                                rows={3}
+                                value={notes}
+                                onChange={(event) => setNotes(event.target.value)}
+                                placeholder="Комментарий или причина назначения"
+                            />
+                        </label>
+                        <button type="submit" className="primary-button">Создать смену</button>
                     </form>
+                    {createError ? <div className="form-error">{createError}</div> : null}
+                    {createMessage ? <div className="form-success">{createMessage}</div> : null}
                 </div>
             </section>
 
             <section className="form-section">
                 <div className="form-card">
-                    <h3>Управление сменами</h3>
+                    <h3>Действия со сменой</h3>
                     <label>
                         ID смены
-                        <input value={shiftIdLookup} onChange={(event) => setShiftIdLookup(event.target.value)} />
+                        <input value={actionShiftId} onChange={(event) => setActionShiftId(event.target.value)} />
                     </label>
                     <div className="inline-actions">
-                        <button type="button" className="secondary-button" onClick={handleFetchShiftById}>
-                            Найти смену
-                        </button>
                         <button type="button" className="secondary-button" onClick={handlePublishShift}>
                             Опубликовать
                         </button>
                     </div>
                     <label>
-                        Подтверждающий (UUID)
-                        <input value={confirmById} onChange={(event) => setConfirmById(event.target.value)} />
-                    </label>
-                    <label>
-                        ID смены для подтверждения
-                        <input value={confirmShiftId} onChange={(event) => setConfirmShiftId(event.target.value)} />
+                        Подтверждающий
+                        <select value={confirmById} onChange={(event) => setConfirmById(event.target.value)}>
+                            <option value="">Выберите сотрудника</option>
+                            {employeeOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label || option.value}
+                                </option>
+                            ))}
+                        </select>
                     </label>
                     <button type="button" className="secondary-button" onClick={handleConfirmShift}>
                         Подтвердить смену
                     </button>
-                    {shiftDetails ? (
-                        <div className="report-output">
-                            <p><strong>ID:</strong> {shiftDetails.id}</p>
-                            <p><strong>Статус:</strong> {shiftDetails.status ?? "DRAFT"}</p>
-                            <p><strong>Дата:</strong> {shiftDetails.shiftDate ?? "—"}</p>
-                            <p><strong>Тип:</strong> {shiftDetails.shiftType ?? "—"}</p>
-                        </div>
-                    ) : null}
+                    <form onSubmit={handleReassignShift} className="stacked-form">
+                        <label>
+                            Новый сотрудник
+                            <select
+                                value={reassignEmployeeId}
+                                onChange={(event) => setReassignEmployeeId(event.target.value)}
+                            >
+                                <option value="">Выберите сотрудника</option>
+                                {employeeOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label || option.value}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <button type="submit" className="secondary-button">Перераспределить смену</button>
+                    </form>
+                    {actionError ? <div className="form-error">{actionError}</div> : null}
+                    {actionMessage ? <div className="form-success">{actionMessage}</div> : null}
                 </div>
             </section>
 
-            <section className="form-section">
-                <div className="form-card">
-                    <h3>Доступность сотрудников</h3>
-                    <label>
-                        Начало периода
-                        <input type="date" value={availabilityStart} onChange={(event) => setAvailabilityStart(event.target.value)} />
-                    </label>
-                    <label>
-                        Конец периода
-                        <input type="date" value={availabilityEnd} onChange={(event) => setAvailabilityEnd(event.target.value)} />
-                    </label>
-                    <button type="button" className="secondary-button" onClick={handleFetchAvailability}>
-                        Получить доступность
-                    </button>
-                    {availabilityData ? (
-                        <div className="report-output">
-                            <pre>{JSON.stringify(availabilityData, null, 2)}</pre>
-                        </div>
-                    ) : null}
-                </div>
-            </section>
-
-            <section className="form-section">
-                <div className="form-card">
-                    <h3>Поиск смен</h3>
-                    <label>
-                        ID сотрудника
-                        <input value={employeeShiftLookup} onChange={(event) => setEmployeeShiftLookup(event.target.value)} />
-                    </label>
-                    <button type="button" className="secondary-button" onClick={handleFetchByEmployee}>
-                        Смены сотрудника
-                    </button>
-                    <label>
-                        Период начала
-                        <input type="date" value={rangeStart} onChange={(event) => setRangeStart(event.target.value)} />
-                    </label>
-                    <label>
-                        Период окончания
-                        <input type="date" value={rangeEnd} onChange={(event) => setRangeEnd(event.target.value)} />
-                    </label>
-                    <button type="button" className="secondary-button" onClick={handleFetchByRange}>
-                        Смены по периоду
-                    </button>
-                    {employeeShifts.length ? (
-                        <div className="card-list">
-                            {employeeShifts.map((shift) => (
-                                <div key={shift.id} className="card">
-                                    <p><strong>ID:</strong> {shift.id}</p>
-                                    <p>Дата: {shift.shiftDate ?? "—"}</p>
-                                    <p>Статус: {shift.status ?? "DRAFT"}</p>
-                                </div>
-                            ))}
-                        </div>
-                    ) : null}
-                    {rangeShifts.length ? (
-                        <div className="card-list">
-                            {rangeShifts.map((shift) => (
-                                <div key={shift.id} className="card">
-                                    <p><strong>ID:</strong> {shift.id}</p>
-                                    <p>Дата: {shift.shiftDate ?? "—"}</p>
-                                    <p>Статус: {shift.status ?? "DRAFT"}</p>
-                                </div>
-                            ))}
-                        </div>
-                    ) : null}
-                </div>
-            </section>
-
-            {statusMessage ? <div className="form-success">{statusMessage}</div> : null}
-
-            {schedules.length ? (
+            {shiftDetails ? (
                 <section className="page-section">
-                    <h2>Созданные смены</h2>
-                    <div className="card-list">
-                        {schedules.map((schedule) => (
-                            <div key={schedule.id} className="card">
-                                <h4>Смена #{schedule.id.slice(0, 8)}</h4>
-                                <p>Дата: {schedule.shiftDate}</p>
-                                <p>Тип: {schedule.shiftType}</p>
-                                <p>Локация: {schedule.location ?? "—"}</p>
-                            </div>
-                        ))}
+                    <h3>Детали последней операции</h3>
+                    <div className="report-output">
+                        <div className="data-row">
+                            <span>Сотрудник</span>
+                            <span className="value">
+                                {employeeNameById.get(shiftDetails.employeeId) ?? shiftDetails.employeeId}
+                            </span>
+                        </div>
+                        <div className="data-row">
+                            <span>Дата</span>
+                            <span className="value">{shiftDetails.shiftDate ?? "—"}</span>
+                        </div>
+                        <div className="data-row">
+                            <span>Время</span>
+                            <span className="value">
+                                {formatDateTime(shiftDetails.plannedStartTime)} — {formatDateTime(shiftDetails.plannedEndTime)}
+                            </span>
+                        </div>
+                        <div className="data-row">
+                            <span>Тип</span>
+                            <span className="value">{shiftDetails.shiftType ?? "—"}</span>
+                        </div>
+                        <div className="data-row">
+                            <span>Статус</span>
+                            <span className="value">{shiftDetails.status ?? "DRAFT"}</span>
+                        </div>
+                        <div className="data-row">
+                            <span>Локация</span>
+                            <span className="value">{shiftDetails.location ?? "—"}</span>
+                        </div>
+                        <div className="data-row">
+                            <span>Автор</span>
+                            <span className="value">
+                                {shiftDetails.createdBy
+                                    ? employeeNameById.get(shiftDetails.createdBy) ?? shiftDetails.createdBy
+                                    : "—"}
+                            </span>
+                        </div>
                     </div>
                 </section>
             ) : null}

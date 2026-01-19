@@ -1,4 +1,7 @@
 import type {ReactNode} from "react";
+import {useLocation} from "react-router-dom";
+import {sectionLinks} from "../navigation/sectionLinks";
+import SectionNav from "./SectionNav";
 type PageShellProps = {
     title: string;
     subtitle?: string;
@@ -8,6 +11,10 @@ type PageShellProps = {
 };
 
 const PageShell = ({title, subtitle, className, footerText, children}: PageShellProps) => {
+    const location = useLocation();
+    const sectionKey = location.pathname.split("/")[1];
+    const links = sectionLinks[sectionKey] ?? [];
+
     return (
         <div className={`page ${className ?? ""}`.trim()}>
             <div className="container">
@@ -15,6 +22,7 @@ const PageShell = ({title, subtitle, className, footerText, children}: PageShell
                     <h1>{title}</h1>
                     {subtitle ? <p>{subtitle}</p> : null}
                 </header>
+                <SectionNav links={links} />
                 {children}
                 <footer className="page-footer">
                     <p>{footerText ?? "© 2025 Казино - Все права защищены"}</p>

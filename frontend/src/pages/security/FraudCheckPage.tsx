@@ -1,8 +1,9 @@
-import {useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import type {FormEvent} from "react";
 import PageShell from "../../components/PageShell";
 import {apiRequest} from "../../api/client";
 import {useAuth} from "../../auth/AuthContext";
+import {useEmployees} from "../../hooks/useEmployees";
 import type {FraudRecord} from "../../types";
 
 type FraudCheckResponse = {
@@ -17,7 +18,8 @@ type FraudCheckResponse = {
 
 const FraudCheckPage = () => {
     const {token, baseUrl} = useAuth();
-    const [customerName, setCustomerName] = useState("");
+    const {employees} = useEmployees();
+    // const [customerName, setCustomerName] = useState("");
     const [customerId, setCustomerId] = useState("");
     const [customerDob, setCustomerDob] = useState("");
     const [checkType, setCheckType] = useState("id");
@@ -30,7 +32,6 @@ const FraudCheckPage = () => {
     const [quickResult, setQuickResult] = useState<FraudCheckResponse | null>(null);
 
     const [records, setRecords] = useState<FraudRecord[]>([]);
-    const [recordPersonId, setRecordPersonId] = useState("");
     const [recordFullName, setRecordFullName] = useState("");
     const [recordDescription, setRecordDescription] = useState("");
     const [recordPhotoUrl, setRecordPhotoUrl] = useState("");
@@ -41,6 +42,18 @@ const FraudCheckPage = () => {
     const [recordIdLookup, setRecordIdLookup] = useState("");
     const [recordDetails, setRecordDetails] = useState<FraudRecord | null>(null);
     const [recordStatusUpdates, setRecordStatusUpdates] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        if (!employees.length || recordAddedBy) {
+            return;
+        }
+        setRecordAddedBy(employees[0].id);
+    }, [employees, recordAddedBy]);
+
+    const employeeOptions = useMemo(() => employees.map((employee) => ({
+        value: employee.id,
+        label: [employee.lastName, employee.firstName, employee.middleName].filter(Boolean).join(" ").trim(),
+    })), [employees]);
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
@@ -91,24 +104,27 @@ const FraudCheckPage = () => {
     const handleCreateRecord = async (event: FormEvent) => {
         event.preventDefault();
         setError("");
-        if (!recordPersonId || !recordFullName) {
-            setError("Заполните идентификатор и имя.");
+        if (!recordFullName) {
+            setError("Заполните полное имя.");
+            return;
+        }
+        if (!recordAddedBy) {
+            setError("Выберите сотрудника, который добавил запись.");
             return;
         }
         try {
             const created = await apiRequest<FraudRecord>(baseUrl, token, "/api/security/fraud-database", {
                 method: "POST",
                 body: JSON.stringify({
-                    personId: recordPersonId,
+                    personId: recordFullName,
                     fullName: recordFullName,
                     description: recordDescription || null,
                     photoUrl: recordPhotoUrl || null,
                     fraudType: recordType,
-                    addedBy: recordAddedBy || null,
+                    addedBy: recordAddedBy,
                 }),
             });
             setRecords((prev) => [created, ...prev]);
-            setRecordPersonId("");
             setRecordFullName("");
             setRecordDescription("");
             setRecordPhotoUrl("");
@@ -215,23 +231,23 @@ const FraudCheckPage = () => {
                 <div className="card">
                     <h3>Информация о клиенте</h3>
                     <form onSubmit={handleSubmit} className="stacked-form">
-                        <label>
+                        {/*<label>
                             Имя клиента:
                             <input
                                 value={customerName}
                                 onChange={(event) => setCustomerName(event.target.value)}
                                 placeholder="Имя клиента"
                             />
-                        </label>
+                        </label>*/}
                         <label>
-                            ID клиента:
+                            Имя клиента:
                             <input
                                 value={customerId}
                                 onChange={(event) => setCustomerId(event.target.value)}
-                                placeholder="ID клиента"
+                                placeholder="Имя клиента"
                             />
                         </label>
-                        <label>
+                        {/*<label>
                             Дата рождения клиента:
                             <input
                                 type="date"
@@ -254,14 +270,14 @@ const FraudCheckPage = () => {
                                 onChange={(event) => setActivityId(event.target.value)}
                                 placeholder="UUID активности"
                             />
-                        </label>
+                        </label>*/}
                         <button type="submit" className="primary-button">Провести сверку</button>
                     </form>
                     {error ? <div className="form-error">{error}</div> : null}
                 </div>
             </section>
 
-            <section className="page-section">
+            {/*<section className="page-section">
                 <h2>Быстрая проверка</h2>
                 <div className="card">
                     <form onSubmit={handleQuickCheck} className="stacked-form">
@@ -289,7 +305,7 @@ const FraudCheckPage = () => {
                         </div>
                     ) : null}
                 </div>
-            </section>
+            </section>*/}
 
             {result ? (
                 <section className="page-section">
@@ -314,10 +330,6 @@ const FraudCheckPage = () => {
                 <div className="card">
                     <h3>Добавление записи</h3>
                     <form onSubmit={handleCreateRecord} className="stacked-form">
-                        <label>
-                            ID лица
-                            <input value={recordPersonId} onChange={(event) => setRecordPersonId(event.target.value)} />
-                        </label>
                         <label>
                             Полное имя
                             <input value={recordFullName} onChange={(event) => setRecordFullName(event.target.value)} />
@@ -345,8 +357,18 @@ const FraudCheckPage = () => {
                             </select>
                         </label>
                         <label>
-                            Добавил (UUID)
-                            <input value={recordAddedBy} onChange={(event) => setRecordAddedBy(event.target.value)} />
+                            Добавил
+                            <select
+                                value={recordAddedBy}
+                                onChange={(event) => setRecordAddedBy(event.target.value)}
+                            >
+                                <option value="">Выберите сотрудника</option>
+                                {employeeOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label || option.value}
+                                    </option>
+                                ))}
+                            </select>
                         </label>
                         <button type="submit" className="primary-button">Добавить запись</button>
                     </form>
@@ -355,29 +377,32 @@ const FraudCheckPage = () => {
                 <div className="card">
                     <h3>Поиск и фильтры</h3>
                     <label>
-                        Поиск по имени или ID
+                        Поиск по имени
                         <input value={recordSearchQuery} onChange={(event) => setRecordSearchQuery(event.target.value)} />
                     </label>
                     <div className="inline-actions">
                         <button type="button" className="secondary-button" onClick={handleSearch}>Поиск</button>
                         <button type="button" className="secondary-button" onClick={handleFetchAll}>Все записи</button>
                     </div>
-                    <label>
-                        Тип мошенничества
-                        <select value={recordTypeFilter} onChange={(event) => setRecordTypeFilter(event.target.value)}>
-                            <option value="CHEATING">Мошенничество в играх</option>
-                            <option value="THEFT">Кража</option>
-                            <option value="FRAUD">Обман</option>
-                            <option value="BANNED">Запрещён к допуску</option>
-                            <option value="OTHER">Другое</option>
-                        </select>
-                    </label>
+                    <div className="padding_jopa">
+                        <label>
+                            Тип мошенничества
+                            <select value={recordTypeFilter} onChange={(event) => setRecordTypeFilter(event.target.value)}>
+                                <option value="CHEATING">Мошенничество в играх</option>
+                                <option value="THEFT">Кража</option>
+                                <option value="FRAUD">Обман</option>
+                                <option value="BANNED">Запрещён к допуску</option>
+                                <option value="OTHER">Другое</option>
+                            </select>
+                        </label>
+                    </div>
+
                     <button type="button" className="secondary-button" onClick={handleFetchByType}>Получить по типу</button>
-                    <label>
+                   {/* <label>
                         Получить по ID
                         <input value={recordIdLookup} onChange={(event) => setRecordIdLookup(event.target.value)} />
-                    </label>
-                    <button type="button" className="secondary-button" onClick={handleFetchById}>Найти запись</button>
+                    </label>*/}
+                    {/*<button type="button" className="secondary-button" onClick={handleFetchById}>Найти запись</button>*/}
                     {recordDetails ? (
                         <div className="report-output">
                             <p><strong>{recordDetails.fullName}</strong></p>
