@@ -1,23 +1,39 @@
-import {useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import type {FormEvent} from "react";
 import PageShell from "../../components/PageShell";
 import {apiRequest} from "../../api/client";
 import {useAuth} from "../../auth/AuthContext";
+import {useEmployees} from "../../hooks/useEmployees";
 import type {Anomaly} from "../../types";
 const toIso = (value: string) => (value ? new Date(value).toISOString() : undefined);
 
 const AnomalyDetectionPage = () => {
     const {token, baseUrl} = useAuth();
+    const {employees} = useEmployees();
     const [start, setStart] = useState("");
     const [end, setEnd] = useState("");
     const [amount, setAmount] = useState("10000");
     const [frequency, setFrequency] = useState("10");
     const [windowMinutes, setWindowMinutes] = useState("60");
     const [reviewerId, setReviewerId] = useState("");
+    const [reviewNotes, setReviewNotes] = useState("");
     const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
     const [error, setError] = useState("");
-    const [anomalyIdLookup, setAnomalyIdLookup] = useState("");
+    const [statusMessage, setStatusMessage] = useState("");
+    // const [anomalyIdLookup, ] = useState("");
     const [anomalyDetails, setAnomalyDetails] = useState<Anomaly | null>(null);
+
+    useEffect(() => {
+        if (!employees.length || reviewerId) {
+            return;
+        }
+        setReviewerId(employees[0].id);
+    }, [employees, reviewerId]);
+
+    const employeeOptions = useMemo(() => employees.map((employee) => ({
+        value: employee.id,
+        label: [employee.lastName, employee.firstName, employee.middleName].filter(Boolean).join(" ").trim(),
+    })), [employees]);
 
     const handleDetect = async (event: FormEvent) => {
         event.preventDefault();
@@ -49,37 +65,45 @@ const AnomalyDetectionPage = () => {
         }
     };
 
-    const handleFetchById = async () => {
-        setError("");
-        if (!anomalyIdLookup) {
-            setError("Укажите ID аномалии.");
-            return;
-        }
-        try {
-            const data = await apiRequest<Anomaly>(
-                baseUrl,
-                token,
-                `/api/finance/anomalies/${anomalyIdLookup}`
-            );
-            setAnomalyDetails(data);
-        } catch {
-            setError("Не удалось получить аномалию.");
-        }
-    };
+    // const handleFetchById = async () => {
+    //     setError("");
+    //     if (!anomalyIdLookup) {
+    //         setError("Укажите ID аномалии.");
+    //         return;
+    //     }
+    //     try {
+    //         const data = await apiRequest<Anomaly>(
+    //             baseUrl,
+    //             token,
+    //             `/api/finance/anomalies/${anomalyIdLookup}`
+    //         );
+    //         setAnomalyDetails(data);
+    //     } catch {
+    //         setError("Не удалось получить аномалию.");
+    //     }
+    // };
 
     const reviewAnomaly = async (id: string, status: string) => {
         if (!reviewerId) {
             setError("Укажите ID проверяющего.");
             return;
         }
+        setError("");
+        setStatusMessage("");
+        const params = new URLSearchParams({status, reviewerId});
+        if (reviewNotes.trim()) {
+            params.append("notes", reviewNotes.trim());
+        }
         try {
             const updated = await apiRequest<Anomaly>(
                 baseUrl,
                 token,
-                `/api/finance/anomalies/${id}/review?status=${status}&reviewerId=${reviewerId}`,
+                `/api/finance/anomalies/${id}/review?${params.toString()}`,
                 {method: "POST"}
             );
             setAnomalies((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+            setAnomalyDetails((prev) => (prev && prev.id === updated.id ? updated : prev));
+            setStatusMessage("Статус аномалии обновлён.");
         } catch {
             setError("Не удалось обновить статус.");
         }
@@ -114,10 +138,6 @@ const AnomalyDetectionPage = () => {
                             Окно времени (мин)
                             <input type="number" value={windowMinutes} onChange={(event) => setWindowMinutes(event.target.value)} />
                         </label>
-                        <label>
-                            ID проверяющего
-                            <input value={reviewerId} onChange={(event) => setReviewerId(event.target.value)} />
-                        </label>
                         <button type="submit" className="primary-button">Запустить анализ</button>
                     </form>
                     <div className="inline-actions">
@@ -125,13 +145,13 @@ const AnomalyDetectionPage = () => {
                             Получить все аномалии
                         </button>
                     </div>
-                    <label>
-                        Найти по ID
-                        <input value={anomalyIdLookup} onChange={(event) => setAnomalyIdLookup(event.target.value)} />
-                    </label>
-                    <button type="button" className="secondary-button" onClick={handleFetchById}>
-                        Найти аномалию
-                    </button>
+                    {/*<label>*/}
+                    {/*    Найти по ID*/}
+                    {/*    <input value={anomalyIdLookup} onChange={(event) => setAnomalyIdLookup(event.target.value)} />*/}
+                    {/*</label>*/}
+                    {/*<button type="button" className="secondary-button" onClick={handleFetchById}>*/}
+                    {/*    Найти аномалию*/}
+                    {/*</button>*/}
                     {anomalyDetails ? (
                         <div className="report-output">
                             <p><strong>ID:</strong> {anomalyDetails.id}</p>
@@ -144,6 +164,27 @@ const AnomalyDetectionPage = () => {
             <section>
                 <h2>Аномальные транзакции</h2>
                 <div className="card">
+                    <div className="stacked-form">
+                        <label>
+                            ID проверяющего
+                            <select value={reviewerId} onChange={(event) => setReviewerId(event.target.value)}>
+                                <option value="">Выберите сотрудника</option>
+                                {employeeOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label || option.value}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="review-notes">
+                            Примечание
+                            <input
+                                value={reviewNotes}
+                                onChange={(event) => setReviewNotes(event.target.value)}
+                                placeholder="Комментарий к решению"
+                            />
+                        </label>
+                    </div>
                     <table>
                         <thead>
                         <tr>
@@ -175,6 +216,7 @@ const AnomalyDetectionPage = () => {
                         </tbody>
                     </table>
                     {error ? <div className="form-error">{error}</div> : null}
+                    {statusMessage ? <div className="form-success">{statusMessage}</div> : null}
                 </div>
             </section>
         </PageShell>

@@ -1,12 +1,14 @@
-import {useState} from "react";
+import {useMemo, useState} from "react";
 import type {FormEvent} from "react";
 import PageShell from "../../components/PageShell";
 import {apiRequest} from "../../api/client";
 import {useAuth} from "../../auth/AuthContext";
+import {useReferenceData} from "../../hooks/useReferenceData";
 import type {CashOperation} from "../../types";
 
 const OperationsPage = () => {
     const {token, baseUrl} = useAuth();
+    const {cashDesks} = useReferenceData();
     const [dateTime, setDateTime] = useState("");
     const [type, setType] = useState("DEPOSIT");
     const [amount, setAmount] = useState("");
@@ -17,12 +19,17 @@ const OperationsPage = () => {
     const [operationIdLookup, setOperationIdLookup] = useState("");
     const [operationDetails, setOperationDetails] = useState<CashOperation | null>(null);
 
+    const cashDeskOptions = useMemo(() => cashDesks.map((desk) => ({
+        value: desk.id,
+        label: `${desk.name}${desk.location ? ` · ${desk.location}` : ""}`,
+    })), [cashDesks]);
+
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
         setError("");
         setStatusMessage("");
         if (!cashDeskId || !amount) {
-            setError("Укажите UUID кассы и сумму.");
+            setError("Выберите кассу и укажите сумму.");
             return;
         }
         try {
@@ -79,12 +86,18 @@ const OperationsPage = () => {
                         />
                     </label>
                     <label>
-                        UUID кассы
-                        <input
+                        Касса
+                        <select
                             value={cashDeskId}
                             onChange={(event) => setCashDeskId(event.target.value)}
-                            placeholder="UUID кассы"
-                        />
+                        >
+                            <option value="">Выберите кассу</option>
+                            {cashDeskOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label || option.value}
+                                </option>
+                            ))}
+                        </select>
                     </label>
                     <label>
                         Тип операции

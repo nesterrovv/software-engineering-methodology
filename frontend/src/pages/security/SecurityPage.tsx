@@ -10,14 +10,14 @@ type NotificationsView = "hidden" | "all" | "unread";
 
 const SecurityPage = () => {
     const {token, baseUrl} = useAuth();
-    const {employees, refresh: refreshEmployees} = useEmployees();
+    const {employees,} = useEmployees();
     const [hallStatus, setHallStatus] = useState<HallStatus | null>(null);
     const [sessions, setSessions] = useState<HallSession[]>([]);
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [unreadNotifications, setUnreadNotifications] = useState<NotificationItem[]>([]);
-    const [unreadCount, setUnreadCount] = useState<number | null>(null);
-    const [sessionId, setSessionId] = useState("");
-    const [sessionDetails, setSessionDetails] = useState<HallSession | null>(null);
+    // const [, setUnreadCount] = useState<number | null>(null);
+    const [sessionId, ] = useState("");
+    const [, setSessionDetails] = useState<HallSession | null>(null);
 
     const [monitoringEmployeeId, setMonitoringEmployeeId] = useState("");
     const [notificationRecipientId, setNotificationRecipientId] = useState("");
@@ -178,24 +178,24 @@ const SecurityPage = () => {
         }
     }, [fetchRecipientId, notificationsView, baseUrl, token]);
 
-    const handleFetchUnreadCount = async () => {
-        setError("");
-        setStatusMessage("");
-        if (!fetchRecipientId) {
-            setError("Выберите получателя.");
-            return;
-        }
-        try {
-            const count = await apiRequest<number>(
-                baseUrl,
-                token,
-                `/api/security/notifications/recipient/${fetchRecipientId}/unread-count`
-            );
-            setUnreadCount(count ?? 0);
-        } catch {
-            setError("Не удалось получить количество непрочитанных.");
-        }
-    };
+    // const handleFetchUnreadCount = async () => {
+    //     setError("");
+    //     setStatusMessage("");
+    //     if (!fetchRecipientId) {
+    //         setError("Выберите получателя.");
+    //         return;
+    //     }
+    //     try {
+    //         const count = await apiRequest<number>(
+    //             baseUrl,
+    //             token,
+    //             `/api/security/notifications/recipient/${fetchRecipientId}/unread-count`
+    //         );
+    //         setUnreadCount(count ?? 0);
+    //     } catch {
+    //         setError("Не удалось получить количество непрочитанных.");
+    //     }
+    // };
 
     const handleMarkAsRead = async (id: string) => {
         setError("");
@@ -213,47 +213,47 @@ const SecurityPage = () => {
         }
     };
 
-    const handleFetchSession = async (event: FormEvent) => {
-        event.preventDefault();
-        setError("");
-        setStatusMessage("");
-        if (!sessionId) {
-            setError("Укажите ID сессии.");
-            return;
-        }
-        try {
-            const data = await apiRequest<HallSession>(
-                baseUrl,
-                token,
-                `/api/security/monitoring/${sessionId}`
-            );
-            setSessionDetails(data);
-        } catch {
-            setError("Не удалось получить данные сессии.");
-        }
-    };
-
-    const handleEndSession = async () => {
-        setError("");
-        setStatusMessage("");
-        if (!sessionId) {
-            setError("Укажите ID сессии.");
-            return;
-        }
-        try {
-            const data = await apiRequest<HallSession>(
-                baseUrl,
-                token,
-                `/api/security/monitoring/${sessionId}/end`,
-                {method: "POST"}
-            );
-            setSessionDetails(data);
-            setSessions((prev) => prev.filter((item) => item.id !== data.id));
-            setStatusMessage("Сессия завершена.");
-        } catch {
-            setError("Не удалось завершить сессию.");
-        }
-    };
+    // const handleFetchSession = async (event: FormEvent) => {
+    //     event.preventDefault();
+    //     setError("");
+    //     setStatusMessage("");
+    //     if (!sessionId) {
+    //         setError("Укажите ID сессии.");
+    //         return;
+    //     }
+    //     try {
+    //         const data = await apiRequest<HallSession>(
+    //             baseUrl,
+    //             token,
+    //             `/api/security/monitoring/${sessionId}`
+    //         );
+    //         setSessionDetails(data);
+    //     } catch {
+    //         setError("Не удалось получить данные сессии.");
+    //     }
+    // };
+    //
+    // const handleEndSession = async () => {
+    //     setError("");
+    //     setStatusMessage("");
+    //     if (!sessionId) {
+    //         setError("Укажите ID сессии.");
+    //         return;
+    //     }
+    //     try {
+    //         const data = await apiRequest<HallSession>(
+    //             baseUrl,
+    //             token,
+    //             `/api/security/monitoring/${sessionId}/end`,
+    //             {method: "POST"}
+    //         );
+    //         setSessionDetails(data);
+    //         setSessions((prev) => prev.filter((item) => item.id !== data.id));
+    //         setStatusMessage("Сессия завершена.");
+    //     } catch {
+    //         setError("Не удалось завершить сессию.");
+    //     }
+    // };
 
     const handleEndSessionById = async (id: string) => {
         setError("");

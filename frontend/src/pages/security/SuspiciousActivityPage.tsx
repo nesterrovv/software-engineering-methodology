@@ -15,8 +15,8 @@ const SuspiciousActivityPage = () => {
     const [error, setError] = useState("");
     const [activities, setActivities] = useState<SuspiciousActivity[]>([]);
     const [isActivitiesShown, setIsActivitiesShown] = useState(false);
-    const [activityIdLookup, setActivityIdLookup] = useState("");
-    const [activityDetails, setActivityDetails] = useState<SuspiciousActivity | null>(null);
+    // const [activityIdLookup, ] = useState("");
+    const [activityDetails, ] = useState<SuspiciousActivity | null>(null);
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
@@ -62,23 +62,23 @@ const SuspiciousActivityPage = () => {
         void handleFetchAll();
     }, [baseUrl, token]);
 
-    const handleFetchById = async () => {
-        setError("");
-        if (!activityIdLookup) {
-            setError("Укажите ID активности.");
-            return;
-        }
-        try {
-            const data = await apiRequest<SuspiciousActivity>(
-                baseUrl,
-                token,
-                `/api/incident/suspicious-activities/${activityIdLookup}`
-            );
-            setActivityDetails(data);
-        } catch {
-            setError("Не удалось получить активность по ID.");
-        }
-    };
+    // const handleFetchById = async () => {
+    //     setError("");
+    //     if (!activityIdLookup) {
+    //         setError("Укажите ID активности.");
+    //         return;
+    //     }
+    //     try {
+    //         const data = await apiRequest<SuspiciousActivity>(
+    //             baseUrl,
+    //             token,
+    //             `/api/incident/suspicious-activities/${activityIdLookup}`
+    //         );
+    //         setActivityDetails(data);
+    //     } catch {
+    //         setError("Не удалось получить активность по ID.");
+    //     }
+    // };
 
     return (
         <PageShell

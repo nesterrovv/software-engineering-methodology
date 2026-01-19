@@ -1,13 +1,15 @@
-import {useState} from "react";
+import {useMemo, useState} from "react";
 import type {FormEvent} from "react";
 import PageShell from "../../components/PageShell";
 import {apiRequest} from "../../api/client";
 import {useAuth} from "../../auth/AuthContext";
+import {useReferenceData} from "../../hooks/useReferenceData";
 import type {Anomaly, CashOperation, CashReconciliation, FinancialReport} from "../../types";
 const toIsoDateTime = (value: string) => (value ? new Date(value).toISOString() : undefined);
 
 const FinancePage = () => {
     const {token, baseUrl} = useAuth();
+    const {cashDesks, error: referenceError} = useReferenceData();
     const [operations, setOperations] = useState<CashOperation[]>([]);
     const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
     const [reconciliations, setReconciliations] = useState<CashReconciliation[]>([]);
@@ -17,6 +19,7 @@ const FinancePage = () => {
     const [operationCashDeskId, setOperationCashDeskId] = useState("");
     const [operationAmount, setOperationAmount] = useState("");
     const [operationType, setOperationType] = useState("DEPOSIT");
+    const [operationCurrency, setOperationCurrency] = useState("RUB");
 
     const [reconciliationCashDeskId, setReconciliationCashDeskId] = useState("");
     const [reconciliationStart, setReconciliationStart] = useState("");
@@ -37,12 +40,17 @@ const FinancePage = () => {
     const [error, setError] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
 
+    const cashDeskOptions = useMemo(() => cashDesks.map((desk) => ({
+        value: desk.id,
+        label: `${desk.name}${desk.location ? ` · ${desk.location}` : ""}`,
+    })), [cashDesks]);
+
     const handleCreateOperation = async (event: FormEvent) => {
         event.preventDefault();
         setError("");
         setStatusMessage("");
         if (!operationCashDeskId || !operationAmount) {
-            setError("Заполните UUID кассы и сумму.");
+            setError("Выберите кассу и укажите сумму.");
             return;
         }
         try {
@@ -52,7 +60,7 @@ const FinancePage = () => {
                     cashDeskId: operationCashDeskId,
                     amount: operationAmount,
                     type: operationType,
-                    currency: "RUB",
+                    currency: operationCurrency,
                 }),
             });
             setOperations((prev) => [created, ...prev]);
@@ -93,7 +101,7 @@ const FinancePage = () => {
         setError("");
         setStatusMessage("");
         if (!searchCashDeskId) {
-            setError("Укажите UUID кассы для поиска.");
+            setError("Выберите кассу для поиска.");
             return;
         }
         try {
@@ -163,12 +171,18 @@ const FinancePage = () => {
                     <h3>Создать операцию</h3>
                     <form onSubmit={handleCreateOperation} className="panel__form">
                         <label>
-                            UUID кассы
-                            <input
+                            Касса
+                            <select
                                 value={operationCashDeskId}
                                 onChange={(event) => setOperationCashDeskId(event.target.value)}
-                                placeholder="e.g. 3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                            />
+                            >
+                                <option value="">Выберите кассу</option>
+                                {cashDeskOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label || option.value}
+                                    </option>
+                                ))}
+                            </select>
                         </label>
                         <label>
                             Сумма
@@ -177,6 +191,14 @@ const FinancePage = () => {
                                 value={operationAmount}
                                 onChange={(event) => setOperationAmount(event.target.value)}
                             />
+                        </label>
+                        <label>
+                            Валюта
+                            <select value={operationCurrency} onChange={(event) => setOperationCurrency(event.target.value)}>
+                                <option value="RUB">RUB</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                            </select>
                         </label>
                         <label>
                             Тип операции
@@ -192,7 +214,7 @@ const FinancePage = () => {
                             {operations.map((operation) => (
                                 <div key={operation.id} className="operation-card">
                                     <h4>{operation.type}</h4>
-                                    <p>Сумма: {operation.amount}</p>
+                                    <p>Сумма: {operation.amount} {operation.currency ?? "—"}</p>
                                     <p className="muted">Касса: {operation.cashDeskId}</p>
                                 </div>
                             ))}
@@ -207,11 +229,18 @@ const FinancePage = () => {
                     <h3>Запустить сверку</h3>
                     <form onSubmit={handleReconcile} className="panel__form">
                         <label>
-                            UUID кассы
-                            <input
+                            Касса
+                            <select
                                 value={reconciliationCashDeskId}
                                 onChange={(event) => setReconciliationCashDeskId(event.target.value)}
-                            />
+                            >
+                                <option value="">Выберите кассу</option>
+                                {cashDeskOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label || option.value}
+                                    </option>
+                                ))}
+                            </select>
                         </label>
                         <label>
                             Начало смены
@@ -256,11 +285,18 @@ const FinancePage = () => {
                     <h3>Поиск сверок по кассе</h3>
                     <form onSubmit={handleSearchReconciliation} className="panel__form">
                         <label>
-                            UUID кассы
-                            <input
+                            Касса
+                            <select
                                 value={searchCashDeskId}
                                 onChange={(event) => setSearchCashDeskId(event.target.value)}
-                            />
+                            >
+                                <option value="">Выберите кассу</option>
+                                {cashDeskOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label || option.value}
+                                    </option>
+                                ))}
+                            </select>
                         </label>
                         <button type="submit" className="secondary-button">По кассе</button>
                     </form>
@@ -362,6 +398,7 @@ const FinancePage = () => {
             </section>
 
             {error ? <div className="form-error">{error}</div> : null}
+            {referenceError ? <div className="form-error">{referenceError}</div> : null}
             {statusMessage ? <div className="form-success">{statusMessage}</div> : null}
         </PageShell>
     );

@@ -43,6 +43,8 @@ const combineDateTime = (date: string, time: string) => {
     return iso.toISOString();
 };
 
+const formatDateInput = (date: Date) => date.toISOString().slice(0, 10);
+
 const ShiftManagementPage = () => {
     const {token, baseUrl} = useAuth();
     const {employees} = useEmployees();
@@ -72,6 +74,14 @@ const ShiftManagementPage = () => {
     const [actionMessage, setActionMessage] = useState("");
 
     const [shiftDetails, setShiftDetails] = useState<ShiftSchedule | null>(null);
+    const [actionShiftRangeStart] = useState(() => formatDateInput(new Date()));
+    const [actionShiftRangeEnd] = useState(() => {
+        const date = new Date();
+        date.setDate(date.getDate() + 30);
+        return formatDateInput(date);
+    });
+    const [actionShifts, setActionShifts] = useState<ShiftSchedule[]>([]);
+    const [actionShiftError, setActionShiftError] = useState("");
 
     useEffect(() => {
         if (!employees.length) {
@@ -106,6 +116,29 @@ const ShiftManagementPage = () => {
         });
         return map;
     }, [employees]);
+
+    const actionShiftOptions = useMemo(() => actionShifts.map((shift) => {
+        const employeeName = employeeNameById.get(shift.employeeId) ?? "Сотрудник";
+        const dateLabel = shift.shiftDate ?? "Без даты";
+        const typeLabel = shift.shiftType ?? "SHIFT";
+        const statusLabel = shift.status ?? "DRAFT";
+        return {
+            value: shift.id,
+            label: `${dateLabel} · ${employeeName} · ${typeLabel} · ${statusLabel}`,
+        };
+    }), [actionShifts, employeeNameById]);
+
+    const upsertActionShift = (shift: ShiftSchedule) => {
+        setActionShifts((prev) => {
+            const index = prev.findIndex((item) => item.id === shift.id);
+            if (index === -1) {
+                return [shift, ...prev];
+            }
+            const next = [...prev];
+            next[index] = shift;
+            return next;
+        });
+    };
 
     const handleFetchAvailability = async () => {
         setAvailabilityError("");
@@ -162,11 +195,30 @@ const ShiftManagementPage = () => {
                 }),
             });
             setShiftDetails(created);
+            upsertActionShift(created);
             setCreateMessage("Смена создана и сохранена в черновиках.");
         } catch {
             setCreateError("Не удалось создать смену.");
         }
     };
+
+    const handleFetchActionShifts = async () => {
+        setActionShiftError("");
+        try {
+            const data = await apiRequest<ShiftSchedule[]>(
+                baseUrl,
+                token,
+                `/api/staff/shifts?startDate=${actionShiftRangeStart}&endDate=${actionShiftRangeEnd}`
+            );
+            setActionShifts(data || []);
+        } catch {
+            setActionShiftError("Не удалось получить список смен.");
+        }
+    };
+
+    useEffect(() => {
+        void handleFetchActionShifts();
+    }, [baseUrl, token, actionShiftRangeStart, actionShiftRangeEnd]);
 
     const handlePublishShift = async () => {
         setActionError("");
@@ -183,6 +235,7 @@ const ShiftManagementPage = () => {
                 {method: "POST"}
             );
             setShiftDetails(data);
+            upsertActionShift(data);
             setActionMessage("Смена опубликована.");
         } catch {
             setActionError("Не удалось опубликовать смену.");
@@ -204,6 +257,7 @@ const ShiftManagementPage = () => {
                 {method: "POST"}
             );
             setShiftDetails(data);
+            upsertActionShift(data);
             setActionMessage("Смена подтверждена.");
         } catch {
             setActionError("Не удалось подтвердить смену.");
@@ -226,6 +280,7 @@ const ShiftManagementPage = () => {
                 {method: "POST"}
             );
             setShiftDetails(data);
+            upsertActionShift(data);
             setActionMessage("Смена перераспределена.");
         } catch {
             setActionError("Не удалось перераспределить смену.");
@@ -381,12 +436,25 @@ const ShiftManagementPage = () => {
                 <div className="form-card">
                     <h3>Действия со сменой</h3>
                     <label>
-                        ID смены
-                        <input value={actionShiftId} onChange={(event) => setActionShiftId(event.target.value)} />
+                        Смена
+                        <select
+                            value={actionShiftId}
+                            onChange={(event) => setActionShiftId(event.target.value)}
+                        >
+                            <option value="">Выберите смену</option>
+                            {actionShiftOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
                     </label>
                     <div className="inline-actions">
                         <button type="button" className="secondary-button" onClick={handlePublishShift}>
                             Опубликовать
+                        </button>
+                        <button type="button" className="secondary-button" onClick={handleFetchActionShifts}>
+                            Обновить список смен
                         </button>
                     </div>
                     <label>
@@ -420,6 +488,7 @@ const ShiftManagementPage = () => {
                         </label>
                         <button type="submit" className="secondary-button">Перераспределить смену</button>
                     </form>
+                    {actionShiftError ? <div className="form-error">{actionShiftError}</div> : null}
                     {actionError ? <div className="form-error">{actionError}</div> : null}
                     {actionMessage ? <div className="form-success">{actionMessage}</div> : null}
                 </div>

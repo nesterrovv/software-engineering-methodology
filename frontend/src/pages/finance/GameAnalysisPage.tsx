@@ -1,8 +1,9 @@
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import type {FormEvent} from "react";
 import PageShell from "../../components/PageShell";
 import {apiRequest} from "../../api/client";
 import {useAuth} from "../../auth/AuthContext";
+import {useReferenceData} from "../../hooks/useReferenceData";
 import type {CashOperation} from "../../types";
 type GameAnalysis = {
     id: string;
@@ -15,16 +16,22 @@ type GameAnalysis = {
 
 const GameAnalysisPage = () => {
     const {token, baseUrl} = useAuth();
+    const {gameTables} = useReferenceData();
     const [periodStart, setPeriodStart] = useState("");
     const [periodEnd, setPeriodEnd] = useState("");
     const [gameTableId, setGameTableId] = useState("");
     const [expectedRtp, setExpectedRtp] = useState("95");
     const [largeWin, setLargeWin] = useState("1000");
     const [analysis, setAnalysis] = useState<GameAnalysis | null>(null);
-    const [analysisIdLookup, setAnalysisIdLookup] = useState("");
+    // const [analysisIdLookup, ] = useState("");
     const [tableLookup, setTableLookup] = useState("");
     const [analysisList, setAnalysisList] = useState<GameAnalysis[]>([]);
     const [operations, setOperations] = useState<CashOperation[]>([]);
+
+    const gameTableOptions = useMemo(() => gameTables.map((table) => ({
+        value: table.id,
+        label: `${table.name}${table.location ? ` · ${table.location}` : ""}`,
+    })), [gameTables]);
 
     useEffect(() => {
         const loadOps = async () => {
@@ -57,21 +64,21 @@ const GameAnalysisPage = () => {
         }
     };
 
-    const handleFetchById = async () => {
-        if (!analysisIdLookup) {
-            return;
-        }
-        try {
-            const data = await apiRequest<GameAnalysis>(
-                baseUrl,
-                token,
-                `/api/finance/game-analysis/${analysisIdLookup}`
-            );
-            setAnalysis(data);
-        } catch {
-            setAnalysis(null);
-        }
-    };
+    // const handleFetchById = async () => {
+    //     if (!analysisIdLookup) {
+    //         return;
+    //     }
+    //     try {
+    //         const data = await apiRequest<GameAnalysis>(
+    //             baseUrl,
+    //             token,
+    //             `/api/finance/game-analysis/${analysisIdLookup}`
+    //         );
+    //         setAnalysis(data);
+    //     } catch {
+    //         setAnalysis(null);
+    //     }
+    // };
 
     const handleFetchByTable = async () => {
         if (!tableLookup) {
@@ -112,7 +119,14 @@ const GameAnalysisPage = () => {
                         </label>
                         <label>
                             Стол/автомат
-                            <input value={gameTableId} onChange={(event) => setGameTableId(event.target.value)} placeholder="ID стола" />
+                            <select value={gameTableId} onChange={(event) => setGameTableId(event.target.value)}>
+                                <option value="">Выберите стол</option>
+                                {gameTableOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label || option.value}
+                                    </option>
+                                ))}
+                            </select>
                         </label>
                         <label>
                             Ожидаемый RTP
@@ -124,16 +138,23 @@ const GameAnalysisPage = () => {
                         </label>
                         <button type="submit" className="primary-button">Запустить анализ</button>
                     </form>
-                    <label>
+                    {/*<label>
                         ID анализа
                         <input value={analysisIdLookup} onChange={(event) => setAnalysisIdLookup(event.target.value)} />
                     </label>
                     <button type="button" className="secondary-button" onClick={handleFetchById}>
                         Получить анализ по ID
-                    </button>
+                    </button>*/}
                     <label>
-                        ID стола
-                        <input value={tableLookup} onChange={(event) => setTableLookup(event.target.value)} />
+                        Стол
+                        <select value={tableLookup} onChange={(event) => setTableLookup(event.target.value)}>
+                            <option value="">Выберите стол</option>
+                            {gameTableOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label || option.value}
+                                </option>
+                            ))}
+                        </select>
                     </label>
                     <button type="button" className="secondary-button" onClick={handleFetchByTable}>
                         Анализы по столу

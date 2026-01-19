@@ -20,7 +20,7 @@ const AllReportsPage = () => {
     const {token, baseUrl} = useAuth();
     const [reports, setReports] = useState<ReportResponse[]>([]);
     const [expandedReportId, setExpandedReportId] = useState<string | null>(null);
-    const [error, setError] = useState("");
+    const [, setError] = useState("");
 
     const handleFetchAllReports = async () => {
         setError("");

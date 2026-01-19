@@ -21,15 +21,15 @@ const FraudCheckPage = () => {
     const {employees} = useEmployees();
     // const [customerName, setCustomerName] = useState("");
     const [customerId, setCustomerId] = useState("");
-    const [customerDob, setCustomerDob] = useState("");
-    const [checkType, setCheckType] = useState("id");
-    const [activityId, setActivityId] = useState("");
+    // const [customerDob, setCustomerDob] = useState("");
+    // const [checkType, setCheckType] = useState("id");
+    const [activityId, ] = useState("");
     const [result, setResult] = useState<FraudCheckResponse | null>(null);
     const [error, setError] = useState("");
 
-    const [quickPersonId, setQuickPersonId] = useState("");
-    const [quickActivityId, setQuickActivityId] = useState("");
-    const [quickResult, setQuickResult] = useState<FraudCheckResponse | null>(null);
+    // const [quickPersonId, ] = useState("");
+    // const [quickActivityId, ] = useState("");
+    // const [, setQuickResult] = useState<FraudCheckResponse | null>(null);
 
     const [records, setRecords] = useState<FraudRecord[]>([]);
     const [recordFullName, setRecordFullName] = useState("");
@@ -39,8 +39,8 @@ const FraudCheckPage = () => {
     const [recordAddedBy, setRecordAddedBy] = useState("");
     const [recordSearchQuery, setRecordSearchQuery] = useState("");
     const [recordTypeFilter, setRecordTypeFilter] = useState("CHEATING");
-    const [recordIdLookup, setRecordIdLookup] = useState("");
-    const [recordDetails, setRecordDetails] = useState<FraudRecord | null>(null);
+    // const [recordIdLookup, setRecordIdLookup] = useState("");
+    const [recordDetails, ] = useState<FraudRecord | null>(null);
     const [recordStatusUpdates, setRecordStatusUpdates] = useState<Record<string, string>>({});
 
     useEffect(() => {
@@ -77,29 +77,29 @@ const FraudCheckPage = () => {
         }
     };
 
-    const handleQuickCheck = async (event: FormEvent) => {
-        event.preventDefault();
-        setError("");
-        if (!quickPersonId) {
-            setError("Укажите ID клиента для быстрой проверки.");
-            return;
-        }
-        const params = new URLSearchParams({personId: quickPersonId});
-        if (quickActivityId) {
-            params.append("activityId", quickActivityId);
-        }
-        try {
-            const data = await apiRequest<FraudCheckResponse>(
-                baseUrl,
-                token,
-                `/api/security/fraud-check/quick?${params.toString()}`,
-                {method: "POST"}
-            );
-            setQuickResult(data);
-        } catch {
-            setError("Не удалось выполнить быструю проверку.");
-        }
-    };
+    // const handleQuickCheck = async (event: FormEvent) => {
+    //     event.preventDefault();
+    //     setError("");
+    //     if (!quickPersonId) {
+    //         setError("Укажите ID клиента для быстрой проверки.");
+    //         return;
+    //     }
+    //     const params = new URLSearchParams({personId: quickPersonId});
+    //     if (quickActivityId) {
+    //         params.append("activityId", quickActivityId);
+    //     }
+    //     try {
+    //         const data = await apiRequest<FraudCheckResponse>(
+    //             baseUrl,
+    //             token,
+    //             `/api/security/fraud-check/quick?${params.toString()}`,
+    //             {method: "POST"}
+    //         );
+    //         setQuickResult(data);
+    //     } catch {
+    //         setError("Не удалось выполнить быструю проверку.");
+    //     }
+    // };
 
     const handleCreateRecord = async (event: FormEvent) => {
         event.preventDefault();
@@ -176,23 +176,23 @@ const FraudCheckPage = () => {
         }
     };
 
-    const handleFetchById = async () => {
-        setError("");
-        if (!recordIdLookup) {
-            setError("Укажите ID записи.");
-            return;
-        }
-        try {
-            const data = await apiRequest<FraudRecord>(
-                baseUrl,
-                token,
-                `/api/security/fraud-database/${recordIdLookup}`
-            );
-            setRecordDetails(data);
-        } catch {
-            setError("Не удалось получить запись.");
-        }
-    };
+    // const handleFetchById = async () => {
+    //     setError("");
+    //     if (!recordIdLookup) {
+    //         setError("Укажите ID записи.");
+    //         return;
+    //     }
+    //     try {
+    //         const data = await apiRequest<FraudRecord>(
+    //             baseUrl,
+    //             token,
+    //             `/api/security/fraud-database/${recordIdLookup}`
+    //         );
+    //         setRecordDetails(data);
+    //     } catch {
+    //         setError("Не удалось получить запись.");
+    //     }
+    // };
 
     const handleUpdateStatus = async (id: string, status: string) => {
         setError("");
